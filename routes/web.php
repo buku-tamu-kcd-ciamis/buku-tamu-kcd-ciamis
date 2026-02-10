@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BukuTamuController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\Product\ProductController;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('public.index');
 })->name('index');
+
+Route::post('/', [BukuTamuController::class, 'store'])->name('buku-tamu.store');
 
 Route::get('/loket', function () {
     return view('loket.index');

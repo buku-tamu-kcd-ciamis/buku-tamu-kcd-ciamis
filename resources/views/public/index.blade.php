@@ -19,9 +19,21 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div style="padding: 15px; background: #4CAF50; color: white; margin: 20px 0; border-radius: 5px; text-align: center;">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div style="padding: 15px; background: #f44336; color: white; margin: 20px 0; border-radius: 5px; text-align: center;">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Form -->
     <div class="form-container">
-        <form id="bukuTamuForm" method="POST" action="#">
+        <form id="bukuTamuForm" method="POST" action="{{ route('buku-tamu.store') }}">
             @csrf
             <div class="form-main">
 

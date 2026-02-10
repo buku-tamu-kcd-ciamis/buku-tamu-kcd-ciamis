@@ -1,0 +1,1209 @@
+/* ===== BUKU TAMU - CADISDIK XIII ===== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: #f0f0f0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 10px 40px;
+}
+
+.wrapper {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header {
+    background: #0f9455;
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    border-radius: 12px 12px 0 0;
+    flex-shrink: 0;
+}
+
+.header img {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+    background: white;
+    padding: 8px;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.header-text {
+    text-align: center;
+}
+
+.header-text h1 {
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.header-text p {
+    color: white;
+    font-size: 12px;
+    font-weight: 300;
+    opacity: 0.9;
+}
+
+.form-container {
+    background: white;
+    padding: 18px 35px 16px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-main {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+}
+
+.form-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-left-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    align-items: stretch;
+    flex: 1;
+}
+
+.form-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    width: 40%;
+    flex-shrink: 0;
+}
+
+.form-right .foto-section {
+    grid-column: 1;
+}
+
+.form-right .ttd-section {
+    grid-column: 2;
+    grid-row: 1 / 3;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group label .required {
+    color: #ff3b3b;
+    margin-left: 2px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper input,
+.input-wrapper select {
+    width: 100%;
+    padding: 8px 38px 8px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    color: #333;
+    background: white;
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.input-wrapper select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+}
+
+.input-wrapper input:focus,
+.input-wrapper select:focus {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.1);
+}
+
+.input-wrapper .input-icon {
+    position: absolute;
+    right: 14px;
+    color: #b0b0b0;
+    font-size: 16px;
+    pointer-events: none;
+}
+
+/* Autocomplete Jenis ID */
+.autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+.autocomplete-wrapper input {
+    width: 100%;
+    padding: 8px 38px 8px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    color: #333;
+    background: white;
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+    outline: none;
+    cursor: text;
+}
+.autocomplete-wrapper input:focus {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.1);
+}
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 999;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.autocomplete-list.show {
+    display: block;
+}
+.autocomplete-item {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-family: "Poppins", sans-serif;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #0f9455;
+    color: white;
+}
+.autocomplete-item:last-child {
+    border-radius: 0 0 6px 6px;
+}
+
+/* Phone Input */
+.phone-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+}
+.phone-prefix {
+    flex-shrink: 0;
+    padding: 8px 8px 8px 12px;
+    background: #f0f0f0;
+    border: 1.5px solid #e0e0e0;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    font-weight: 600;
+    color: #333;
+    user-select: none;
+    line-height: 1.5;
+}
+.phone-wrapper input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 38px 8px 8px;
+    border: 1.5px solid #e0e0e0;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    color: #333;
+    background: white;
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+    outline: none;
+}
+.phone-wrapper:focus-within .phone-prefix {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.1);
+}
+.phone-wrapper:focus-within input {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.1);
+}
+.phone-hint {
+    font-size: 11px;
+    margin-top: 4px;
+    font-family: "Poppins", sans-serif;
+    color: #999;
+    transition: color 0.2s;
+}
+.phone-hint.valid {
+    color: #0f9455;
+}
+.phone-hint.invalid {
+    color: #e53935;
+}
+
+/* Toast Notification */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #e53935;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition:
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        opacity 0.4s;
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+    max-width: 90vw;
+}
+.toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+.toast-notification i {
+    margin-right: 8px;
+}
+.form-group.shake input,
+.form-group.shake select,
+.form-group.shake .autocomplete-wrapper input,
+.form-group.shake .phone-wrapper input {
+    border-color: #e53935 !important;
+    animation: shake 0.5s ease;
+}
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    20% {
+        transform: translateX(-4px);
+    }
+    40% {
+        transform: translateX(4px);
+    }
+    60% {
+        transform: translateX(-4px);
+    }
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+/* Foto Sections (Selfie & Penerimaan) */
+.foto-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.foto-penerimaan-section .foto-box .camera-icon {
+    background: linear-gradient(135deg, #a8c8db, #7ca8c9);
+}
+
+.foto-penerimaan-section .foto-box p {
+    color: #2e7d9e;
+}
+
+.foto-box {
+    border: 2px dashed #b8dcc8;
+    border-radius: 10px;
+    background: #f0faf4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    flex: 1;
+    text-align: center;
+    max-width: 100%;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.foto-box .camera-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #a8dbb8, #7cc99a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.foto-box .camera-icon i {
+    font-size: 18px;
+    color: white;
+}
+
+.foto-box p {
+    color: #0f9455;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.foto-box video,
+.foto-box canvas,
+.foto-box img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.btn-camera {
+    width: 100%;
+    padding: 8px;
+    background: #0f9455;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.3s ease;
+}
+
+.btn-camera:hover {
+    background: #0b7a46;
+}
+
+/* Tanda Tangan Section */
+.ttd-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ttd-box {
+    border: 2px dashed #b8dcc8;
+    border-radius: 10px;
+    background: #f0faf4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    flex: 1;
+    text-align: center;
+    max-width: 100%;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.ttd-box .pen-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #a8dbb8, #7cc99a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.ttd-box .pen-icon i {
+    font-size: 18px;
+    color: white;
+}
+
+.ttd-box p {
+    color: #0f9455;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.ttd-box canvas {
+    border: 1px solid #b8dcc8;
+    border-radius: 8px;
+    background: white;
+    cursor: crosshair;
+    max-width: 100%;
+}
+
+.btn-ttd {
+    width: 100%;
+    padding: 8px;
+    background: #0f9455;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.3s ease;
+}
+
+.btn-ttd:hover {
+    background: #0b7a46;
+}
+
+/* Catatan */
+.catatan {
+    margin-top: 5px;
+    padding-top: 2px;
+}
+
+.catatan p:first-child {
+    font-size: 11px;
+    font-weight: 700;
+    color: #333;
+    font-style: italic;
+}
+
+.catatan p:last-child {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+}
+
+.catatan .required {
+    color: #ff3b3b;
+}
+
+/* Submit Button */
+.btn-simpan {
+    width: 100%;
+    padding: 10px;
+    background: #0f9455;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+}
+
+.btn-simpan:hover {
+    background: #0b7a46;
+}
+
+/* Floating Barcode Button (Draggable) */
+.floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: #0f9455;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(15, 148, 85, 0.4);
+    cursor: grab;
+    text-decoration: none;
+    z-index: 100;
+    user-select: none;
+    touch-action: none;
+    transition: box-shadow 0.3s ease;
+}
+
+.floating-btn:active,
+.floating-btn.dragging {
+    cursor: grabbing;
+    box-shadow: 0 8px 25px rgba(15, 148, 85, 0.6);
+    transform: scale(1.08);
+}
+
+.floating-btn:hover {
+    box-shadow: 0 6px 20px rgba(15, 148, 85, 0.5);
+}
+
+.floating-btn i {
+    color: white;
+    font-size: 26px;
+}
+
+/* Barcode Survey Modal */
+.barcode-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10001;
+    align-items: center;
+    justify-content: center;
+}
+.barcode-modal-overlay.active {
+    display: flex;
+}
+.barcode-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.barcode-modal .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-family: "Poppins", sans-serif;
+}
+.barcode-modal .close-btn:hover {
+    color: #e53935;
+}
+.barcode-modal h3 {
+    font-family: "Poppins", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f9455;
+    margin-bottom: 6px;
+}
+.barcode-modal p {
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+}
+.barcode-modal img {
+    width: 100%;
+    max-width: 280px;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Signature Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 18px;
+}
+
+.modal-content canvas {
+    border: 2px solid #b8dcc8;
+    border-radius: 8px;
+    cursor: crosshair;
+    background: white;
+    width: 100%;
+    height: 250px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.modal-buttons button {
+    padding: 10px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-clear {
+    background: #e5e7eb;
+    color: #333;
+}
+
+.btn-clear:hover {
+    background: #d1d5db;
+}
+
+.btn-save-ttd {
+    background: #0f9455;
+    color: white;
+}
+
+.btn-save-ttd:hover {
+    background: #0b7a46;
+}
+
+.btn-cancel {
+    background: #f87171;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #ef4444;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* ---- LARGE TABLET / SMALL DESKTOP (max 1366px) ---- */
+@media (max-width: 1366px) {
+    body {
+        padding: 20px 30px 15px;
+    }
+    .header {
+        padding: 22px 30px;
+        gap: 18px;
+    }
+    .header img {
+        width: 72px;
+        height: 72px;
+    }
+    .header-text h1 {
+        font-size: 24px;
+    }
+    .form-container {
+        padding: 18px 25px 15px;
+    }
+    .form-main {
+        gap: 20px;
+    }
+    .form-left-grid {
+        gap: 10px 18px;
+    }
+    .form-right {
+        width: 46%;
+    }
+}
+
+/* ---- TABLET LANDSCAPE (landscape + 768-1200px) ---- */
+/* Ini mode utama untuk loket: landscape di tablet */
+@media (max-width: 1200px) and (orientation: landscape) {
+    body {
+        padding: 12px 20px 10px;
+        height: 100vh;
+        overflow: hidden;
+    }
+    .header {
+        padding: 14px 25px;
+        gap: 14px;
+        border-radius: 10px 10px 0 0;
+    }
+    .header img {
+        width: 55px;
+        height: 55px;
+        padding: 7px;
+    }
+    .header-text h1 {
+        font-size: 20px;
+    }
+    .header-text p {
+        font-size: 12px;
+    }
+    .form-container {
+        padding: 14px 20px 12px;
+    }
+    .form-main {
+        gap: 16px;
+        flex-direction: row;
+    }
+    .form-left {
+        flex: 1;
+    }
+    .form-left-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 14px;
+    }
+    .form-right {
+        width: 40%;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 8px;
+    }
+    .form-group label {
+        font-size: 10.5px;
+        margin-bottom: 4px;
+    }
+    .input-wrapper input,
+    .input-wrapper select,
+    .autocomplete-wrapper input {
+        font-size: 12.5px;
+        padding: 7px 36px 7px 12px;
+    }
+    .phone-prefix {
+        font-size: 12.5px;
+        padding: 7px 6px 7px 10px;
+    }
+    .phone-wrapper input {
+        font-size: 12.5px;
+        padding: 7px 36px 7px 6px;
+    }
+    .phone-hint {
+        font-size: 10px;
+        margin-top: 2px;
+    }
+    .input-wrapper .input-icon {
+        font-size: 14px;
+        right: 10px;
+    }
+    .foto-box,
+    .ttd-box {
+        aspect-ratio: auto;
+        padding: 10px 8px;
+        min-height: 90px;
+    }
+    .foto-box .camera-icon,
+    .ttd-box .pen-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 8px;
+    }
+    .foto-box .camera-icon i,
+    .ttd-box .pen-icon i {
+        font-size: 18px;
+    }
+    .foto-box p,
+    .ttd-box p {
+        font-size: 10px;
+    }
+    .btn-camera,
+    .btn-ttd {
+        padding: 8px;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+    .btn-simpan {
+        padding: 10px;
+        font-size: 13px;
+        margin-top: 6px;
+    }
+    .catatan {
+        margin-top: 4px;
+        padding-top: 2px;
+    }
+    .catatan p:first-child,
+    .catatan p:last-child {
+        font-size: 10.5px;
+    }
+    .floating-btn {
+        width: 45px;
+        height: 45px;
+        bottom: 15px;
+        right: 15px;
+    }
+    .floating-btn i {
+        font-size: 20px;
+    }
+}
+
+/* ---- TABLET PORTRAIT (portrait + 600-1200px) ---- */
+/* Tablet ditegakkan: scroll aktif, form di atas, foto/ttd di bawah */
+@media (max-width: 1200px) and (orientation: portrait) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+        padding: 15px 20px;
+    }
+    .wrapper {
+        max-width: 100%;
+    }
+    .header {
+        padding: 20px 25px;
+        gap: 15px;
+    }
+    .header img {
+        width: 65px;
+        height: 65px;
+        padding: 8px;
+    }
+    .header-text h1 {
+        font-size: 22px;
+    }
+    .header-text p {
+        font-size: 13px;
+    }
+    .form-container {
+        padding: 18px 22px 15px;
+    }
+    .form-main {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .form-left-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 20px;
+    }
+    .form-right {
+        width: 100%;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 14px;
+    }
+    .form-right .foto-section {
+        grid-column: 1;
+    }
+    .form-right .ttd-section {
+        grid-column: 2;
+        grid-row: 1 / 3;
+    }
+    .foto-box,
+    .ttd-box {
+        aspect-ratio: 4 / 3;
+        max-height: 260px;
+    }
+    .btn-camera,
+    .btn-ttd {
+        padding: 10px;
+        font-size: 13px;
+    }
+    .btn-simpan {
+        padding: 12px;
+        font-size: 14px;
+    }
+    .catatan {
+        margin-top: 8px;
+    }
+}
+
+/* ---- MOBILE LANDSCAPE (landscape + max 768px height) ---- */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding: 8px 15px;
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+    }
+    .header {
+        padding: 10px 20px;
+        gap: 12px;
+    }
+    .header img {
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+    }
+    .header-text h1 {
+        font-size: 16px;
+    }
+    .header-text p {
+        font-size: 10px;
+    }
+    .form-container {
+        padding: 10px 15px;
+    }
+    .form-left-grid {
+        gap: 6px 12px;
+    }
+    .form-group label {
+        font-size: 10px;
+        margin-bottom: 3px;
+    }
+    .input-wrapper input,
+    .input-wrapper select,
+    .autocomplete-wrapper input {
+        font-size: 12px;
+        padding: 6px 32px 6px 10px;
+    }
+    .phone-prefix {
+        font-size: 12px;
+        padding: 6px 5px 6px 8px;
+    }
+    .phone-wrapper input {
+        font-size: 12px;
+        padding: 6px 32px 6px 5px;
+    }
+}
+
+/* ---- MOBILE / SMALL TABLET (max 768px) ---- */
+@media (max-width: 768px) {
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+        padding: 10px 12px;
+        align-items: flex-start;
+    }
+    .header {
+        padding: 18px 15px;
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+        border-radius: 10px 10px 0 0;
+    }
+    .header img {
+        width: 58px;
+        height: 58px;
+        padding: 7px;
+    }
+    .header-text h1 {
+        font-size: 18px;
+    }
+    .header-text p {
+        font-size: 12px;
+    }
+    .form-container {
+        padding: 15px 14px 12px;
+        border-radius: 0 0 10px 10px;
+    }
+    .form-main {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .form-left-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .form-right {
+        width: 100%;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        gap: 12px;
+    }
+    .form-right .foto-section,
+    .form-right .ttd-section {
+        grid-column: 1;
+        grid-row: auto;
+    }
+    .foto-box,
+    .ttd-box {
+        aspect-ratio: 4 / 3;
+        max-height: 240px;
+    }
+    .form-group label {
+        font-size: 11px;
+    }
+    .input-wrapper input,
+    .input-wrapper select,
+    .autocomplete-wrapper input {
+        font-size: 13px;
+        padding: 9px 38px 9px 12px;
+    }
+    .phone-prefix {
+        font-size: 13px;
+        padding: 9px 8px 9px 12px;
+    }
+    .phone-wrapper input {
+        font-size: 13px;
+        padding: 9px 38px 9px 8px;
+    }
+    .btn-camera,
+    .btn-ttd {
+        padding: 10px;
+        font-size: 13px;
+    }
+    .btn-simpan {
+        padding: 12px;
+        font-size: 14px;
+    }
+    .floating-btn {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px;
+    }
+    .floating-btn i {
+        font-size: 22px;
+    }
+    .catatan p:first-child,
+    .catatan p:last-child {
+        font-size: 11px;
+    }
+    .modal-content {
+        padding: 20px 15px;
+        width: 95%;
+    }
+    .barcode-modal {
+        padding: 20px 15px;
+        width: 95%;
+    }
+    .barcode-modal img {
+        max-width: 220px;
+    }
+}
+
+/* ---- MOBILE PORTRAIT (max 480px) ---- */
+@media (max-width: 480px) {
+    body {
+        padding: 6px;
+    }
+    .header {
+        padding: 14px 10px;
+        gap: 8px;
+    }
+    .header img {
+        width: 48px;
+        height: 48px;
+        padding: 5px;
+    }
+    .header-text h1 {
+        font-size: 15px;
+    }
+    .header-text p {
+        font-size: 10.5px;
+    }
+    .form-container {
+        padding: 10px 10px;
+    }
+    .form-left-grid {
+        gap: 8px;
+    }
+    .input-wrapper input,
+    .input-wrapper select,
+    .autocomplete-wrapper input {
+        font-size: 12px;
+        padding: 8px 34px 8px 10px;
+    }
+    .input-wrapper .input-icon {
+        font-size: 14px;
+        right: 10px;
+    }
+    .phone-prefix {
+        font-size: 12px;
+        padding: 8px 5px 8px 8px;
+    }
+    .phone-wrapper input {
+        font-size: 12px;
+        padding: 8px 34px 8px 5px;
+    }
+    .phone-hint {
+        font-size: 10px;
+    }
+    .foto-box,
+    .ttd-box {
+        aspect-ratio: auto;
+        min-height: 180px;
+        max-height: 220px;
+    }
+    .foto-box .camera-icon,
+    .ttd-box .pen-icon {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 10px;
+    }
+    .foto-box .camera-icon i,
+    .ttd-box .pen-icon i {
+        font-size: 17px;
+    }
+    .toast-notification {
+        font-size: 11px;
+        padding: 10px 14px;
+        max-width: 96vw;
+    }
+    .floating-btn {
+        width: 44px;
+        height: 44px;
+        bottom: 12px;
+        right: 12px;
+    }
+    .floating-btn i {
+        font-size: 19px;
+    }
+}

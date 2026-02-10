@@ -11,11 +11,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, UuidTrait;
+    use HasFactory, Notifiable, UuidTrait;
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -44,17 +43,20 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 
 
-    public function role_user() : BelongsTo
+    public function role_user(): BelongsTo
     {
         return $this->belongsTo(RoleUser::class);
     }

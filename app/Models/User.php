@@ -18,7 +18,44 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return str_ends_with($this->role_user->name, 'Super Admin') && $this->hasVerifiedEmail();
+        if (!$this->role_user) return false;
+
+        return match ($panel->getId()) {
+            'admin' => $this->hasAnyRole(['Super Admin', 'Ketua KCD']),
+            'loket' => $this->hasAnyRole(['Loket', 'Super Admin']),
+            default => false,
+        };
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role_user && $this->role_user->name === $role;
+    }
+
+    /**
+     * Check if user has any of the given roles
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->role_user && in_array($this->role_user->name, $roles);
+    }
+
+    /**
+     * Get the dashboard route for this user's role
+     */
+    public function getDashboardRoute(): string
+    {
+        if (!$this->role_user) return '/';
+
+        return match ($this->role_user->name) {
+            'Super Admin' => '/admin',
+            'Ketua KCD'   => '/admin',
+            'Loket'       => '/loket',
+            default       => '/',
+        };
     }
     /**
      * The attributes that are mass assignable.

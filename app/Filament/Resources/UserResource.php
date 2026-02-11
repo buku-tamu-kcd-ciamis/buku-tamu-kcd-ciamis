@@ -23,6 +23,8 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    protected static ?string $slug = 'user';
+
     protected static ?string $navigationGroup = 'Profiles';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -37,15 +39,15 @@ class UserResource extends Resource
                         Grid::make()
                             ->schema([
                                 TextInput::make('name')
-                                ->required()
-                                ->live(onBlur: true),
+                                    ->required()
+                                    ->live(onBlur: true),
                                 TextInput::make('email')
-                                ->required(fn (string $operation): bool => $operation === 'create')
-                                ->unique(ignorable: fn (?User $record): ?User => $record)
-                                ->disabled(fn (string $operation): bool => $operation === 'edit')
-                                ->live(onBlur: true)
+                                    ->required(fn(string $operation): bool => $operation === 'create')
+                                    ->unique(ignorable: fn(?User $record): ?User => $record)
+                                    ->disabled(fn(string $operation): bool => $operation === 'edit')
+                                    ->live(onBlur: true)
                             ]),
-                            Select::make('role_user_id')
+                        Select::make('role_user_id')
                             ->required()
                             ->relationship('role_user', 'name'),
                     ])
@@ -56,18 +58,18 @@ class UserResource extends Resource
                         Grid::make()
                             ->schema([
                                 TextInput::make('password')
-                                ->password()
-                                ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                                ->dehydrated(fn (?string $state): bool => filled($state))
-                                ->required(fn (string $operation): bool => $operation === 'create')
-                                ->hidden(fn (string $operation): bool => $operation === 'view')
-                                ->revealable()
-                                ->same('passwordConfirmation'),
+                                    ->password()
+                                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                                    ->dehydrated(fn(?string $state): bool => filled($state))
+                                    ->required(fn(string $operation): bool => $operation === 'create')
+                                    ->hidden(fn(string $operation): bool => $operation === 'view')
+                                    ->revealable()
+                                    ->same('passwordConfirmation'),
                                 TextInput::make('passwordConfirmation')
-                                ->password()
-                                ->required(fn (string $operation): bool => $operation === 'create')
-                                ->dehydrated(fn (?string $state): bool => filled($state))
-                                ->revealable()
+                                    ->password()
+                                    ->required(fn(string $operation): bool => $operation === 'create')
+                                    ->dehydrated(fn(?string $state): bool => filled($state))
+                                    ->revealable()
                             ]),
                     ])
                     ->aside(),

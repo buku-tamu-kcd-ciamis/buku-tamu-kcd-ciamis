@@ -17,6 +17,8 @@ class BukuTamuResource extends Resource
 {
     protected static ?string $model = BukuTamu::class;
 
+    protected static ?string $slug = 'buku-tamu';
+
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     protected static ?string $navigationLabel = 'Buku Tamu';

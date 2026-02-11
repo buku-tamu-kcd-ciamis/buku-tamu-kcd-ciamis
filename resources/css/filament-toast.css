@@ -1,0 +1,43 @@
+/* Custom Toast Notification for Filament - mirip dengan halaman publik */
+.filament-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #10b981;
+    color: white;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-family: "Inter", "Figtree", ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 99999;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+    max-width: 90vw;
+    min-width: 320px;
+}
+
+.filament-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.filament-toast.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.filament-toast.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.filament-toast.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.filament-toast.info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}

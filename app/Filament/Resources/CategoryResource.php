@@ -20,6 +20,8 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
+    protected static ?string $slug = 'category';
+
     protected static ?string $navigationGroup = 'Shop';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -27,16 +29,16 @@ class CategoryResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-        ->schema([
-            Section::make('General')
-                ->description('Category General Data')
-                ->schema([
-                    TextInput::make('name')
-                    ->required()
-                    ->live(onBlur: true),
-                ])
-                ->aside()
-        ]);
+            ->schema([
+                Section::make('General')
+                    ->description('Category General Data')
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->live(onBlur: true),
+                    ])
+                    ->aside()
+            ]);
     }
 
     public static function table(Table $table): Table

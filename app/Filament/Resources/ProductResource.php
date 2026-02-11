@@ -28,6 +28,8 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
+    protected static ?string $slug = 'product';
+
     protected static ?string $navigationGroup = 'Shop';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -37,49 +39,49 @@ class ProductResource extends Resource
         return $form
             ->schema([
                 Section::make('General')
-                ->description('this is description')
-                ->schema([
-                    Grid::make()
-                        ->schema([
-                            TextInput::make('name')
-                            ->required()
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
-                            TextInput::make('slug')
-                            ->readOnly()
-                        ]),
+                    ->description('this is description')
+                    ->schema([
+                        Grid::make()
+                            ->schema([
+                                TextInput::make('name')
+                                    ->required()
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(fn(Set $set, ?string $state) => $set('slug', Str::slug($state))),
+                                TextInput::make('slug')
+                                    ->readOnly()
+                            ]),
                         TextInput::make('sku')
                             ->required()
                             ->live(onBlur: true),
                         Textarea::make('excerpt')
-                        ->autosize()
-                        ->rows(10),
+                            ->autosize()
+                            ->rows(10),
                         Textarea::make('body')
-                        ->autosize()
-                        ->rows(10),
+                            ->autosize()
+                            ->rows(10),
                         Select::make('category_id')
                             ->required()
                             ->relationship('category', 'name'),
-                ])
-                ->aside(),
-            Section::make('Pricing')
-                ->description('this is description')
-                ->schema([
-                    TextInput::make('price')
-                    ->numeric()
-                    ->minValue(0),
-                    TextInput::make('price_sale')
-                    ->numeric()
-                    ->minValue(0),
-                    Checkbox::make('stock_status')
-                    ->default(Product::STATUS_IN_STOCK)
-                    ->live(),
-                    TextInput::make('manage_stock')
-                    ->numeric()
-                    ->minValue(0)
-                    ->hidden(fn (Get $get): bool => ! $get('stock_status')),
-                ])
-                ->aside()
+                    ])
+                    ->aside(),
+                Section::make('Pricing')
+                    ->description('this is description')
+                    ->schema([
+                        TextInput::make('price')
+                            ->numeric()
+                            ->minValue(0),
+                        TextInput::make('price_sale')
+                            ->numeric()
+                            ->minValue(0),
+                        Checkbox::make('stock_status')
+                            ->default(Product::STATUS_IN_STOCK)
+                            ->live(),
+                        TextInput::make('manage_stock')
+                            ->numeric()
+                            ->minValue(0)
+                            ->hidden(fn(Get $get): bool => ! $get('stock_status')),
+                    ])
+                    ->aside()
             ]);
     }
 
@@ -88,14 +90,14 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 ImageColumn::make('featured_image')
-                ->defaultImageUrl('https://www.psykososialberedskap.no/wp-content/themes/rvts_psb_sage-2.0/resources/assets/images/default-placeholder.png'),
+                    ->defaultImageUrl('https://www.psykososialberedskap.no/wp-content/themes/rvts_psb_sage-2.0/resources/assets/images/default-placeholder.png'),
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('category.name')->searchable()->sortable(),
                 TextColumn::make('price')->sortable()->money('idr'),
                 TextColumn::make('status')
-                ->formatStateUsing(fn (string $state): string => Product::STATUSSES[$state]),
+                    ->formatStateUsing(fn(string $state): string => Product::STATUSSES[$state]),
                 TextColumn::make('manage_stock')
-                ->label('Stock')
+                    ->label('Stock')
             ])
             ->filters([
                 //

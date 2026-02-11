@@ -23,6 +23,8 @@ class RoleUserResource extends Resource
     protected static ?string $model = RoleUser::class;
     protected static ?string $label = 'Roles';
 
+    protected static ?string $slug = 'role';
+
     protected static ?string $navigationGroup = 'Profiles';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -37,10 +39,10 @@ class RoleUserResource extends Resource
                         Grid::make()
                             ->schema([
                                 TextInput::make('name')
-                                ->required()
-                                ->live(onBlur: true),
+                                    ->required()
+                                    ->live(onBlur: true),
                             ]),
-                            Select::make('need_approval')
+                        Select::make('need_approval')
                             ->required()
                             ->options(RoleUser::APPROVE_STATUS),
                     ])
@@ -54,7 +56,7 @@ class RoleUserResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('need_approval')
-                ->formatStateUsing(fn (string $state): string => RoleUser::APPROVE_STATUS[$state])
+                    ->formatStateUsing(fn(string $state): string => RoleUser::APPROVE_STATUS[$state])
             ])
             ->filters([
                 //

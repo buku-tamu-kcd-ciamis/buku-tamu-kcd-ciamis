@@ -608,26 +608,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function detectFaces(canvasOrBitmap, canvas) {
-        // Try native FaceDetector first
+        // Try native FaceDetector first — this is the AUTHORITATIVE face check
         if (faceDetectorSupported && faceDetector) {
             try {
                 const faces = await faceDetector.detect(canvasOrBitmap);
                 if (faces.length > 0) {
-                    return { detected: true, count: faces.length };
+                    return {
+                        detected: true,
+                        count: faces.length,
+                        native: true,
+                    };
                 }
             } catch (e) {
                 console.warn("FaceDetector failed, using fallback:", e);
             }
         }
-        // Fallback: skin-tone multi-region detection
+        // Fallback: skin-tone — ONLY used if native API not available at all
+        // Mark as non-native so selfie can reject it
         if (canvas) {
             var regions = detectFaceRegions(canvas);
             return {
                 detected: regions.length > 0,
                 count: regions.length,
+                native: false,
             };
         }
-        return { detected: true, count: 0 };
+        return { detected: false, count: 0, native: false };
     }
 
     // ===== CAMERA UTILITY =====
@@ -635,30 +641,36 @@ document.addEventListener("DOMContentLoaded", function () {
     // Stores recent frame data for motion analysis
     let livenessFrames = [];
     let livenessLastCapture = 0;
-    const LIVENESS_FRAME_COUNT = 5;
-    const LIVENESS_INTERVAL = 400; // ms between frame captures
+    const LIVENESS_FRAME_COUNT = 10;
+    const LIVENESS_INTERVAL = 300; // ms between frame captures
 
     function captureLivenessFrame(video) {
         var now = Date.now();
         if (now - livenessLastCapture < LIVENESS_INTERVAL) return;
         livenessLastCapture = now;
         var c = document.createElement("canvas");
-        var s = 80; // small downscale for performance
+        var s = 100; // slightly larger for better analysis
         c.width = s;
         c.height = Math.round(s * (video.videoHeight / video.videoWidth));
         c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
-        var data = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
-        // Store brightness array of center region
-        var cx = Math.floor(c.width * 0.25), cy = Math.floor(c.height * 0.15);
-        var cw = Math.floor(c.width * 0.5), ch = Math.floor(c.height * 0.5);
-        var vals = [];
-        for (var y = cy; y < cy + ch; y += 2) {
-            for (var x = cx; x < cx + cw; x += 2) {
-                var i = (y * c.width + x) * 4;
-                vals.push(Math.round((data[i] + data[i+1] + data[i+2]) / 3));
+        var data = c
+            .getContext("2d")
+            .getImageData(0, 0, c.width, c.height).data;
+        // Store brightness values for 4 quadrants (to detect uniform vs localized motion)
+        var cw = c.width,
+            ch = c.height;
+        var halfW = Math.floor(cw / 2),
+            halfH = Math.floor(ch / 2);
+        var quads = [[], [], [], []]; // TL, TR, BL, BR
+        for (var y = 0; y < ch; y += 2) {
+            for (var x = 0; x < cw; x += 2) {
+                var i = (y * cw + x) * 4;
+                var bri = Math.round((data[i] + data[i + 1] + data[i + 2]) / 3);
+                var qi = (y < halfH ? 0 : 2) + (x < halfW ? 0 : 1);
+                quads[qi].push(bri);
             }
         }
-        livenessFrames.push(vals);
+        livenessFrames.push(quads);
         if (livenessFrames.length > LIVENESS_FRAME_COUNT) {
             livenessFrames.shift();
         }
@@ -670,101 +682,186 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Liveness check: detects photo-of-photo spoofing
+     * Liveness check v2: strict anti-spoofing
      * Returns { live: bool, reason: string }
      * Checks:
-     * 1. Micro-movement: real face has slight motion between frames
-     * 2. Texture variance: real skin has varied texture; printed photo is smoother
-     * 3. Color depth: real face has diverse hue range; screen/print is flatter
+     * 1. Micro-motion: frames must show movement (reject perfectly still photos)
+     * 2. Regional motion variance: real faces move non-uniformly (eyes blink, head tilts)
+     *    — a photo held by hand shakes UNIFORMLY across all quadrants
+     * 3. Texture sharpness (Laplacian): real camera-to-face is sharp; photo-of-screen is soft/moiré
+     * 4. Screen glare: look for specular highlight clusters (screens reflect light)
+     * 5. Color depth: real faces have natural hue gradients
      */
     function checkLiveness(canvas) {
         var result = { live: true, reason: "" };
 
-        // ----- Check 1: Micro-movement between frames -----
-        if (livenessFrames.length >= 3) {
-            var totalDiff = 0;
+        // ===== Check 1: Micro-motion (must exist) =====
+        if (livenessFrames.length >= 4) {
+            var quadMotions = [0, 0, 0, 0];
             var comparisons = 0;
             for (var fi = 1; fi < livenessFrames.length; fi++) {
                 var prev = livenessFrames[fi - 1];
                 var curr = livenessFrames[fi];
-                var len = Math.min(prev.length, curr.length);
-                var diff = 0;
-                for (var pi = 0; pi < len; pi++) {
-                    diff += Math.abs(curr[pi] - prev[pi]);
-                }
-                totalDiff += diff / len;
                 comparisons++;
+                for (var qi = 0; qi < 4; qi++) {
+                    var len = Math.min(prev[qi].length, curr[qi].length);
+                    var diff = 0;
+                    for (var pi = 0; pi < len; pi++) {
+                        diff += Math.abs(curr[qi][pi] - prev[qi][pi]);
+                    }
+                    quadMotions[qi] += len > 0 ? diff / len : 0;
+                }
             }
-            var avgMotion = totalDiff / comparisons;
-            // A still photo has near-zero motion; real person has > 0.8
-            if (avgMotion < 0.5) {
+            // Average motion per quadrant
+            for (var qi2 = 0; qi2 < 4; qi2++) {
+                quadMotions[qi2] /= comparisons;
+            }
+            var totalMotion =
+                (quadMotions[0] +
+                    quadMotions[1] +
+                    quadMotions[2] +
+                    quadMotions[3]) /
+                4;
+
+            // Static photo: near-zero motion
+            if (totalMotion < 0.8) {
                 result.live = false;
-                result.reason = "Tidak terdeteksi gerakan wajah — pastikan ini bukan foto!";
+                result.reason =
+                    "Tidak terdeteksi gerakan — pastikan ini wajah asli langsung, bukan foto!";
                 return result;
             }
+
+            // ===== Check 2: Regional motion variance =====
+            // A real face has NON-UNIFORM motion (e.g., eyes blink, mouth moves, head tilts)
+            // A photo held by hand shakes ALL quadrants nearly equally
+            var motionMin = Math.min.apply(null, quadMotions);
+            var motionMax = Math.max.apply(null, quadMotions);
+            var motionRange = motionMax - motionMin;
+            var motionAvg = totalMotion;
+            // Coefficient of variation of quadrant motions
+            var motionVariance = 0;
+            for (var qi3 = 0; qi3 < 4; qi3++) {
+                motionVariance +=
+                    (quadMotions[qi3] - motionAvg) *
+                    (quadMotions[qi3] - motionAvg);
+            }
+            motionVariance = Math.sqrt(motionVariance / 4);
+            var motionCV = motionAvg > 0 ? motionVariance / motionAvg : 0;
+
+            // If all quadrants move almost identically (CV < 0.08), it's uniform shake = photo
+            // Real faces have CV > 0.08 because different face parts move differently
+            if (motionCV < 0.06 && totalMotion > 1.0 && totalMotion < 15) {
+                result.live = false;
+                result.reason =
+                    "Gerakan terlalu seragam — seperti foto yang digoyang. Gunakan wajah asli!";
+                return result;
+            }
+        } else {
+            // Not enough frames yet — require waiting
+            result.live = false;
+            result.reason =
+                "Tunggu sebentar... sedang memverifikasi wajah asli.";
+            return result;
         }
 
-        // ----- Check 2: Local texture variance (Laplacian-like) -----
+        // ===== Check 3: Texture sharpness (Laplacian variance) =====
         var ctx2 = canvas.getContext("2d");
-        var w = canvas.width, h = canvas.height;
-        // Analyze face region (center 50%)
-        var rx = Math.floor(w * 0.25), ry = Math.floor(h * 0.15);
-        var rw = Math.floor(w * 0.5), rh = Math.floor(h * 0.5);
+        var w = canvas.width,
+            h = canvas.height;
+        var rx = Math.floor(w * 0.2),
+            ry = Math.floor(h * 0.1);
+        var rw = Math.floor(w * 0.6),
+            rh = Math.floor(h * 0.6);
         var imgData = ctx2.getImageData(rx, ry, rw, rh);
         var d = imgData.data;
-        var step = 4; // sample every 4th pixel row/col
-        var sw = Math.floor(rw / step), sh = Math.floor(rh / step);
+        var step = 3;
+        var sw = Math.floor(rw / step),
+            sh = Math.floor(rh / step);
         var gray = [];
         for (var gy = 0; gy < sh; gy++) {
             gray[gy] = [];
             for (var gx = 0; gx < sw; gx++) {
-                var gi = ((gy * step) * rw + (gx * step)) * 4;
-                gray[gy][gx] = (d[gi] + d[gi+1] + d[gi+2]) / 3;
+                var gi = (gy * step * rw + gx * step) * 4;
+                gray[gy][gx] = (d[gi] + d[gi + 1] + d[gi + 2]) / 3;
             }
         }
-        // Compute Laplacian variance (sharpness indicator)
-        var lapSum = 0, lapCount = 0;
+        var lapSum = 0,
+            lapCount = 0;
         for (var ly = 1; ly < sh - 1; ly++) {
             for (var lx = 1; lx < sw - 1; lx++) {
-                var lap = -4 * gray[ly][lx] + gray[ly-1][lx] + gray[ly+1][lx] + gray[ly][lx-1] + gray[ly][lx+1];
+                var lap =
+                    -4 * gray[ly][lx] +
+                    gray[ly - 1][lx] +
+                    gray[ly + 1][lx] +
+                    gray[ly][lx - 1] +
+                    gray[ly][lx + 1];
                 lapSum += lap * lap;
                 lapCount++;
             }
         }
         var lapVariance = lapCount > 0 ? lapSum / lapCount : 0;
-        // Photos of screens often have moiré or are very blurry
-        // Very low variance = extremely flat/smooth = likely a photo/screen
-        if (lapVariance < 15) {
+        // Photo-of-screen has moiré or extreme blurriness → low Laplacian
+        // Real face has natural texture → higher Laplacian (>40)
+        if (lapVariance < 40) {
             result.live = false;
-            result.reason = "Gambar terlalu datar — pastikan ini wajah asli, bukan foto!";
+            result.reason =
+                "Gambar terlalu halus/buram — pastikan ini wajah asli langsung, bukan foto!";
             return result;
         }
 
-        // ----- Check 3: Color hue diversity in face region -----
-        var hueHist = new Array(36).fill(0); // 10-degree buckets
+        // ===== Check 4: Screen glare / specular highlight detection =====
+        var veryBrightPx = 0,
+            totalPx = 0;
+        var clusterCount = 0;
+        for (var si = 0; si < d.length; si += step * 4) {
+            var sr = d[si],
+                sg = d[si + 1],
+                sb = d[si + 2];
+            totalPx++;
+            // Screen glare: very bright and near-white (low saturation)
+            if (sr > 245 && sg > 245 && sb > 245) {
+                veryBrightPx++;
+            }
+        }
+        var brightRatio = totalPx > 0 ? veryBrightPx / totalPx : 0;
+        // More than 8% pure-white pixels in the face region = screen reflection
+        if (brightRatio > 0.08) {
+            result.live = false;
+            result.reason =
+                "Terdeteksi pantulan layar — jangan gunakan foto dari HP/layar!";
+            return result;
+        }
+
+        // ===== Check 5: Color naturalness (hue spread) =====
+        var hueHist = new Array(36).fill(0);
         var skinPxCount = 0;
         for (var ci = 0; ci < d.length; ci += step * 4) {
-            var cr = d[ci], cg = d[ci+1], cb = d[ci+2];
-            var cmax = Math.max(cr, cg, cb), cmin = Math.min(cr, cg, cb);
-            var cdiff = cmax - cmin;
-            if (cdiff > 12 && cr > 60 && cg > 40 && cr > cb) {
-                var hue = 0;
-                if (cmax === cr) hue = ((cg - cb) / cdiff) % 6;
-                else if (cmax === cg) hue = (cb - cr) / cdiff + 2;
-                else hue = (cr - cg) / cdiff + 4;
-                hue = Math.round(hue * 60);
-                if (hue < 0) hue += 360;
-                hueHist[Math.floor(hue / 10) % 36]++;
+            var cr2 = d[ci],
+                cg2 = d[ci + 1],
+                cb2 = d[ci + 2];
+            var cmax2 = Math.max(cr2, cg2, cb2),
+                cmin2 = Math.min(cr2, cg2, cb2);
+            var cdiff2 = cmax2 - cmin2;
+            if (cdiff2 > 15 && cr2 > 50 && cg2 > 30 && cr2 > cb2) {
+                var hue2 = 0;
+                if (cmax2 === cr2) hue2 = ((cg2 - cb2) / cdiff2) % 6;
+                else if (cmax2 === cg2) hue2 = (cb2 - cr2) / cdiff2 + 2;
+                else hue2 = (cr2 - cg2) / cdiff2 + 4;
+                hue2 = Math.round(hue2 * 60);
+                if (hue2 < 0) hue2 += 360;
+                hueHist[Math.floor(hue2 / 10) % 36]++;
                 skinPxCount++;
             }
         }
         if (skinPxCount > 50) {
-            var nonZeroBuckets = hueHist.filter(function(v) { return v > skinPxCount * 0.01; }).length;
-            // Real faces have 5+ hue buckets (shadows, highlights, varied skin)
-            // Printed/screen photos tend to have fewer (3 or less)
+            var nonZeroBuckets = hueHist.filter(function (v) {
+                return v > skinPxCount * 0.02;
+            }).length;
+            // Real skin has 4+ distinct hue ranges; very flat = likely screen/print
             if (nonZeroBuckets <= 2) {
                 result.live = false;
-                result.reason = "Warna wajah terlalu seragam — pastikan ini bukan foto layar!";
+                result.reason =
+                    "Warna terlalu seragam — pastikan ini wajah asli, bukan foto layar!";
                 return result;
             }
         }
@@ -1376,6 +1473,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var scaleY = overlay.height / video.videoHeight;
             // --- Face Detection (multi-face) ---
             var newFaces = [];
+            var nativeFaceCount = 0;
             if (faceDetectorSupported && faceDetector) {
                 try {
                     var faces = await faceDetector.detect(video);
@@ -1387,11 +1485,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (isFront) bx = overlay.width - bx - bw;
                         newFaces.push({ x: bx, y: by, w: bw, h: bh });
                     });
+                    nativeFaceCount = faces.length;
                 } catch (e) {
                     /* ignore */
                 }
             }
-            // Always also run skin fallback, add non-overlapping regions
+            // Skin fallback for overlay bounding boxes when native found nothing
+            // NOTE: This is just a visual hint. Actual selfie CAPTURE still requires native API.
             var tmpC = document.createElement("canvas");
             tmpC.width = video.videoWidth;
             tmpC.height = video.videoHeight;
@@ -1473,28 +1573,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         // Status indicator text at bottom
         if (overlay.width > 0) {
-            ctx.font = "bold 12px 'Poppins', sans-serif";
+            // Dynamic font size based on overlay width
+            var fontSize = Math.max(
+                9,
+                Math.min(12, Math.floor(overlay.width / 28)),
+            );
+            ctx.font = "bold " + fontSize + "px 'Poppins', sans-serif";
             var statusText = "";
             if (mode === "selfie") {
                 if (currentFaceBoxes.length === 0)
                     statusText = "\u26A0 Arahkan wajah ke kamera";
                 else if (currentFaceBoxes.length === 1)
-                    statusText = "\u2713 1 wajah terdeteksi — siap foto";
+                    statusText = "\u2713 1 wajah — siap foto";
                 else
                     statusText =
                         "\u2717 " +
                         currentFaceBoxes.length +
-                        " wajah — harus 1 orang saja";
+                        " wajah — harus 1 saja";
             } else {
                 var parts = [];
                 if (currentFaceBoxes.length < 2)
-                    parts.push(
-                        "perlu " +
-                            (2 - currentFaceBoxes.length) +
-                            " wajah lagi",
-                    );
-                if (currentDocBoxes.length < 1)
-                    parts.push("arahkan berkas ke kamera");
+                    parts.push("+" + (2 - currentFaceBoxes.length) + " wajah");
+                if (currentDocBoxes.length < 1) parts.push("arahkan berkas");
                 if (
                     currentFaceBoxes.length >= 2 &&
                     currentDocBoxes.length >= 1
@@ -1504,7 +1604,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         currentFaceBoxes.length +
                         " wajah + " +
                         currentDocBoxes.length +
-                        " berkas — siap foto";
+                        " berkas — siap";
                 } else {
                     statusText = "\u26A0 " + parts.join(", ");
                 }
@@ -1512,11 +1612,14 @@ document.addEventListener("DOMContentLoaded", function () {
             // Override status text with countdown
             if (autoCaptureActive && autoCaptureCountdown > 0) {
                 statusText =
-                    "\uD83D\uDCF8 Mengambil foto dalam " +
+                    "\uD83D\uDCF8 Foto dalam " +
                     autoCaptureCountdown +
-                    " detik...";
+                    " dtk...";
             }
             var stW = ctx.measureText(statusText).width;
+            // Clamp to overlay width with padding
+            var maxW = overlay.width - 16;
+            if (stW > maxW) stW = maxW;
             var stX = (overlay.width - stW - 16) / 2;
             var stY = overlay.height - 10;
             var allOk =
@@ -1855,8 +1958,21 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection — STRICT: must be exactly 1 face
+            // Face detection — STRICT: must be exactly 1 REAL face (native API)
             const faceResult = await detectFaces(result.canvas, result.canvas);
+
+            // For selfie: REQUIRE native FaceDetector — skin-tone blobs are NOT enough
+            if (faceDetectorSupported && !faceResult.native) {
+                showToast(
+                    '<i class="fa-solid fa-face-frown"></i> Wajah tidak terdeteksi! Pastikan wajah Anda terlihat jelas di kamera.',
+                );
+                restartDetectionLoop(
+                    fotoSelfieBox,
+                    selfieLocalStream,
+                    "selfie",
+                );
+                return;
+            }
 
             if (!faceResult.detected || faceResult.count === 0) {
                 showToast(
@@ -1887,7 +2003,8 @@ document.addEventListener("DOMContentLoaded", function () {
             var liveness = checkLiveness(result.canvas);
             if (!liveness.live) {
                 showToast(
-                    '<i class="fa-solid fa-user-shield"></i> ' + liveness.reason,
+                    '<i class="fa-solid fa-user-shield"></i> ' +
+                        liveness.reason,
                     "warning",
                 );
                 resetLivenessFrames();

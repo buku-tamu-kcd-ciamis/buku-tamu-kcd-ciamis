@@ -14,7 +14,7 @@
     <div class="header">
         <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo Cadisdik">
         <div class="header-text">
-            <h1>Selamat Datang di Cadisdik XIII</h1>
+            <h1>Selamat Datang di Cabang Dinas Pendidikan Wilayah XIII</h1>
             <p>Silahkan untuk mengisi buku tamu terlebih dahulu</p>
         </div>
     </div>
@@ -209,9 +209,9 @@
     </div>{{-- /.wrapper --}}
 
     <!-- Floating Barcode Button -->
-    <a href="javascript:void(0);" class="floating-btn" id="btnBarcode" title="Survey Kepuasan Masyarakat">
+    <button type="button" class="floating-btn" id="btnBarcode" title="Survey Kepuasan Masyarakat">
         <i class="fa-solid fa-qrcode"></i>
-    </a>
+    </button>
 
     <!-- Barcode Survey Modal -->
     <div class="barcode-modal-overlay" id="barcodeModal">

@@ -20,15 +20,11 @@
     </div>
 
     @if(session('success'))
-        <div style="padding: 15px; background: #4CAF50; color: white; margin: 20px 0; border-radius: 5px; text-align: center;">
-            {{ session('success') }}
-        </div>
+        <script>window.__flashSuccess = @json(session('success'));</script>
     @endif
 
     @if(session('error'))
-        <div style="padding: 15px; background: #f44336; color: white; margin: 20px 0; border-radius: 5px; text-align: center;">
-            {{ session('error') }}
-        </div>
+        <script>window.__flashError = @json(session('error'));</script>
     @endif
 
     <!-- Form -->
@@ -138,7 +134,10 @@
                         <div class="form-group">
                             <label>Keperluan <span class="required">*</span></label>
                             <div class="input-wrapper">
-                                <input type="text" name="keperluan" id="keperluan" placeholder="" required>
+                                <div class="autocomplete-wrapper">
+                                    <input type="text" name="keperluan" id="keperluan" placeholder="Ketik atau pilih keperluan..." autocomplete="off" required>
+                                    <div class="autocomplete-list" id="keperluan_list"></div>
+                                </div>
                                 <i class="fa-solid fa-clipboard-list input-icon"></i>
                             </div>
                         </div>
@@ -163,7 +162,10 @@
                             </div>
                             <p>Tekan tombol dibawah untuk<br>mengambil foto selfie.</p>
                         </div>
-                        <button type="button" class="btn-camera" id="btnCameraSelfie">Mulai Kamera</button>
+                        <div class="camera-controls">
+                            <button type="button" class="btn-camera" id="btnCameraSelfie">Mulai Kamera</button>
+                            <button type="button" class="btn-flip-camera" id="btnFlipSelfie" title="Ganti Kamera" style="display:none;"><i class="fa-solid fa-camera-rotate"></i></button>
+                        </div>
                         <input type="hidden" name="foto_selfie" id="fotoSelfieInput">
                     </div>
 
@@ -176,7 +178,10 @@
                             </div>
                             <p>Foto bersama resepsionis<br>saat penerimaan berkas.</p>
                         </div>
-                        <button type="button" class="btn-camera" id="btnCameraPenerimaan">Mulai Kamera</button>
+                        <div class="camera-controls">
+                            <button type="button" class="btn-camera" id="btnCameraPenerimaan">Mulai Kamera</button>
+                            <button type="button" class="btn-flip-camera" id="btnFlipPenerimaan" title="Ganti Kamera" style="display:none;"><i class="fa-solid fa-camera-rotate"></i></button>
+                        </div>
                         <input type="hidden" name="foto_penerimaan" id="fotoPenerimaanInput">
                     </div>
 

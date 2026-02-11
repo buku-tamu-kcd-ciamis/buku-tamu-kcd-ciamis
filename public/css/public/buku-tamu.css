@@ -453,6 +453,26 @@ body {
     background: #0b7a46;
 }
 
+.btn-close-camera {
+    width: 38px;
+    height: auto;
+    padding: 8px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close-camera:hover {
+    background: #dc2626;
+}
+
 .btn-flip-camera {
     width: 38px;
     height: auto;

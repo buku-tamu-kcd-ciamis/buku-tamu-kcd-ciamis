@@ -180,6 +180,7 @@
                         </div>
                         <div class="camera-controls">
                             <button type="button" class="btn-camera" id="btnCameraPenerimaan">Mulai Kamera</button>
+                            <button type="button" class="btn-close-camera" id="btnClosePenerimaan" title="Tutup Kamera" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
                             <button type="button" class="btn-flip-camera" id="btnFlipPenerimaan" title="Ganti Kamera" style="display:none;"><i class="fa-solid fa-camera-rotate"></i></button>
                         </div>
                         <input type="hidden" name="foto_penerimaan" id="fotoPenerimaanInput">

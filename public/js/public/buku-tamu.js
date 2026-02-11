@@ -553,6 +553,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const fotoPenerimaanBox = document.getElementById("fotoPenerimaanBox");
     const fotoPenerimaanInput = document.getElementById("fotoPenerimaanInput");
     const btnFlipPenerimaan = document.getElementById("btnFlipPenerimaan");
+    const btnClosePenerimaan = document.getElementById("btnClosePenerimaan");
 
     // ===== FACE DETECTION HELPER =====
     let faceDetectorSupported = false;
@@ -2073,6 +2074,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 btnCameraPenerimaan.textContent = "Ambil Foto";
                 btnFlipPenerimaan.style.display = "flex";
+                btnClosePenerimaan.style.display = "flex";
 
                 // Start live detection overlay (face + document)
                 cam.video.addEventListener("loadeddata", function () {
@@ -2204,6 +2206,7 @@ document.addEventListener("DOMContentLoaded", function () {
             activeCameraId = null;
             penerimaanDone = true;
             btnFlipPenerimaan.style.display = "none";
+            btnClosePenerimaan.style.display = "none";
 
             fotoPenerimaanBox.innerHTML = "";
             const imgEl = document.createElement("img");
@@ -2214,6 +2217,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
             btnCameraPenerimaan.textContent = "Ulangi Foto";
         }
+    });
+
+    // Close penerimaan camera (optional — user can skip this photo)
+    btnClosePenerimaan.addEventListener("click", function () {
+        if (!penerimaanCameraActive) return;
+        stopDetectionLoop();
+        if (penerimaanLocalStream) {
+            penerimaanLocalStream.getTracks().forEach((t) => t.stop());
+            penerimaanLocalStream = null;
+        }
+        penerimaanCameraActive = false;
+        activeCameraId = null;
+        btnFlipPenerimaan.style.display = "none";
+        btnClosePenerimaan.style.display = "none";
+        btnCameraPenerimaan.textContent = "Mulai Kamera";
+        fotoPenerimaanBox.innerHTML =
+            '<div class="camera-icon"><i class="fa-solid fa-handshake"></i></div><p>Foto bersama resepsionis<br>saat penerimaan berkas.</p>';
+        showToast(
+            '<i class="fa-solid fa-circle-info"></i> Kamera penerimaan berkas ditutup.',
+            "info",
+        );
     });
 
     // Flip penerimaan camera

@@ -254,7 +254,6 @@
                     <th>Keperluan</th>
                     <th>Bagian Dituju</th>
                     <th>Waktu</th>
-                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -274,11 +273,6 @@
                     <td>{{ \Illuminate\Support\Str::limit($tamu->keperluan, 50) }}</td>
                     <td>{{ $tamu->bagian_dituju }}</td>
                     <td>{{ $tamu->created_at->diffForHumans() }}</td>
-                    <td>
-                        <span class="status-badge status-{{ $tamu->status }}">
-                            {{ \App\Models\BukuTamu::STATUS_LABELS[$tamu->status] ?? ucfirst($tamu->status) }}
-                        </span>
-                    </td>
                 </tr>
                 @empty
                 <tr>

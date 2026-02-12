@@ -52,4 +52,32 @@ class VisitChart extends ChartWidget
   {
     return 'bar';
   }
+
+  protected function getOptions(): array
+  {
+    return [
+      'plugins' => [
+        'legend' => [
+          'display' => true,
+          'position' => 'bottom',
+        ],
+      ],
+      'scales' => [
+        'y' => [
+          'beginAtZero' => true,
+          'min' => 0,
+          'max' => 20,
+          'ticks' => [
+            'stepSize' => 1,
+            'precision' => 0,
+          ],
+        ],
+        'x' => [
+          'grid' => [
+            'display' => false,
+          ],
+        ],
+      ],
+    ];
+  }
 }

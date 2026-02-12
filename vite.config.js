@@ -5,16 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
     plugins: [
         laravel({
-            input: [
-                "resources/css/app.css",
-                "resources/js/app.js",
-
-                "resources/views/themes/indotoko/assets/css/main.css",
-                "resources/views/themes/indotoko/assets/plugins/jqueryui/jquery-ui.css",
-
-                "resources/views/themes/indotoko/assets/js/main.js",
-                "resources/views/themes/indotoko/assets/plugins/jqueryui/jquery-ui.min.js",
-            ],
+            input: ["resources/css/app.css", "resources/js/app.js"],
             refresh: true,
         }),
         tailwindcss(),

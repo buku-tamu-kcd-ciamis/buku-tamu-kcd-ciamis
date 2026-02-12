@@ -16,10 +16,10 @@ class PegawaiIzinResource extends Resource
 
   protected static ?string $slug = 'pegawai-izin';
   protected static ?string $navigationIcon = 'heroicon-o-user-minus';
-  protected static ?string $navigationLabel = 'Pegawai Izin';
+  protected static ?string $navigationLabel = 'Izin Pegawai';
   protected static ?string $navigationGroup = 'Kepegawaian';
-  protected static ?string $modelLabel = 'Pegawai Izin';
-  protected static ?string $pluralModelLabel = 'Pegawai Izin';
+  protected static ?string $modelLabel = 'Izin Pegawai';
+  protected static ?string $pluralModelLabel = 'Izin Pegawai';
   protected static ?int $navigationSort = 4;
 
   public static function form(Form $form): Form

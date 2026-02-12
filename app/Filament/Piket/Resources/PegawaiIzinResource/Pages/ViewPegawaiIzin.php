@@ -7,10 +7,23 @@ use App\Models\PegawaiIzin;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Actions;
 
 class ViewPegawaiIzin extends ViewRecord
 {
     protected static string $resource = PegawaiIzinResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('print')
+                ->label('Cetak Surat Izin')
+                ->icon('heroicon-o-printer')
+                ->color('success')
+                ->url(fn() => route('piket.pegawai-izin.print', ['id' => $this->record->id]))
+                ->openUrlInNewTab(),
+        ];
+    }
 
     public function infolist(Infolist $infolist): Infolist
     {

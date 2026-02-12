@@ -174,6 +174,9 @@ class KunjunganResource extends Resource
               ->label('Tanggal Mulai'),
             Forms\Components\DatePicker::make('end_date')
               ->label('Tanggal Akhir'),
+            Forms\Components\TextInput::make('nama')
+              ->label('Nama')
+              ->placeholder('Cari berdasarkan nama'),
             Forms\Components\Select::make('kabupaten_kota')
               ->label('Kabupaten/Kota')
               ->searchable()
@@ -235,6 +238,7 @@ class KunjunganResource extends Resource
             $query = http_build_query(array_filter([
               'start_date' => $data['start_date'] ?? null,
               'end_date' => $data['end_date'] ?? null,
+              'nama' => $data['nama'] ?? null,
               'kabupaten_kota' => $data['kabupaten_kota'] ?? null,
               'keperluan' => $data['keperluan'] ?? null,
             ]));

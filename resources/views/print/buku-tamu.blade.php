@@ -320,15 +320,6 @@
                 <td class="colon">:</td>
                 <td>{{ \Carbon\Carbon::parse($tamu->created_at)->translatedFormat('d F Y, H:i') }} WIB</td>
             </tr>
-            <tr>
-                <td class="label">Status</td>
-                <td class="colon">:</td>
-                <td>
-                    <span class="status-badge status-{{ $tamu->status }}">
-                        {{ \App\Models\BukuTamu::STATUS_LABELS[$tamu->status] ?? ucfirst($tamu->status) }}
-                    </span>
-                </td>
-            </tr>
             @if($tamu->catatan)
             <tr>
                 <td class="label">Catatan</td>

@@ -13,6 +13,7 @@ class PegawaiIzin extends Model
     'nip',
     'jabatan',
     'unit_kerja',
+    'nomor_hp',
     'jenis_izin',
     'tanggal_mulai',
     'tanggal_selesai',

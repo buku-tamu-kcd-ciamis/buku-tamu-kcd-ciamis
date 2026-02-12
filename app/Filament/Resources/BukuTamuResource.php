@@ -152,8 +152,43 @@ class BukuTamuResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Lihat Detail')
+                        ->icon('heroicon-o-eye'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Hapus')
+                        ->icon('heroicon-o-trash'),
+                ])
+                    ->label(false)
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button()
+                    ->color('gray'),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('print_bulk')
+                    ->label('Cetak Laporan')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\DatePicker::make('start_date')
+                            ->label('Tanggal Mulai'),
+                        Forms\Components\DatePicker::make('end_date')
+                            ->label('Tanggal Akhir'),
+                    ])
+                    ->action(function (array $data) {
+                        $query = http_build_query(array_filter([
+                            'start_date' => $data['start_date'] ?? null,
+                            'end_date' => $data['end_date'] ?? null,
+                            'status' => 'selesai',
+                        ]));
+
+                        $url = route('buku-tamu.print-bulk') . ($query ? '?' . $query : '');
+                        return redirect($url);
+                    })
+                    ->modalHeading('Filter Laporan Buku Tamu')
+                    ->modalButton('Cetak')
+                    ->modalSubmitActionLabel('Cetak'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

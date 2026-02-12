@@ -1,0 +1,78 @@
+/* Custom Styling untuk Filament Action Group Dropdown - Lebih Simetris */
+
+/* Membuat dropdown menu lebih simetris dan rapi */
+.fi-dropdown-panel {
+    min-width: 13rem !important;
+}
+
+/* Styling untuk item dalam dropdown action group - lebih simetris */
+.fi-dropdown-list-item {
+    padding: 0.625rem 1rem !important;
+}
+
+/* Membuat icon dan text sejajar dengan baik */
+.fi-dropdown-list-item button,
+.fi-dropdown-list-item a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.875rem !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+/* Icon dalam dropdown memiliki ukuran konsisten */
+.fi-dropdown-list-item svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Text dalam dropdown */
+.fi-dropdown-list-item span {
+    flex: 1;
+    white-space: nowrap;
+}
+
+/* Hover effect yang lebih smooth */
+.fi-dropdown-list-item button:hover,
+.fi-dropdown-list-item a:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Dark mode hover */
+.dark .fi-dropdown-list-item button:hover,
+.dark .fi-dropdown-list-item a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dropdown menu shadow dan border radius yang lebih halus */
+.fi-dropdown-panel {
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+}
+
+/* Spacing antar item dalam dropdown - lebih rapi */
+.fi-dropdown-list-item + .fi-dropdown-list-item {
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark .fi-dropdown-list-item + .fi-dropdown-list-item {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Padding untuk list container */
+.fi-dropdown-list {
+    padding: 0.25rem 0 !important;
+}
+
+/* Membuat action button lebih compact dan simetris */
+.fi-ta-actions button[type="button"] {
+    padding: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}

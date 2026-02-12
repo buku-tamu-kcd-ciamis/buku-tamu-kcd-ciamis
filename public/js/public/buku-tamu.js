@@ -304,7 +304,35 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ===== NIK REAL-TIME VALIDATION =====
+    // ===== NIK REAL-TIME VALIDATION & AUTO-FILL =====
+    let autoFillTimeout = null;
+
+    // Function to check if number has more than 3 consecutive repeated digits
+    function hasRepeatedDigits(value) {
+        const regex = /(\d)\1{3,}/; // Matches any digit repeated 4 or more times
+        return regex.test(value);
+    }
+
+    // Function to check if number has more than 2 consecutive sequential digits
+    function hasSequentialDigits(value) {
+        for (let i = 0; i < value.length - 2; i++) {
+            const digit1 = parseInt(value[i]);
+            const digit2 = parseInt(value[i + 1]);
+            const digit3 = parseInt(value[i + 2]);
+
+            // Check ascending sequence (e.g., 123, 234, 345)
+            if (digit2 === digit1 + 1 && digit3 === digit2 + 1) {
+                return true;
+            }
+
+            // Check descending sequence (e.g., 321, 432, 543)
+            if (digit2 === digit1 - 1 && digit3 === digit2 - 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     nikInput.addEventListener("input", function () {
         const selectedId = jenisIdHidden.value;
         const config = idConfig[selectedId] || idConfig[""];
@@ -314,6 +342,22 @@ document.addEventListener("DOMContentLoaded", function () {
             // Only allow digits for types with digit requirement
             this.value = this.value.replace(/[^0-9]/g, "");
             const count = this.value.length;
+
+            // Check for repeated digits
+            if (count > 0 && hasRepeatedDigits(this.value)) {
+                nikHint.textContent =
+                    "\u2717 Angka tidak boleh sama lebih dari 3 digit berturut-turut";
+                nikHint.className = "phone-hint invalid";
+                return;
+            }
+
+            // Check for sequential digits
+            if (count > 0 && hasSequentialDigits(this.value)) {
+                nikHint.textContent =
+                    "\u2717 Angka tidak boleh berurutan lebih dari 2 digit";
+                nikHint.className = "phone-hint invalid";
+                return;
+            }
 
             if (count === 0) {
                 nikHint.textContent = "Wajib " + config.digits + " digit";
@@ -329,12 +373,80 @@ document.addEventListener("DOMContentLoaded", function () {
                 nikHint.textContent =
                     "\u2713 " + config.digits + " digit \u2014 valid";
                 nikHint.className = "phone-hint valid";
+
+                // Auto-fill data jika NIK sudah pernah terdaftar
+                clearTimeout(autoFillTimeout);
+                autoFillTimeout = setTimeout(() => {
+                    fetchGuestDataByNik(this.value);
+                }, 500);
             }
         } else {
             nikHint.textContent = "";
             nikHint.className = "phone-hint";
         }
     });
+
+    // Function to fetch guest data by NIK
+    async function fetchGuestDataByNik(nik) {
+        if (!nik) return;
+
+        try {
+            const response = await fetch(
+                `/api/guest-by-nik?nik=${encodeURIComponent(nik)}`,
+            );
+            const result = await response.json();
+
+            if (result.found && result.data) {
+                const data = result.data;
+
+                // Auto-fill form fields
+                document.getElementById("nama_lengkap").value =
+                    data.nama_lengkap || "";
+                document.getElementById("instansi").value = data.instansi || "";
+                document.getElementById("jabatan").value = data.jabatan || "";
+                document.getElementById("kabupaten_kota").value =
+                    data.kabupaten_kota || "";
+                document.getElementById("email").value = data.email || "";
+
+                // Handle phone number - remove +62 prefix if present
+                if (data.nomor_hp) {
+                    let phoneNumber = data.nomor_hp.replace(/[^0-9]/g, "");
+                    if (phoneNumber.startsWith("62")) {
+                        phoneNumber = phoneNumber.substring(2);
+                    }
+                    if (phoneNumber.startsWith("0")) {
+                        phoneNumber = phoneNumber.substring(1);
+                    }
+
+                    // Format: 8xx-xxxx-xxxx
+                    let formatted = "";
+                    for (let i = 0; i < phoneNumber.length; i++) {
+                        if (i === 3 || i === 7) formatted += "-";
+                        formatted += phoneNumber[i];
+                    }
+                    document.getElementById("nomor_hp").value = formatted;
+
+                    // Trigger validation hint
+                    phoneInput.dispatchEvent(
+                        new Event("input", { bubbles: true }),
+                    );
+                }
+
+                // Show notification
+                const nikHint = document.getElementById("nik_hint");
+                const originalText = nikHint.textContent;
+                nikHint.textContent =
+                    "\u2713 Data otomatis terisi dari kunjungan sebelumnya";
+                nikHint.className = "phone-hint valid";
+
+                setTimeout(() => {
+                    nikHint.textContent = originalText;
+                }, 3000);
+            }
+        } catch (error) {
+            console.error("Error fetching guest data:", error);
+        }
+    }
 
     // ===== NOMOR HANDPHONE (+62 AUTO FORMAT) =====
     const phoneInput = document.getElementById("nomor_hp");
@@ -2544,6 +2656,54 @@ document.addEventListener("DOMContentLoaded", function () {
     const bukuTamuForm = document.getElementById("bukuTamuForm");
     if (bukuTamuForm) {
         bukuTamuForm.addEventListener("submit", function (e) {
+            // Check NIK validity (no repeated digits more than 3 times)
+            const selectedId = jenisIdHidden.value;
+            const config = idConfig[selectedId] || idConfig[""];
+            if (
+                config.digits &&
+                nikInput.value &&
+                hasRepeatedDigits(nikInput.value)
+            ) {
+                e.preventDefault();
+                showToast(
+                    '<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh sama lebih dari 3 digit berturut-turut.',
+                    "error",
+                );
+                nikInput.closest(".form-group").classList.add("shake");
+                setTimeout(
+                    () =>
+                        nikInput
+                            .closest(".form-group")
+                            .classList.remove("shake"),
+                    600,
+                );
+                nikInput.focus();
+                return;
+            }
+
+            // Check NIK validity (no sequential digits more than 2)
+            if (
+                config.digits &&
+                nikInput.value &&
+                hasSequentialDigits(nikInput.value)
+            ) {
+                e.preventDefault();
+                showToast(
+                    '<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh berurutan lebih dari 2 digit.',
+                    "error",
+                );
+                nikInput.closest(".form-group").classList.add("shake");
+                setTimeout(
+                    () =>
+                        nikInput
+                            .closest(".form-group")
+                            .classList.remove("shake"),
+                    600,
+                );
+                nikInput.focus();
+                return;
+            }
+
             // Check selfie is taken
             if (!fotoSelfieInput.value) {
                 e.preventDefault();

@@ -42,15 +42,15 @@ class UserSeeder extends Seeder
             ]);
         }
 
-        // Loket
-        if (! DB::table('users')->where('email', 'loket@cadisdik13.id')->exists()) {
+        // Piket
+        if (! DB::table('users')->where('email', 'piket@cadisdik13.id')->exists()) {
             DB::table('users')->insert([
                 'id'    => uniqid(),
-                'name' => 'Petugas Loket',
-                'email' => 'loket@cadisdik13.id',
-                'role_user_id'  => RoleUser::where('name', 'Loket')->first()->id,
+                'name' => 'Petugas Piket',
+                'email' => 'piket@cadisdik13.id',
+                'role_user_id'  => RoleUser::where('name', 'Piket')->first()->id,
                 'email_verified_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'password' => Hash::make('loket123'),
+                'password' => Hash::make('piket123'),
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
             ]);
         }

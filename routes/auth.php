@@ -12,8 +12,8 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    // Login handled by Filament panels — redirect to loket login
-    Route::get('login', fn() => redirect('/loket/login'))->name('login');
+    // Login handled by Filament panels — redirect to piket login
+    Route::get('login', fn() => redirect('/piket/login'))->name('login');
 });
 
 Route::middleware('auth')->group(function () {

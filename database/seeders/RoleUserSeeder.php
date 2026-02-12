@@ -35,10 +35,10 @@ class RoleUserSeeder extends Seeder
             ]);
         }
 
-        if (! DB::table('role_users')->where('name', '=', 'Loket')->exists()) {
+        if (! DB::table('role_users')->where('name', '=', 'Piket')->exists()) {
             DB::table('role_users')->insert([
                 'id'    => uniqid(),
-                'name' => 'Loket',
+                'name' => 'Piket',
                 'need_approval' => false,
                 'author_id' => null,
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),

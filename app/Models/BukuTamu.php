@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class BukuTamu extends Model
 {
+    use LogsActivity;
+
     protected $table = 'buku_tamu';
 
     protected $fillable = [
@@ -24,6 +28,7 @@ class BukuTamu extends Model
         'tanda_tangan',
         'status',
         'catatan',
+        'nama_penerima',
     ];
 
     public const STATUS_MENUNGGU = 'menunggu';
@@ -39,4 +44,14 @@ class BukuTamu extends Model
         'ditolak' => 'Ditolak',
         'dibatalkan' => 'Dibatalkan',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'catatan', 'nama_penerima'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Buku tamu {$eventName}")
+            ->useLogName('buku_tamu');
+    }
 }

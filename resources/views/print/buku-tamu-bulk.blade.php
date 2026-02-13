@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Laporan Kunjungan Tamu — Cadisdik XIII</title>
     <style>
         @page {
@@ -38,10 +39,22 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
             gap: 15px;
+            justify-content: space-between;
         }
 
         .header-logo {
-            width: 60px;
+            width: 90px;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .header-spacer {
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .header-logo-right {
+            width: 90px;
             height: auto;
             flex-shrink: 0;
         }
@@ -163,15 +176,16 @@
 
         .signature-box {
             text-align: center;
-            width: 200px;
+            width: 250px;
         }
 
         .signature-box p {
             font-size: 10pt;
+            line-height: 1.3;
         }
 
         .signature-box .name {
-            margin-top: 60px;
+            margin-top: 50px;
             font-weight: bold;
             border-bottom: 1px solid #000;
             padding-bottom: 2px;
@@ -234,6 +248,7 @@
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
         </div>
 
         <!-- TITLE -->
@@ -293,15 +308,11 @@
         <div class="signature-section">
             <div class="signature-box">
                 <p>Ciamis, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                <p>Petugas Piket,</p>
-                <p class="name">(...............................)</p>
+                <p style="margin-top: 10px;">Kepala Cabang Dinas Pendidikan</p>
+                <p>Wilayah XIII,</p>
+                <p class="name">(...............................................)</p>
+                <p style="font-size: 9pt; margin-top: 3px;">NIP. ..............................</p>
             </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="footer">
-            Dicetak pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB &mdash;
-            Cabang Dinas Pendidikan Wilayah XIII
         </div>
     </div>
 </body>

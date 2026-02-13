@@ -94,6 +94,14 @@ class ViewPegawaiIzin extends ViewRecord
                         ->icon('heroicon-o-document-text')
                         ->placeholder('-')
                         ->columnSpanFull(),
+                    Infolists\Components\TextEntry::make('nama_piket')
+                        ->label('Nama Piket')
+                        ->icon('heroicon-o-user-circle')
+                        ->placeholder('-'),
+                    Infolists\Components\ImageEntry::make('tanda_tangan_piket')
+                        ->label('Tanda Tangan Piket')
+                        ->height(100)
+                        ->placeholder('-'),
                 ]),
 
             // === Informasi Sistem ===

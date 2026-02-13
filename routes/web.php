@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\BukuTamuController;
 use App\Http\Controllers\PegawaiIzinController;
-use App\Http\Controllers\Product\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,9 +14,5 @@ Route::get('/print/buku-tamu/{id}', [BukuTamuController::class, 'print'])->name(
 Route::get('/print/buku-tamu-bulk', [BukuTamuController::class, 'printBulk'])->name('buku-tamu.print-bulk');
 
 Route::get('/piket/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('piket.pegawai-izin.print');
-
-Route::prefix('/product')->name('product.')->controller(ProductController::class)->group(function () {
-    Route::get('', 'index')->name('index');
-});
 
 require __DIR__ . '/auth.php';

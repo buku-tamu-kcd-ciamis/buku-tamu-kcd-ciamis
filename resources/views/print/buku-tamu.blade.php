@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Surat Kunjungan — {{ $tamu->nama_lengkap }}</title>
     <style>
         @page {
-            size: A4 landscape;
-            margin: 15mm 20mm;
+            size: A4 portrait;
+            margin: 10mm 15mm;
         }
 
         * {
@@ -18,16 +19,26 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
+            font-size: 11pt;
             color: #000;
-            line-height: 1.5;
+            line-height: 1.4;
             background: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .page {
-            max-width: 297mm;   
+            max-width: 210mm;   
             margin: 0 auto;
-            padding: 10mm;
+            padding: 5mm;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex: 1;
         }
 
         /* === HEADER === */
@@ -38,10 +49,22 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
             gap: 15px;
+            justify-content: space-between;
         }
 
         .header-logo {
-            width: 70px;
+            width: 90px;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .header-spacer {
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .header-logo-right {
+            width: 90px;
             height: auto;
             flex-shrink: 0;
         }
@@ -73,33 +96,33 @@
         /* === TITLE === */
         .title {
             text-align: center;
-            margin: 25px 0 20px;
+            margin: 15px 0 12px;
         }
 
         .title h3 {
-            font-size: 14pt;
+            font-size: 13pt;
             text-decoration: underline;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
         }
 
         .title p {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #555;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
         /* === TABLE DATA === */
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .data-table td {
-            padding: 6px 8px;
+            padding: 4px 6px;
             vertical-align: top;
-            font-size: 12pt;
+            font-size: 11pt;
         }
 
         .data-table td.label {
@@ -131,8 +154,8 @@
         /* === FOTO SECTION === */
         .foto-section {
             display: flex;
-            gap: 30px;
-            margin: 20px 0;
+            gap: 20px;
+            margin: 15px 0;
             justify-content: center;
         }
 
@@ -141,58 +164,59 @@
         }
 
         .foto-item p {
-            font-size: 10pt;
+            font-size: 9pt;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .foto-item img {
-            max-width: 180px;
-            max-height: 180px;
+            max-width: 150px;
+            max-height: 150px;
             object-fit: contain;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
 
         .foto-placeholder {
-            width: 180px;
-            height: 120px;
+            width: 150px;
+            height: 100px;
             border: 1px dashed #ccc;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #aaa;
-            font-size: 10pt;
+            font-size: 9pt;
         }
 
         /* === SIGNATURE === */
         .signature-section {
             display: flex;
             justify-content: space-between;
-            margin-top: 40px;
+            margin-top: auto;
+            padding-top: 30px;
             page-break-inside: avoid;
         }
 
         .signature-box {
             text-align: center;
-            width: 200px;
+            width: 180px;
         }
 
         .signature-box p {
-            font-size: 11pt;
+            font-size: 10pt;
         }
 
         .signature-box .name {
-            margin-top: 70px;
+            margin-top: 50px;
             font-weight: bold;
             border-bottom: 1px solid #000;
             padding-bottom: 2px;
         }
 
         .signature-box img {
-            max-width: 150px;
-            max-height: 80px;
+            max-width: 120px;
+            max-height: 60px;
             object-fit: contain;
         }
 
@@ -251,6 +275,7 @@
     </button>
 
     <div class="page">
+        <div class="content">
         <!-- HEADER -->
         <div class="header">
             <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo" class="header-logo">
@@ -260,6 +285,7 @@
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
         </div>
 
         <!-- TITLE -->
@@ -354,6 +380,7 @@
             </div>
             @endif
         </div>
+        </div>
 
         <!-- SIGNATURE -->
         <div class="signature-section">
@@ -368,14 +395,8 @@
             </div>
             <div class="signature-box">
                 <p>Petugas Piket,</p>
-                <p class="name">(...............................)</p>
+                <p class="name">{{ $tamu->nama_penerima ?? '(.................................)' }}</p>
             </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="footer">
-            Dicetak pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB &mdash;
-            Cabang Dinas Pendidikan Wilayah XIII
         </div>
     </div>
 </body>

@@ -10,6 +10,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\View\View;
 
 class RiwayatTamu extends Page implements HasTable
 {
@@ -156,7 +157,7 @@ class RiwayatTamu extends Page implements HasTable
               ])
               ->placeholder('Pilih keperluan'),
           ])
-          ->action(function (array $data) {
+          ->action(function (array $data, $livewire) {
             $query = http_build_query(array_filter([
               'start_date' => $data['start_date'] ?? null,
               'end_date' => $data['end_date'] ?? null,
@@ -165,11 +166,17 @@ class RiwayatTamu extends Page implements HasTable
             ]));
 
             $url = route('buku-tamu.print-bulk') . ($query ? '?' . $query : '');
-            return redirect($url);
+
+            // Dispatch browser event to open in new tab
+            $livewire->dispatch('open-url-in-new-tab', url: $url);
           })
           ->modalHeading('Filter Laporan Riwayat Pengunjung')
-          ->modalButton('Cetak')
           ->modalSubmitActionLabel('Cetak'),
       ]);
+  }
+
+  public function getFooter(): ?View
+  {
+    return view('filament.piket.pages.riwayat-tamu-footer');
   }
 }

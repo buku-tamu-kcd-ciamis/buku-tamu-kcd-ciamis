@@ -51,38 +51,48 @@ class KunjunganResource extends Resource
           ->label('Foto')
           ->circular()
           ->size(40)
+          ->verticallyAlignCenter()
           ->defaultImageUrl(fn() => 'https://ui-avatars.com/api/?name=G&background=0F9455&color=fff'),
         Tables\Columns\TextColumn::make('nama_lengkap')
           ->label('Nama')
           ->searchable()
-          ->weight('bold'),
+          ->weight('bold')
+          ->verticallyAlignCenter(),
         Tables\Columns\TextColumn::make('nik')
           ->label('NIK')
           ->searchable()
-          ->toggleable(isToggledHiddenByDefault: true),
+          ->toggleable(isToggledHiddenByDefault: true)
+          ->verticallyAlignCenter(),
         Tables\Columns\TextColumn::make('instansi')
           ->searchable()
-          ->toggleable(),
+          ->toggleable()
+          ->verticallyAlignCenter(),
         Tables\Columns\TextColumn::make('keperluan')
           ->limit(40)
-          ->toggleable(),
+          ->toggleable()
+          ->verticallyAlignCenter(),
         Tables\Columns\TextColumn::make('bagian_dituju')
           ->label('Bagian Dituju')
-          ->toggleable(),
-        Tables\Columns\BadgeColumn::make('status')
-          ->colors([
-            'warning' => 'menunggu',
-            'info' => 'diproses',
-            'success' => 'selesai',
-            'danger' => 'ditolak',
-            'gray' => 'dibatalkan',
-          ])
-          ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state)),
+          ->toggleable()
+          ->verticallyAlignCenter(),
+        Tables\Columns\TextColumn::make('status')
+          ->badge()
+          ->color(fn(string $state): string => match ($state) {
+            'menunggu' => 'warning',
+            'diproses' => 'info',
+            'selesai' => 'success',
+            'ditolak' => 'danger',
+            'dibatalkan' => 'gray',
+            default => 'gray',
+          })
+          ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state))
+          ->verticallyAlignCenter(),
         Tables\Columns\TextColumn::make('created_at')
           ->label('Waktu')
           ->since()
           ->tooltip(fn($record) => $record->created_at->format('d/m/Y H:i'))
-          ->sortable(),
+          ->sortable()
+          ->verticallyAlignCenter(),
       ])
       ->defaultSort('created_at', 'desc')
       ->defaultPaginationPageOption(10)
@@ -99,6 +109,8 @@ class KunjunganResource extends Resource
             return $query->when($data['tanggal'], fn($q, $date) => $q->whereDate('created_at', $date));
           }),
       ])
+      ->actionsAlignment('center')
+      ->actionsColumnLabel('Aksi')
       ->actions([
         Tables\Actions\ActionGroup::make([
           Tables\Actions\Action::make('ubah_status')
@@ -147,7 +159,7 @@ class KunjunganResource extends Resource
               $record->update($data);
             })
             ->modalHeading('Ubah Status Kunjungan')
-            ->modalButton('Simpan'),
+            ->modalSubmitActionLabel('Simpan'),
           Tables\Actions\ViewAction::make()
             ->label('Lihat Detail')
             ->icon('heroicon-s-eye'),
@@ -161,7 +173,7 @@ class KunjunganResource extends Resource
         ])
           ->label(false)
           ->icon('heroicon-m-ellipsis-vertical')
-          ->button()
+          ->iconButton()
           ->color('gray'),
       ])
       ->headerActions([
@@ -180,35 +192,7 @@ class KunjunganResource extends Resource
             Forms\Components\Select::make('kabupaten_kota')
               ->label('Kabupaten/Kota')
               ->searchable()
-              ->options([
-                'Kab. Bandung' => 'Kab. Bandung',
-                'Kab. Bandung Barat' => 'Kab. Bandung Barat',
-                'Kab. Bekasi' => 'Kab. Bekasi',
-                'Kab. Bogor' => 'Kab. Bogor',
-                'Kab. Ciamis' => 'Kab. Ciamis',
-                'Kab. Cianjur' => 'Kab. Cianjur',
-                'Kab. Cirebon' => 'Kab. Cirebon',
-                'Kab. Garut' => 'Kab. Garut',
-                'Kab. Indramayu' => 'Kab. Indramayu',
-                'Kab. Karawang' => 'Kab. Karawang',
-                'Kab. Kuningan' => 'Kab. Kuningan',
-                'Kab. Majalengka' => 'Kab. Majalengka',
-                'Kab. Pangandaran' => 'Kab. Pangandaran',
-                'Kab. Purwakarta' => 'Kab. Purwakarta',
-                'Kab. Subang' => 'Kab. Subang',
-                'Kab. Sukabumi' => 'Kab. Sukabumi',
-                'Kab. Sumedang' => 'Kab. Sumedang',
-                'Kab. Tasikmalaya' => 'Kab. Tasikmalaya',
-                'Kota Bandung' => 'Kota Bandung',
-                'Kota Banjar' => 'Kota Banjar',
-                'Kota Bekasi' => 'Kota Bekasi',
-                'Kota Bogor' => 'Kota Bogor',
-                'Kota Cimahi' => 'Kota Cimahi',
-                'Kota Cirebon' => 'Kota Cirebon',
-                'Kota Depok' => 'Kota Depok',
-                'Kota Sukabumi' => 'Kota Sukabumi',
-                'Kota Tasikmalaya' => 'Kota Tasikmalaya',
-              ])
+              ->options(\App\Helpers\KabupatenKota::all())
               ->placeholder('Pilih kabupaten/kota'),
             Forms\Components\Select::make('keperluan')
               ->label('Keperluan')
@@ -234,7 +218,7 @@ class KunjunganResource extends Resource
               ])
               ->placeholder('Pilih keperluan'),
           ])
-          ->action(function (array $data) {
+          ->action(function (array $data, $livewire) {
             $query = http_build_query(array_filter([
               'start_date' => $data['start_date'] ?? null,
               'end_date' => $data['end_date'] ?? null,
@@ -244,10 +228,11 @@ class KunjunganResource extends Resource
             ]));
 
             $url = route('buku-tamu.print-bulk') . ($query ? '?' . $query : '');
-            return redirect($url);
+
+            // Dispatch browser event to open in new tab
+            $livewire->dispatch('open-url-in-new-tab', url: $url);
           })
           ->modalHeading('Filter Laporan Kunjungan')
-          ->modalButton('Cetak')
           ->modalSubmitActionLabel('Cetak'),
       ])
       ->bulkActions([]);

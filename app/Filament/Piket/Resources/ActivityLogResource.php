@@ -45,7 +45,7 @@ class ActivityLogResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Waktu')
-                    ->dateTime('d/m/Y H:i:s')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('causer.name')
@@ -56,36 +56,22 @@ class ActivityLogResource extends Resource
                     ->label('Kategori')
                     ->badge()
                     ->searchable()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'buku_tamu' => 'Buku Tamu',
+                        'pegawai_izin' => 'Izin Pegawai',
+                        'auth' => 'Login/Logout',
+                        default => ucfirst(str_replace('_', ' ', $state)),
+                    })
                     ->color(fn(string $state): string => match ($state) {
                         'buku_tamu' => 'success',
-                        'default' => 'gray',
+                        'pegawai_izin' => 'info',
+                        'auth' => 'warning',
+                        default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Aktivitas')
                     ->searchable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('subject_type')
-                    ->label('Model')
-                    ->formatStateUsing(fn($state) => class_basename($state))
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('subject_id')
-                    ->label('ID')
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('event')
-                    ->label('Event')
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'created' => 'success',
-                        'updated' => 'warning',
-                        'deleted' => 'danger',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn($state) => match ($state) {
-                        'created' => 'Dibuat',
-                        'updated' => 'Diubah',
-                        'deleted' => 'Dihapus',
-                        default => ucfirst($state),
-                    }),
             ])
             ->defaultSort('created_at', 'desc')
             ->defaultPaginationPageOption(25)
@@ -95,6 +81,8 @@ class ActivityLogResource extends Resource
                     ->label('Kategori')
                     ->options([
                         'buku_tamu' => 'Buku Tamu',
+                        'pegawai_izin' => 'Izin Pegawai',
+                        'auth' => 'Login/Logout',
                     ]),
                 Tables\Filters\SelectFilter::make('event')
                     ->label('Event')
@@ -117,7 +105,9 @@ class ActivityLogResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('')
+                    ->icon('heroicon-m-ellipsis-horizontal'),
             ]);
     }
 

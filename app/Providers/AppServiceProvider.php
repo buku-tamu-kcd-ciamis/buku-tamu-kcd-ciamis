@@ -8,6 +8,9 @@ use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,5 +31,42 @@ class AppServiceProvider extends ServiceProvider
         // Notifikasi mengambang di atas tengah (seperti halaman publik)
         Notifications::alignment(Alignment::Center);
         Notifications::verticalAlignment(VerticalAlignment::Start);
+
+        // Log aktivitas login
+        Event::listen(Login::class, function (Login $event) {
+            /** @var \App\Models\User $user */
+            $user = $event->user;
+            $roleName = $user->role_user?->name ?? 'Unknown';
+
+            activity('auth')
+                ->causedBy($user)
+                ->withProperties([
+                    'user_name' => $user->name,
+                    'role' => $roleName,
+                    'email' => $user->email,
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ])
+                ->log("Login ke sistem sebagai {$roleName}");
+        });
+
+        // Log aktivitas logout
+        Event::listen(Logout::class, function (Logout $event) {
+            /** @var \App\Models\User|null $user */
+            $user = $event->user;
+            if ($user) {
+                $roleName = $user->role_user?->name ?? 'Unknown';
+
+                activity('auth')
+                    ->causedBy($user)
+                    ->withProperties([
+                        'user_name' => $user->name,
+                        'role' => $roleName,
+                        'email' => $user->email,
+                        'ip_address' => request()->ip(),
+                    ])
+                    ->log("Logout dari sistem sebagai {$roleName}");
+            }
+        });
     }
 }

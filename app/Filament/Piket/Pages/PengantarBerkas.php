@@ -51,14 +51,16 @@ class PengantarBerkas extends Page implements HasTable
         Tables\Columns\TextColumn::make('keperluan'),
         Tables\Columns\TextColumn::make('bagian_dituju')
           ->label('Bagian Dituju'),
-        Tables\Columns\BadgeColumn::make('status')
-          ->colors([
-            'warning' => 'menunggu',
-            'info' => 'diproses',
-            'success' => 'selesai',
-            'danger' => 'ditolak',
-            'gray' => 'dibatalkan',
-          ])
+        Tables\Columns\TextColumn::make('status')
+          ->badge()
+          ->color(fn(string $state): string => match ($state) {
+            'menunggu' => 'warning',
+            'diproses' => 'info',
+            'selesai' => 'success',
+            'ditolak' => 'danger',
+            'dibatalkan' => 'gray',
+            default => 'gray',
+          })
           ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state)),
         Tables\Columns\TextColumn::make('created_at')
           ->label('Waktu')
@@ -121,7 +123,7 @@ class PengantarBerkas extends Page implements HasTable
               $record->update($data);
             })
             ->modalHeading('Ubah Status Pengantar Berkas')
-            ->modalButton('Simpan'),
+            ->modalSubmitActionLabel('Simpan'),
           Tables\Actions\ViewAction::make()
             ->label('Lihat Detail')
             ->icon('heroicon-s-eye')
@@ -152,35 +154,7 @@ class PengantarBerkas extends Page implements HasTable
             Forms\Components\Select::make('kabupaten_kota')
               ->label('Kabupaten/Kota')
               ->searchable()
-              ->options([
-                'Kab. Bandung' => 'Kab. Bandung',
-                'Kab. Bandung Barat' => 'Kab. Bandung Barat',
-                'Kab. Bekasi' => 'Kab. Bekasi',
-                'Kab. Bogor' => 'Kab. Bogor',
-                'Kab. Ciamis' => 'Kab. Ciamis',
-                'Kab. Cianjur' => 'Kab. Cianjur',
-                'Kab. Cirebon' => 'Kab. Cirebon',
-                'Kab. Garut' => 'Kab. Garut',
-                'Kab. Indramayu' => 'Kab. Indramayu',
-                'Kab. Karawang' => 'Kab. Karawang',
-                'Kab. Kuningan' => 'Kab. Kuningan',
-                'Kab. Majalengka' => 'Kab. Majalengka',
-                'Kab. Pangandaran' => 'Kab. Pangandaran',
-                'Kab. Purwakarta' => 'Kab. Purwakarta',
-                'Kab. Subang' => 'Kab. Subang',
-                'Kab. Sukabumi' => 'Kab. Sukabumi',
-                'Kab. Sumedang' => 'Kab. Sumedang',
-                'Kab. Tasikmalaya' => 'Kab. Tasikmalaya',
-                'Kota Bandung' => 'Kota Bandung',
-                'Kota Banjar' => 'Kota Banjar',
-                'Kota Bekasi' => 'Kota Bekasi',
-                'Kota Bogor' => 'Kota Bogor',
-                'Kota Cimahi' => 'Kota Cimahi',
-                'Kota Cirebon' => 'Kota Cirebon',
-                'Kota Depok' => 'Kota Depok',
-                'Kota Sukabumi' => 'Kota Sukabumi',
-                'Kota Tasikmalaya' => 'Kota Tasikmalaya',
-              ])
+              ->options(\App\Helpers\KabupatenKota::all())
               ->placeholder('Pilih kabupaten/kota'),
             Forms\Components\Select::make('keperluan')
               ->label('Keperluan')
@@ -206,7 +180,6 @@ class PengantarBerkas extends Page implements HasTable
             return redirect($url);
           })
           ->modalHeading('Filter Laporan Pengantar Berkas')
-          ->modalButton('Cetak')
           ->modalSubmitActionLabel('Cetak'),
       ])
       ->bulkActions([]);

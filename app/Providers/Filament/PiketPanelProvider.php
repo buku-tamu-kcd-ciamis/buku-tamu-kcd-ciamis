@@ -28,6 +28,7 @@ class PiketPanelProvider extends PanelProvider
       ->profile(\App\Filament\Piket\Pages\EditProfile::class)
       ->darkMode(true)
       ->brandName('Cadisdik XIII — Piket')
+      ->favicon(asset('img/logo-cadisdik.png'))
       ->colors([
         'primary' => Color::Green,
       ])

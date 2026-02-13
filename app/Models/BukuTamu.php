@@ -51,7 +51,12 @@ class BukuTamu extends Model
             ->logOnly(['status', 'catatan', 'nama_penerima'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Buku tamu {$eventName}")
+            ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+                'created' => "Mendaftarkan tamu baru atas nama {$this->nama_lengkap}",
+                'updated' => "Memperbarui status buku tamu atas nama {$this->nama_lengkap}",
+                'deleted' => "Menghapus data buku tamu atas nama {$this->nama_lengkap}",
+                default => "Aktivitas buku tamu: {$eventName}",
+            })
             ->useLogName('buku_tamu');
     }
 }

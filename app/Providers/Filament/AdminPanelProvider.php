@@ -32,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->profile()
             ->darkMode(true)
             ->brandName('Cadisdik XIII — Admin')
+            ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
                 'primary' => Color::Amber,
             ])

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Surat Izin — {{ $pegawai->nama_pegawai }}</title>
     <style>
         @page {
@@ -38,10 +39,22 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
             gap: 15px;
+            justify-content: space-between;
         }
 
         .header-logo {
-            width: 70px;
+            width: 90px;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .header-spacer {
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .header-logo-right {
+            width: 90px;
             height: auto;
             flex-shrink: 0;
         }
@@ -137,18 +150,20 @@
         /* === SIGNATURE === */
         .signature-section {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             margin-top: 40px;
             page-break-inside: avoid;
+            gap: 10px;
         }
 
         .signature-box {
             text-align: center;
-            width: 200px;
+            width: 180px;
+            flex: 0 1 180px;
         }
 
         .signature-box p {
-            font-size: 11pt;
+            font-size: 10pt;
         }
 
         .signature-box .name {
@@ -160,7 +175,7 @@
 
         .signature-box .nip {
             margin-top: 5px;
-            font-size: 11pt;
+            font-size: 10pt;
         }
 
         /* === FOOTER === */
@@ -175,7 +190,7 @@
 
         /* === PRINT === */
         @media print {
-            body { background: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            body { background: none; }
             .page { padding: 0; max-width: 100%; }
             .no-print { display: none !important; }
         }
@@ -205,7 +220,7 @@
     </style>
 </head>
 <body>
-    <button class="print-btn no-print" onclick="window.print()">
+    <button class="print-btn no-print" onclick="printClean()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
         Cetak
     </button>
@@ -220,6 +235,7 @@
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
         </div>
 
         <!-- TITLE -->
@@ -301,18 +317,69 @@
                 <p class="name">Kepala Cabang Dinas Wil. XIII</p>
                 <p class="nip">NIP. _____________________</p>
             </div>
+            @if($pegawai->nama_piket)
+            <div class="signature-box">
+                <p>Petugas Piket,</p>
+                @if($pegawai->tanda_tangan_piket)
+                <div style="margin: 10px 0;">
+                    <img src="{{ $pegawai->tanda_tangan_piket }}" alt="Tanda Tangan Piket" style="max-height: 60px; max-width: 150px;">
+                </div>
+                @endif
+                <p class="name">{{ $pegawai->nama_piket }}</p>
+            </div>
+            @endif
             <div class="signature-box">
                 <p>Yang Mengajukan,</p>
                 <p class="name">{{ $pegawai->nama_pegawai }}</p>
                 <p class="nip">NIP. {{ $pegawai->nip }}</p>
             </div>
         </div>
-
-        <!-- FOOTER -->
-        <div class="footer">
-            Dicetak pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB &mdash;
-            Cabang Dinas Pendidikan Wilayah XIII
-        </div>
     </div>
+
+    <script>
+        function printClean() {
+            // Buat iframe tersembunyi untuk print tanpa watermark browser
+            var iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+
+            var doc = iframe.contentWindow.document;
+            doc.open();
+            // Salin seluruh konten halaman ke iframe
+            doc.write('<!DOCTYPE html><html lang="id"><head>');
+            doc.write('<meta charset="UTF-8">');
+            doc.write('<style>');
+            // Ambil semua style dari halaman utama
+            var styles = document.querySelectorAll('style');
+            styles.forEach(function(style) {
+                doc.write(style.innerHTML);
+            });
+            // Override @page margin jadi 0 di iframe
+            doc.write('@page { size: A4 portrait; margin: 0; }');
+            doc.write('.page { padding: 15mm 20mm !important; max-width: 100% !important; }');
+            doc.write('.no-print { display: none !important; }');
+            doc.write('</style>');
+            doc.write('</head><body>');
+            doc.write(document.querySelector('.page').outerHTML);
+            doc.write('</body></html>');
+            doc.close();
+
+            // Tunggu images load lalu print
+            iframe.contentWindow.onload = function() {
+                setTimeout(function() {
+                    iframe.contentWindow.print();
+                    // Hapus iframe setelah print
+                    setTimeout(function() {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 500);
+            };
+        }
+    </script>
 </body>
 </html>

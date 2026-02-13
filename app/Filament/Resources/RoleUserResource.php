@@ -17,17 +17,26 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class RoleUserResource extends Resource
 {
     protected static ?string $model = RoleUser::class;
-    protected static ?string $label = 'Roles';
+    protected static ?string $label = 'Role';
 
     protected static ?string $slug = 'role';
+    protected static ?string $navigationGroup = 'Pengguna';
+    protected static ?string $navigationLabel = 'Role';
+    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationGroup = 'Profiles';
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static function shouldRegisterNavigation(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        return $user && $user->hasRole('Super Admin');
+    }
 
     public static function form(Form $form): Form
     {

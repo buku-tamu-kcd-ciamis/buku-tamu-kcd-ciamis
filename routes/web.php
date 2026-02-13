@@ -14,5 +14,6 @@ Route::get('/print/buku-tamu/{id}', [BukuTamuController::class, 'print'])->name(
 Route::get('/print/buku-tamu-bulk', [BukuTamuController::class, 'printBulk'])->name('buku-tamu.print-bulk');
 
 Route::get('/piket/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('piket.pegawai-izin.print');
+Route::get('/admin/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('admin.pegawai-izin.print');
 
 require __DIR__ . '/auth.php';

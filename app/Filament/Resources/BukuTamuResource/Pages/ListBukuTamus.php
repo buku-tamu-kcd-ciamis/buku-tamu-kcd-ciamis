@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\BukuTamuResource\Pages;
 
 use App\Filament\Resources\BukuTamuResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\View\View;
 
 class ListBukuTamus extends ListRecords
 {
@@ -12,8 +12,11 @@ class ListBukuTamus extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\CreateAction::make(),
-        ];
+        return [];
+    }
+
+    public function getFooter(): ?View
+    {
+        return view('filament.pages.buku-tamu-footer');
     }
 }

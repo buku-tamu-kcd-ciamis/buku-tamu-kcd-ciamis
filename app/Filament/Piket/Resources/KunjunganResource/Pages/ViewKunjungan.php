@@ -126,7 +126,7 @@ class ViewKunjungan extends ViewRecord
             ->view('filament.infolists.components.image-base64-entry'),
           Infolists\Components\ViewEntry::make('tanda_tangan')
             ->label('Tanda Tangan')
-            ->view('filament.infolists.components.image-base64-entry'),
+            ->view('filament.infolists.components.signature-base64-entry'),
         ]),
     ]);
   }

@@ -98,10 +98,9 @@ class ViewPegawaiIzin extends ViewRecord
                         ->label('Nama Piket')
                         ->icon('heroicon-o-user-circle')
                         ->placeholder('-'),
-                    Infolists\Components\ImageEntry::make('tanda_tangan_piket')
+                    Infolists\Components\ViewEntry::make('tanda_tangan_piket')
                         ->label('Tanda Tangan Piket')
-                        ->height(100)
-                        ->placeholder('-'),
+                        ->view('filament.infolists.components.signature-base64-entry'),
                 ]),
 
             // === Informasi Sistem ===

@@ -9,6 +9,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ActivityLogResource extends Resource
 {
@@ -20,6 +22,13 @@ class ActivityLogResource extends Resource
     protected static ?string $modelLabel = 'Log Aktivitas';
     protected static ?string $pluralModelLabel = 'Log Aktivitas';
     protected static ?int $navigationSort = 98;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        return $user && $user->hasRole('Super Admin');
+    }
 
     public static function form(Form $form): Form
     {

@@ -13,13 +13,6 @@ class ViewBukuTamu extends ViewRecord
 {
     protected static string $resource = BukuTamuResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-    }
-
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
@@ -113,8 +106,13 @@ class ViewBukuTamu extends ViewRecord
                             'dibatalkan' => 'gray',
                             default => 'secondary',
                         }),
+                    Infolists\Components\TextEntry::make('nama_penerima')
+                        ->label('Nama Penerima')
+                        ->icon('heroicon-o-user')
+                        ->placeholder('Belum ada penerima'),
                     Infolists\Components\TextEntry::make('catatan')
-                        ->placeholder('Tidak ada catatan'),
+                        ->placeholder('Tidak ada catatan')
+                        ->columnSpanFull(),
                 ]),
 
             // === Dokumen ===
@@ -127,7 +125,7 @@ class ViewBukuTamu extends ViewRecord
                         ->view('filament.infolists.components.image-base64-entry'),
                     Infolists\Components\ViewEntry::make('tanda_tangan')
                         ->label('Tanda Tangan')
-                        ->view('filament.infolists.components.image-base64-entry'),
+                        ->view('filament.infolists.components.signature-base64-entry'),
                 ]),
         ]);
     }

@@ -6,63 +6,58 @@ use App\Filament\Piket\Resources\ActivityLogResource;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
-use Spatie\Activitylog\Models\Activity;
 
 class ViewActivityLog extends ViewRecord
 {
-    protected static string $resource = ActivityLogResource::class;
+  protected static string $resource = ActivityLogResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist->schema([
-            Infolists\Components\Section::make('Detail Log Aktivitas')
-                ->schema([
-                    Infolists\Components\Grid::make(2)
-                        ->schema([
-                            Infolists\Components\TextEntry::make('created_at')
-                                ->label('Waktu')
-                                ->dateTime('d F Y, H:i:s')
-                                ->icon('heroicon-o-clock'),
-                            Infolists\Components\TextEntry::make('causer.name')
-                                ->label('Dilakukan Oleh')
-                                ->default('System')
-                                ->icon('heroicon-o-user'),
-                            Infolists\Components\TextEntry::make('log_name')
-                                ->label('Kategori')
-                                ->badge()
-                                ->color('success'),
-                            Infolists\Components\TextEntry::make('description')
-                                ->label('Deskripsi Aktivitas'),
-                            Infolists\Components\TextEntry::make('event')
-                                ->label('Jenis Event')
-                                ->badge()
-                                ->formatStateUsing(fn($state) => match ($state) {
-                                    'created' => 'Dibuat',
-                                    'updated' => 'Diubah',
-                                    'deleted' => 'Dihapus',
-                                    default => ucfirst($state),
-                                })
-                                ->color(fn(string $state): string => match ($state) {
-                                    'created' => 'success',
-                                    'updated' => 'warning',
-                                    'deleted' => 'danger',
-                                    default => 'gray',
-                                }),
-                            Infolists\Components\TextEntry::make('subject_type')
-                                ->label('Tipe Model')
-                                ->formatStateUsing(fn($state) => class_basename($state)),
-                            Infolists\Components\TextEntry::make('subject_id')
-                                ->label('ID Record'),
-                        ]),
-                ]),
-
-            Infolists\Components\Section::make('Perubahan Data')
-                ->visible(fn($record) => $record->properties->has('attributes') || $record->properties->has('old'))
-                ->schema([
-                    Infolists\Components\ViewEntry::make('properties')
-                        ->label('')
-                        ->view('filament.infolists.components.activity-properties'),
-                ]),
-        ]);
-    }
+  public function infolist(Infolist $infolist): Infolist
+  {
+    return $infolist->schema([
+      Infolists\Components\Section::make('Informasi Log Aktivitas')
+        ->schema([
+          Infolists\Components\Grid::make(2)
+            ->schema([
+              Infolists\Components\TextEntry::make('created_at')
+                ->label('Waktu')
+                ->dateTime('d/m/Y H:i:s'),
+              Infolists\Components\TextEntry::make('causer.name')
+                ->label('User')
+                ->default('System'),
+              Infolists\Components\TextEntry::make('log_name')
+                ->label('Kategori')
+                ->badge()
+                ->formatStateUsing(fn(string $state): string => match ($state) {
+                  'buku_tamu' => 'Buku Tamu',
+                  'pegawai_izin' => 'Izin Pegawai',
+                  'auth' => 'Login/Logout',
+                  default => ucfirst(str_replace('_', ' ', $state)),
+                })
+                ->color(fn(string $state): string => match ($state) {
+                  'buku_tamu' => 'success',
+                  'pegawai_izin' => 'info',
+                  'auth' => 'warning',
+                  default => 'gray',
+                }),
+              Infolists\Components\TextEntry::make('description')
+                ->label('Deskripsi Aktivitas')
+                ->columnSpanFull(),
+              Infolists\Components\TextEntry::make('subject_type')
+                ->label('Tipe Subject')
+                ->default('-'),
+              Infolists\Components\TextEntry::make('subject_id')
+                ->label('ID Subject')
+                ->default('-'),
+            ]),
+        ]),
+      Infolists\Components\Section::make('Properties')
+        ->schema([
+          Infolists\Components\ViewEntry::make('properties')
+            ->label('')
+            ->view('filament.infolists.components.json-viewer'),
+        ])
+        ->collapsed()
+        ->collapsible(),
+    ]);
+  }
 }

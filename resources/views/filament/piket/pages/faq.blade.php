@@ -26,7 +26,7 @@
                             <div class="flex items-center gap-4 flex-1">
                                 <div class="flex-shrink-0 relative z-20">
                                     <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base transition-all duration-300"
-                                         :class="openFaq === {{ $index }} ? 'bg-primary-500 text-white shadow-xl' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                                         :class="openFaq === {{ $index }} ? 'bg-primary-500 text-white shadow-xl' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white'"
                                          style="isolation: isolate;">
                                         <span style="position: relative; z-index: 50;">{{ $index + 1 }}</span>
                                     </div>

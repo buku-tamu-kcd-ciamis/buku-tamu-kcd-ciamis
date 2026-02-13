@@ -16,6 +16,13 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, UuidTrait;
 
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var array<int, string>
+     */
+    protected $with = ['role_user'];
+
     public function canAccessPanel(Panel $panel): bool
     {
         if (!$this->role_user) return false;

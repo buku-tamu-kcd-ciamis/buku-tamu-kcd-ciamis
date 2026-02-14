@@ -289,6 +289,8 @@ Detail: Lihat [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) dan [ISPCONFIG_DEPL
 
 Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
 
+**[Lihat detail kontribusi →](CONTRIBUTORS.md)**
+
 <table>
   <tr>
     <td align="center">
@@ -348,6 +350,8 @@ Contributions, issues, and feature requests are welcome!
 This project is **proprietary** software developed for Cabang Dinas Pendidikan Wilayah XIII Ciamis.
 
 All rights reserved © 2026 Cadisdik XIII
+
+**[Baca lisensi lengkap →](LICENSE)**
 
 ---
 

@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
-    <title>Laporan Kunjungan Tamu — Cadisdik XIII</title>
+    <title>Data Pegawai — Cadisdik XIII</title>
     <style>
         @page {
-            size: A4 landscape;
+            size: A4 portrait;
             margin: 15mm 20mm;
         }
 
@@ -26,7 +26,7 @@
         }
 
         .page {
-            max-width: 297mm;
+            max-width: 210mm;
             margin: 0 auto;
             padding: 10mm;
         }
@@ -45,11 +45,6 @@
         .header-logo {
             width: 90px;
             height: auto;
-            flex-shrink: 0;
-        }
-
-        .header-spacer {
-            width: 90px;
             flex-shrink: 0;
         }
 
@@ -129,19 +124,17 @@
 
         .data-table td.no {
             text-align: center;
-            width: 30px;
+            width: 35px;
         }
 
-        .data-table td.foto {
+        .data-table td.status {
             text-align: center;
-            width: 60px;
+            width: 70px;
         }
 
-        .data-table td.foto img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 4px;
+        .data-table td.nip {
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
         }
 
         /* === STATUS === */
@@ -154,7 +147,8 @@
             text-transform: uppercase;
         }
 
-        .status-selesai { background: #D1FAE5; color: #065F46; }
+        .status-aktif { background: #D1FAE5; color: #065F46; }
+        .status-nonaktif { background: #FEE2E2; color: #991B1B; }
 
         /* === SUMMARY === */
         .summary {
@@ -189,16 +183,6 @@
             font-weight: bold;
             border-bottom: 1px solid #000;
             padding-bottom: 2px;
-        }
-
-        /* === FOOTER === */
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-            text-align: center;
-            font-size: 8pt;
-            color: #777;
         }
 
         /* === PRINT === */
@@ -253,8 +237,8 @@
 
         <!-- TITLE -->
         <div class="title">
-            <h3>Laporan Data Kunjungan Tamu</h3>
-            <p>Per {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+            <h3>Data Pegawai Cabang Dinas XIII</h3>
+            <p>Dicetak pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB</p>
         </div>
 
         <!-- TABLE -->
@@ -262,37 +246,35 @@
             <thead>
                 <tr>
                     <th class="no">No</th>
-                    <th class="foto">Foto</th>
                     <th>Nama Lengkap</th>
-                    <th>NIK</th>
-                    <th>Instansi</th>
-                    <th>Keperluan</th>
-                    <th>Bagian Dituju</th>
-                    <th>Waktu</th>
+                    <th>NIP</th>
+                    <th>Jabatan</th>
+                    <th>Unit Kerja</th>
+                    <th>No. HP</th>
+                    <th class="status">Status</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($tamuList as $index => $tamu)
+                @forelse($pegawaiList as $index => $pegawai)
                 <tr>
                     <td class="no">{{ $index + 1 }}</td>
-                    <td class="foto">
-                        @if($tamu->foto_selfie)
-                            <img src="{{ $tamu->foto_selfie }}" alt="Foto">
+                    <td>{{ $pegawai->nama }}</td>
+                    <td class="nip">{{ $pegawai->nip }}</td>
+                    <td>{{ $pegawai->jabatan }}</td>
+                    <td>{{ $pegawai->unit_kerja }}</td>
+                    <td>{{ $pegawai->nomor_hp ? '+62' . ltrim($pegawai->nomor_hp, '0') : '-' }}</td>
+                    <td class="status">
+                        @if($pegawai->is_active)
+                            <span class="status-badge status-aktif">Aktif</span>
                         @else
-                            -
+                            <span class="status-badge status-nonaktif">Nonaktif</span>
                         @endif
                     </td>
-                    <td>{{ $tamu->nama_lengkap }}</td>
-                    <td>{{ $tamu->nik }}</td>
-                    <td>{{ $tamu->instansi ?? '-' }}</td>
-                    <td>{{ \Illuminate\Support\Str::limit($tamu->keperluan, 50) }}</td>
-                    <td>{{ $tamu->bagian_dituju }}</td>
-                    <td>{{ $tamu->created_at->diffForHumans() }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 20px; color: #999;">
-                        Tidak ada data kunjungan yang selesai
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
+                        Tidak ada data pegawai
                     </td>
                 </tr>
                 @endforelse
@@ -301,7 +283,9 @@
 
         <!-- SUMMARY -->
         <div class="summary">
-            <p><strong>Total Data:</strong> {{ $tamuList->count() }} kunjungan</p>
+            <p><strong>Total Pegawai:</strong> {{ $pegawaiList->count() }} orang</p>
+            <p><strong>Aktif:</strong> {{ $pegawaiList->where('is_active', true)->count() }} orang</p>
+            <p><strong>Nonaktif:</strong> {{ $pegawaiList->where('is_active', false)->count() }} orang</p>
         </div>
 
         <!-- SIGNATURE -->

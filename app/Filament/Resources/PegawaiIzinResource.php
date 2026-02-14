@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PegawaiIzinResource\Pages;
+use App\Models\Pegawai;
 use App\Models\PegawaiIzin;
 use App\Models\User;
 use Filament\Forms;
@@ -35,10 +36,59 @@ class PegawaiIzinResource extends Resource
   {
     return $form->schema([
       Forms\Components\Section::make()->columns(2)->schema([
+        Forms\Components\Select::make('pegawai_id')
+          ->label('Pilih Pegawai')
+          ->options(function () {
+            return Pegawai::active()
+              ->orderBy('nama')
+              ->get()
+              ->mapWithKeys(fn($p) => [$p->id => "{$p->nama} — {$p->nip}"]);
+          })
+          ->searchable()
+          ->preload()
+          ->placeholder('Cari nama atau NIP pegawai...')
+          ->live()
+          ->afterStateUpdated(function ($state, Forms\Set $set) {
+            if (!$state) return;
+
+            $pegawai = Pegawai::find($state);
+            if (!$pegawai) return;
+
+            $set('nama_pegawai', $pegawai->nama);
+            $set('nip', $pegawai->nip);
+            $set('jabatan', $pegawai->jabatan);
+            $set('unit_kerja', $pegawai->unit_kerja);
+            $set('nomor_hp', $pegawai->nomor_hp);
+
+            // Cek apakah ada surat izin aktif
+            $suratAktif = PegawaiIzin::where('nip', $pegawai->nip)
+              ->where('status', 'aktif')
+              ->where('tanggal_selesai', '>=', now()->toDateString())
+              ->orderBy('tanggal_selesai', 'desc')
+              ->first();
+
+            if ($suratAktif) {
+              $jenisIzin = ucfirst($suratAktif->jenis_izin);
+              $tanggalMulai = $suratAktif->tanggal_mulai->translatedFormat('d F Y');
+              $tanggalSelesai = $suratAktif->tanggal_selesai->translatedFormat('d F Y');
+              $besok = $suratAktif->tanggal_selesai->addDay()->translatedFormat('d F Y');
+
+              \Filament\Notifications\Notification::make()
+                ->warning()
+                ->title('⚠️ Pegawai Masih Memiliki Surat Izin Aktif')
+                ->body("Pegawai {$suratAktif->nama_pegawai} masih memiliki surat izin {$jenisIzin} yang berlaku dari {$tanggalMulai} sampai {$tanggalSelesai}. Surat izin baru dapat dibuat mulai tanggal {$besok}.")
+                ->persistent()
+                ->send();
+            }
+          })
+          ->helperText('Pilih pegawai dari daftar untuk mengisi data otomatis.')
+          ->columnSpanFull()
+          ->dehydrated(false),
         Forms\Components\TextInput::make('nama_pegawai')
           ->label('Nama Pegawai')
           ->required()
-          ->maxLength(255),
+          ->maxLength(255)
+          ->readOnly(),
         Forms\Components\TextInput::make('nip')
           ->label('NIP')
           ->required()
@@ -46,6 +96,7 @@ class PegawaiIzinResource extends Resource
           ->maxLength(18)
           ->placeholder('Masukkan 18 digit NIP')
           ->mask('999999999999999999')
+          ->readOnly()
           ->live()
           ->suffixIcon(function ($state) {
             if (!$state) return null;
@@ -56,63 +107,18 @@ class PegawaiIzinResource extends Resource
             return strlen($state) === 18 ? 'success' : 'danger';
           })
           ->helperText(function ($state) {
-            if (!$state) return 'NIP harus tepat 18 digit angka';
+            if (!$state) return 'Otomatis terisi dari pilihan pegawai';
             $length = strlen($state);
             $status = $length === 18 ? 'valid' : 'invalid';
             return "{$length} digit — {$status}";
-          })
-          ->afterStateUpdated(function ($state, Forms\Set $set) {
-            if (strlen($state) === 18) {
-              // Cek apakah ada surat izin aktif
-              $suratAktif = PegawaiIzin::where('nip', $state)
-                ->where('status', 'aktif')
-                ->where('tanggal_selesai', '>=', now()->toDateString())
-                ->orderBy('tanggal_selesai', 'desc')
-                ->first();
-
-              if ($suratAktif) {
-                $jenisIzin = ucfirst($suratAktif->jenis_izin);
-                $tanggalMulai = $suratAktif->tanggal_mulai->translatedFormat('d F Y');
-                $tanggalSelesai = $suratAktif->tanggal_selesai->translatedFormat('d F Y');
-                $besok = $suratAktif->tanggal_selesai->addDay()->translatedFormat('d F Y');
-
-                \Filament\Notifications\Notification::make()
-                  ->warning()
-                  ->title('⚠️ Pegawai Masih Memiliki Surat Izin Aktif')
-                  ->body("Pegawai {$suratAktif->nama_pegawai} masih memiliki surat izin {$jenisIzin} yang berlaku dari {$tanggalMulai} sampai {$tanggalSelesai}. Surat izin baru dapat dibuat mulai tanggal {$besok}.")
-                  ->persistent()
-                  ->send();
-
-                return;
-              }
-
-              // Jika tidak ada surat aktif, auto-fill data dari record terakhir
-              $pegawai = PegawaiIzin::where('nip', $state)
-                ->orderBy('tanggal_selesai', 'desc')
-                ->first();
-
-              if ($pegawai) {
-                $set('nama_pegawai', $pegawai->nama_pegawai);
-                $set('jabatan', $pegawai->jabatan);
-                $set('unit_kerja', $pegawai->unit_kerja);
-
-                // Set tanggal mulai berdasarkan tanggal selesai izin terakhir
-                $tanggalMulai = \Carbon\Carbon::parse($pegawai->tanggal_selesai)->addDay();
-
-                // Jika tanggal selesai terakhir kurang dari hari ini, pakai hari ini
-                if ($tanggalMulai->lt(now())) {
-                  $tanggalMulai = now();
-                }
-
-                $set('tanggal_mulai', $tanggalMulai->format('Y-m-d'));
-              }
-            }
           }),
         Forms\Components\TextInput::make('jabatan')
-          ->maxLength(255),
+          ->maxLength(255)
+          ->readOnly(),
         Forms\Components\TextInput::make('unit_kerja')
           ->label('Unit Kerja')
-          ->maxLength(255),
+          ->maxLength(255)
+          ->readOnly(),
         Forms\Components\TextInput::make('nomor_hp')
           ->label('Nomor Handphone')
           ->tel()
@@ -120,7 +126,8 @@ class PegawaiIzinResource extends Resource
           ->placeholder('8xx-xxxx-xxxx')
           ->mask('999-9999-99999')
           ->maxLength(15)
-          ->helperText('Min. 9 digit, Maks. 13 digit (setelah +62)'),
+          ->readOnly()
+          ->helperText('Otomatis terisi dari data pegawai'),
         Forms\Components\Select::make('jenis_izin')
           ->label('Jenis Izin')
           ->options(PegawaiIzin::JENIS_IZIN_LABELS)

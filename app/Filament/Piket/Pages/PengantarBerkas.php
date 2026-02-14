@@ -3,6 +3,7 @@
 namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
+use App\Models\DropdownOption;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Tables;
@@ -105,9 +106,12 @@ class PengantarBerkas extends Page implements HasTable
                     '</div>' .
                     '</div>'
                 )),
-              Forms\Components\TextInput::make('nama_penerima')
+              Forms\Components\Select::make('nama_penerima')
                 ->label('Nama Penerima')
-                ->placeholder('Masukkan nama penerima'),
+                ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_PEGAWAI_PIKET))
+                ->searchable()
+                ->allowHtml(false)
+                ->placeholder('Pilih nama penerima'),
               Forms\Components\Select::make('status')
                 ->options(BukuTamu::STATUS_LABELS)
                 ->required(),
@@ -154,17 +158,12 @@ class PengantarBerkas extends Page implements HasTable
             Forms\Components\Select::make('kabupaten_kota')
               ->label('Kabupaten/Kota')
               ->searchable()
-              ->options(\App\Helpers\KabupatenKota::all())
+              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KABUPATEN_KOTA))
               ->placeholder('Pilih kabupaten/kota'),
             Forms\Components\Select::make('keperluan')
               ->label('Keperluan')
               ->searchable()
-              ->options([
-                'Menyerahkan Surat/Berkas' => 'Menyerahkan Surat/Berkas',
-                'Legalisir' => 'Legalisir',
-                'Pengambilan Dokumen' => 'Pengambilan Dokumen',
-                'Tanda Tangan Dokumen' => 'Tanda Tangan Dokumen',
-              ])
+              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KEPERLUAN))
               ->placeholder('Pilih keperluan'),
           ])
           ->action(function (array $data) {

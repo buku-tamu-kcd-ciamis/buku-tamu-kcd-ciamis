@@ -11,10 +11,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable, UuidTrait;
+    use HasFactory, Notifiable, UuidTrait, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'role_user_id'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('user')
+            ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+                'created' => "User baru '{$this->name}' berhasil dibuat",
+                'updated' => "Data user '{$this->name}' diperbarui",
+                'deleted' => "User '{$this->name}' dihapus",
+                default => "User '{$this->name}' {$eventName}",
+            });
+    }
 
     /**
      * The relationships that should always be loaded.

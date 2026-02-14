@@ -33,9 +33,7 @@ class RoleUserResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        /** @var User $user */
-        $user = Auth::user();
-        return $user && $user->hasRole('Super Admin');
+        return false;
     }
 
     public static function form(Form $form): Form

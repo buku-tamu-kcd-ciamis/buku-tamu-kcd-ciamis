@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
-    <title>Laporan Kunjungan Tamu — Cadisdik XIII</title>
+    <title>Log Aktivitas Sistem — Cadisdik XIII</title>
     <style>
         @page {
             size: A4 landscape;
@@ -45,11 +45,6 @@
         .header-logo {
             width: 90px;
             height: auto;
-            flex-shrink: 0;
-        }
-
-        .header-spacer {
-            width: 90px;
             flex-shrink: 0;
         }
 
@@ -102,12 +97,30 @@
             margin-top: 3px;
         }
 
+        /* === FILTER INFO === */
+        .filter-info {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 10pt;
+        }
+
+        .filter-info p {
+            margin: 3px 0;
+        }
+
+        .filter-info strong {
+            font-weight: bold;
+        }
+
         /* === TABLE === */
         .data-table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
-            font-size: 10pt;
+            font-size: 9.5pt;
         }
 
         .data-table thead {
@@ -132,29 +145,39 @@
             width: 30px;
         }
 
-        .data-table td.foto {
+        .data-table td.waktu {
+            width: 120px;
+        }
+
+        .data-table td.user {
+            width: 120px;
+        }
+
+        .data-table td.modul {
+            width: 100px;
+        }
+
+        .data-table td.aksi {
             text-align: center;
-            width: 60px;
+            width: 70px;
         }
 
-        .data-table td.foto img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-
-        /* === STATUS === */
-        .status-badge {
+        /* === BADGES === */
+        .badge {
             display: inline-block;
             padding: 2px 8px;
             border-radius: 3px;
-            font-size: 9pt;
+            font-size: 8.5pt;
             font-weight: bold;
             text-transform: uppercase;
         }
 
-        .status-selesai { background: #D1FAE5; color: #065F46; }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-info { background: #DBEAFE; color: #1E40AF; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .badge-gray { background: #F3F4F6; color: #374151; }
+        .badge-primary { background: #E0E7FF; color: #3730A3; }
 
         /* === SUMMARY === */
         .summary {
@@ -191,32 +214,15 @@
             padding-bottom: 2px;
         }
 
-        /* === FOOTER === */
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-            text-align: center;
-            font-size: 8pt;
-            color: #777;
-        }
-
-        /* === PRINT === */
-        @media print {
-            body { background: none; }
-            .page { padding: 0; max-width: 100%; }
-            .no-print { display: none !important; }
-        }
-
         /* === PRINT BUTTON === */
         .print-btn {
             position: fixed;
             top: 20px;
             right: 20px;
+            padding: 12px 24px;
             background: #10B981;
-            color: #fff;
+            color: white;
             border: none;
-            padding: 10px 24px;
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
@@ -229,6 +235,12 @@
 
         .print-btn:hover {
             background: #059669;
+        }
+
+        @media print {
+            .print-btn, .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -253,46 +265,95 @@
 
         <!-- TITLE -->
         <div class="title">
-            <h3>Laporan Data Kunjungan Tamu</h3>
-            <p>Per {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+            <h3>Log Aktivitas Sistem</h3>
+            <p>Dicetak pada {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }} WIB</p>
         </div>
+
+        <!-- FILTER INFO -->
+        @php
+            $filterActive = request()->has('user_id') || request()->has('log_name') || request()->has('event') || request()->has('start_date') || request()->has('end_date');
+        @endphp
+
+        @if($filterActive)
+        <div class="filter-info no-print">
+            <p><strong>Filter yang Diterapkan:</strong></p>
+            @if(request()->has('user_id') && request()->user_id)
+                @php
+                    $user = \App\Models\User::find(request()->user_id);
+                @endphp
+                <p>• User: {{ $user ? $user->name : '-' }}</p>
+            @endif
+            @if(request()->has('log_name') && request()->log_name)
+                <p>• Modul: {{ \App\Filament\Resources\ActivityLogResource::getLogNameLabel(request()->log_name) }}</p>
+            @endif
+            @if(request()->has('event') && request()->event)
+                <p>• Event: {{ ucfirst(request()->event) }}</p>
+            @endif
+            @if(request()->has('start_date') && request()->start_date)
+                <p>• Tanggal Mulai: {{ \Carbon\Carbon::parse(request()->start_date)->translatedFormat('d F Y') }}</p>
+            @endif
+            @if(request()->has('end_date') && request()->end_date)
+                <p>• Tanggal Akhir: {{ \Carbon\Carbon::parse(request()->end_date)->translatedFormat('d F Y') }}</p>
+            @endif
+            <p>• Batas Data: {{ $limit }} log terakhir</p>
+        </div>
+        @endif
 
         <!-- TABLE -->
         <table class="data-table">
             <thead>
                 <tr>
                     <th class="no">No</th>
-                    <th class="foto">Foto</th>
-                    <th>Nama Lengkap</th>
-                    <th>NIK</th>
-                    <th>Instansi</th>
-                    <th>Keperluan</th>
-                    <th>Bagian Dituju</th>
-                    <th>Waktu</th>
+                    <th class="waktu">Waktu</th>
+                    <th class="user">User</th>
+                    <th class="modul">Modul</th>
+                    <th class="aksi">Aksi</th>
+                    <th>Deskripsi Aktivitas</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($tamuList as $index => $tamu)
+                @forelse($activityLogs as $index => $log)
                 <tr>
                     <td class="no">{{ $index + 1 }}</td>
-                    <td class="foto">
-                        @if($tamu->foto_selfie)
-                            <img src="{{ $tamu->foto_selfie }}" alt="Foto">
-                        @else
-                            -
-                        @endif
+                    <td class="waktu">{{ $log->created_at->translatedFormat('d/m/Y H:i:s') }}</td>
+                    <td class="user">{{ $log->causer ? $log->causer->name : 'System' }}</td>
+                    <td class="modul">
+                        @php
+                            $labelClass = match($log->log_name) {
+                                'buku_tamu' => 'badge-success',
+                                'pegawai_izin' => 'badge-info',
+                                'auth' => 'badge-warning',
+                                'cetak' => 'badge-gray',
+                                'user' => 'badge-danger',
+                                'dropdown_option' => 'badge-primary',
+                                'pegawai' => 'badge-info',
+                                'pengaturan' => 'badge-warning',
+                                default => 'badge-gray',
+                            };
+                            $label = \App\Filament\Resources\ActivityLogResource::getLogNameLabel($log->log_name);
+                        @endphp
+                        <span class="badge {{ $labelClass }}">{{ $label }}</span>
                     </td>
-                    <td>{{ $tamu->nama_lengkap }}</td>
-                    <td>{{ $tamu->nik }}</td>
-                    <td>{{ $tamu->instansi ?? '-' }}</td>
-                    <td>{{ \Illuminate\Support\Str::limit($tamu->keperluan, 50) }}</td>
-                    <td>{{ $tamu->bagian_dituju }}</td>
-                    <td>{{ $tamu->created_at->diffForHumans() }}</td>
+                    <td class="aksi">
+                        @php
+                            $eventClass = match($log->event) {
+                                'created' => 'badge-success',
+                                'updated' => 'badge-warning',
+                                'deleted' => 'badge-danger',
+                                'login' => 'badge-info',
+                                'logout' => 'badge-gray',
+                                'print' => 'badge-primary',
+                                default => 'badge-gray',
+                            };
+                        @endphp
+                        <span class="badge {{ $eventClass }}">{{ ucfirst($log->event) }}</span>
+                    </td>
+                    <td>{{ $log->description }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 20px; color: #999;">
-                        Tidak ada data kunjungan yang selesai
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+                        Tidak ada data log aktivitas
                     </td>
                 </tr>
                 @endforelse
@@ -301,7 +362,10 @@
 
         <!-- SUMMARY -->
         <div class="summary">
-            <p><strong>Total Data:</strong> {{ $tamuList->count() }} kunjungan</p>
+            <p><strong>Total Data:</strong> {{ $activityLogs->count() }} log aktivitas</p>
+            @if($filterActive)
+                <p><strong>Catatan:</strong> Data yang ditampilkan telah difilter sesuai kriteria yang dipilih</p>
+            @endif
         </div>
 
         <!-- SIGNATURE -->

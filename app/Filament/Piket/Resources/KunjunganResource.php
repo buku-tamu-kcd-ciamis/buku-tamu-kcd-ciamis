@@ -4,6 +4,7 @@ namespace App\Filament\Piket\Resources;
 
 use App\Filament\Piket\Resources\KunjunganResource\Pages;
 use App\Models\BukuTamu;
+use App\Models\DropdownOption;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -141,9 +142,12 @@ class KunjunganResource extends Resource
                     '</div>' .
                     '</div>'
                 )),
-              Forms\Components\TextInput::make('nama_penerima')
+              Forms\Components\Select::make('nama_penerima')
                 ->label('Nama Penerima')
-                ->placeholder('Masukkan nama penerima'),
+                ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_PEGAWAI_PIKET))
+                ->searchable()
+                ->allowHtml(false)
+                ->placeholder('Pilih nama penerima'),
               Forms\Components\Select::make('status')
                 ->options(BukuTamu::STATUS_LABELS)
                 ->required(),
@@ -192,30 +196,12 @@ class KunjunganResource extends Resource
             Forms\Components\Select::make('kabupaten_kota')
               ->label('Kabupaten/Kota')
               ->searchable()
-              ->options(\App\Helpers\KabupatenKota::all())
+              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KABUPATEN_KOTA))
               ->placeholder('Pilih kabupaten/kota'),
             Forms\Components\Select::make('keperluan')
               ->label('Keperluan')
               ->searchable()
-              ->options([
-                'Koordinasi/Konsultasi' => 'Koordinasi/Konsultasi',
-                'Rapat' => 'Rapat',
-                'Audiensi' => 'Audiensi',
-                'Permohonan Izin' => 'Permohonan Izin',
-                'Sosialisasi' => 'Sosialisasi',
-                'Pembinaan' => 'Pembinaan',
-                'Monitoring/Evaluasi' => 'Monitoring/Evaluasi',
-                'Pelaporan' => 'Pelaporan',
-                'Pengaduan' => 'Pengaduan',
-                'Kunjungan Kerja' => 'Kunjungan Kerja',
-                'Verifikasi Data' => 'Verifikasi Data',
-                'Permohonan Rekomendasi' => 'Permohonan Rekomendasi',
-                'Asistensi' => 'Asistensi',
-                'Pendataan' => 'Pendataan',
-                'Kerja Sama/MoU' => 'Kerja Sama/MoU',
-                'Undangan/Acara Resmi' => 'Undangan/Acara Resmi',
-                'Lainnya' => 'Lainnya',
-              ])
+              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KEPERLUAN))
               ->placeholder('Pilih keperluan'),
           ])
           ->action(function (array $data, $livewire) {

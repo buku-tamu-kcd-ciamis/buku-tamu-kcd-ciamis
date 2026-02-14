@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ===== BUKU TAMU - CADISDIK XIII =====
  * JavaScript untuk halaman buku tamu
  */
@@ -12,87 +12,37 @@ document.addEventListener("DOMContentLoaded", function () {
     const nikInput = document.getElementById("nik");
     const nikIcon = document.getElementById("nik_icon");
 
-    const jenisIdOptions = [
-        { value: "KTP", label: "KTP" },
-        { value: "SIM", label: "SIM" },
-        { value: "Passport", label: "Passport" },
-        { value: "Kartu Pelajar", label: "Kartu Pelajar" },
-        { value: "Kartu Pers", label: "Kartu Pers" },
-        { value: "Kartu Pegawai", label: "Kartu Pegawai / ASN" },
-        { value: "NIP", label: "NIP" },
-        { value: "KITAS", label: "KITAS / KITAP" },
-        { value: "Kartu Anggota", label: "Kartu Anggota" },
-        { value: "Lainnya", label: "Lainnya" },
-    ];
+    // ===== DYNAMIC DATA FROM DATABASE =====
+    const __dd = window.__dropdownData || {};
 
+    // Build jenisIdOptions from dynamic data (fallback to empty)
+    const jenisIdOptions = (__dd.jenisId || []).map(function (item) {
+        return { value: item.value, label: item.label };
+    });
+
+    // Build idConfig from dynamic data metadata
     const idConfig = {
         "": {
             label: "Nomor ID",
             placeholder: "Pilih jenis ID terlebih dahulu",
-            icon: "fa-address-card",
-            digits: null,
-        },
-        KTP: {
-            label: "NIK",
-            placeholder: "Masukkan 16 digit NIK",
-            icon: "fa-id-card",
-            digits: 16,
-        },
-        SIM: {
-            label: "No. SIM",
-            placeholder: "Masukkan 12 digit No. SIM",
-            icon: "fa-car",
-            digits: 12,
-        },
-        Passport: {
-            label: "No. Passport",
-            placeholder: "Masukkan nomor passport",
-            icon: "fa-passport",
-            digits: null,
-        },
-        "Kartu Pelajar": {
-            label: "No. Induk Siswa",
-            placeholder: "Masukkan NIS / NISN",
-            icon: "fa-graduation-cap",
-            digits: null,
-        },
-        "Kartu Pers": {
-            label: "No. Kartu Pers",
-            placeholder: "Masukkan nomor kartu pers",
-            icon: "fa-newspaper",
-            digits: null,
-        },
-        "Kartu Pegawai": {
-            label: "NIP / No. Pegawai",
-            placeholder: "Masukkan NIP atau no. pegawai",
-            icon: "fa-user-tie",
-            digits: null,
-        },
-        NIP: {
-            label: "NIP",
-            placeholder: "Masukkan NIP (18 digit)",
-            icon: "fa-user-tie",
-            digits: 18,
-        },
-        KITAS: {
-            label: "No. KITAS/KITAP",
-            placeholder: "Masukkan nomor KITAS/KITAP",
-            icon: "fa-globe",
-            digits: null,
-        },
-        "Kartu Anggota": {
-            label: "No. Anggota",
-            placeholder: "Masukkan nomor kartu anggota",
-            icon: "fa-id-badge",
-            digits: null,
-        },
-        Lainnya: {
-            label: "Nomor Identitas",
-            placeholder: "Masukkan nomor identitas Anda",
-            icon: "fa-fingerprint",
             digits: null,
         },
     };
+    (__dd.jenisId || []).forEach(function (item) {
+        if (item.metadata) {
+            idConfig[item.value] = {
+                label: item.metadata.id_label || item.label,
+                placeholder: item.metadata.placeholder || "Masukkan nomor ID",
+                digits: item.metadata.digits || null,
+            };
+        } else {
+            idConfig[item.value] = {
+                label: item.label,
+                placeholder: "Masukkan nomor ID",
+                digits: null,
+            };
+        }
+    });
 
     let activeIndex = -1;
 
@@ -136,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const config = idConfig[opt.value] || idConfig[""];
         nikLabel.innerHTML = config.label + ' <span class="required">*</span>';
         nikInput.placeholder = config.placeholder;
-        nikIcon.className = "fa-solid " + config.icon + " input-icon";
+        nikIcon.className = "fa-solid fa-id-card input-icon";
         nikInput.value = "";
 
         // Update hint & maxlength
@@ -180,8 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     nikLabel.innerHTML =
                         config.label + ' <span class="required">*</span>';
                     nikInput.placeholder = config.placeholder;
-                    nikIcon.className =
-                        "fa-solid " + config.icon + " input-icon";
+                    nikIcon.className = "fa-solid fa-id-card input-icon";
                 }
             }
         }, 150);
@@ -529,564 +478,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // ===== KABUPATEN/KOTA AUTOCOMPLETE (SELURUH INDONESIA) =====
-    const kabKotaData = [
-        // === ACEH ===
-        "Kab. Aceh Barat",
-        "Kab. Aceh Barat Daya",
-        "Kab. Aceh Besar",
-        "Kab. Aceh Jaya",
-        "Kab. Aceh Selatan",
-        "Kab. Aceh Singkil",
-        "Kab. Aceh Tamiang",
-        "Kab. Aceh Tengah",
-        "Kab. Aceh Tenggara",
-        "Kab. Aceh Timur",
-        "Kab. Aceh Utara",
-        "Kab. Bener Meriah",
-        "Kab. Bireuen",
-        "Kab. Gayo Lues",
-        "Kab. Nagan Raya",
-        "Kab. Pidie",
-        "Kab. Pidie Jaya",
-        "Kab. Simeulue",
-        "Kota Banda Aceh",
-        "Kota Langsa",
-        "Kota Lhokseumawe",
-        "Kota Sabang",
-        "Kota Subulussalam",
-        // === SUMATERA UTARA ===
-        "Kab. Asahan",
-        "Kab. Batu Bara",
-        "Kab. Dairi",
-        "Kab. Deli Serdang",
-        "Kab. Humbang Hasundutan",
-        "Kab. Karo",
-        "Kab. Labuhanbatu",
-        "Kab. Labuhanbatu Selatan",
-        "Kab. Labuhanbatu Utara",
-        "Kab. Langkat",
-        "Kab. Mandailing Natal",
-        "Kab. Nias",
-        "Kab. Nias Barat",
-        "Kab. Nias Selatan",
-        "Kab. Nias Utara",
-        "Kab. Padang Lawas",
-        "Kab. Padang Lawas Utara",
-        "Kab. Pakpak Bharat",
-        "Kab. Samosir",
-        "Kab. Serdang Bedagai",
-        "Kab. Simalungun",
-        "Kab. Tapanuli Selatan",
-        "Kab. Tapanuli Tengah",
-        "Kab. Tapanuli Utara",
-        "Kab. Toba",
-        "Kota Binjai",
-        "Kota Gunungsitoli",
-        "Kota Medan",
-        "Kota Padangsidimpuan",
-        "Kota Pematang Siantar",
-        "Kota Sibolga",
-        "Kota Tanjungbalai",
-        "Kota Tebing Tinggi",
-        // === SUMATERA BARAT ===
-        "Kab. Agam",
-        "Kab. Dharmasraya",
-        "Kab. Kepulauan Mentawai",
-        "Kab. Lima Puluh Kota",
-        "Kab. Padang Pariaman",
-        "Kab. Pasaman",
-        "Kab. Pasaman Barat",
-        "Kab. Pesisir Selatan",
-        "Kab. Sijunjung",
-        "Kab. Solok",
-        "Kab. Solok Selatan",
-        "Kab. Tanah Datar",
-        "Kota Bukittinggi",
-        "Kota Padang",
-        "Kota Padang Panjang",
-        "Kota Pariaman",
-        "Kota Payakumbuh",
-        "Kota Sawahlunto",
-        "Kota Solok",
-        // === RIAU ===
-        "Kab. Bengkalis",
-        "Kab. Indragiri Hilir",
-        "Kab. Indragiri Hulu",
-        "Kab. Kampar",
-        "Kab. Kepulauan Meranti",
-        "Kab. Kuantan Singingi",
-        "Kab. Pelalawan",
-        "Kab. Rokan Hilir",
-        "Kab. Rokan Hulu",
-        "Kab. Siak",
-        "Kota Dumai",
-        "Kota Pekanbaru",
-        // === JAMBI ===
-        "Kab. Batanghari",
-        "Kab. Bungo",
-        "Kab. Kerinci",
-        "Kab. Merangin",
-        "Kab. Muaro Jambi",
-        "Kab. Sarolangun",
-        "Kab. Tanjung Jabung Barat",
-        "Kab. Tanjung Jabung Timur",
-        "Kab. Tebo",
-        "Kota Jambi",
-        "Kota Sungai Penuh",
-        // === SUMATERA SELATAN ===
-        "Kab. Banyuasin",
-        "Kab. Empat Lawang",
-        "Kab. Lahat",
-        "Kab. Muara Enim",
-        "Kab. Musi Banyuasin",
-        "Kab. Musi Rawas",
-        "Kab. Musi Rawas Utara",
-        "Kab. Ogan Ilir",
-        "Kab. Ogan Komering Ilir",
-        "Kab. Ogan Komering Ulu",
-        "Kab. Ogan Komering Ulu Selatan",
-        "Kab. Ogan Komering Ulu Timur",
-        "Kab. Penukal Abab Lematang Ilir",
-        "Kota Lubuklinggau",
-        "Kota Pagar Alam",
-        "Kota Palembang",
-        "Kota Prabumulih",
-        // === BENGKULU ===
-        "Kab. Bengkulu Selatan",
-        "Kab. Bengkulu Tengah",
-        "Kab. Bengkulu Utara",
-        "Kab. Kaur",
-        "Kab. Kepahiang",
-        "Kab. Lebong",
-        "Kab. Mukomuko",
-        "Kab. Rejang Lebong",
-        "Kab. Seluma",
-        "Kota Bengkulu",
-        // === LAMPUNG ===
-        "Kab. Lampung Barat",
-        "Kab. Lampung Selatan",
-        "Kab. Lampung Tengah",
-        "Kab. Lampung Timur",
-        "Kab. Lampung Utara",
-        "Kab. Mesuji",
-        "Kab. Pesawaran",
-        "Kab. Pesisir Barat",
-        "Kab. Pringsewu",
-        "Kab. Tanggamus",
-        "Kab. Tulang Bawang",
-        "Kab. Tulang Bawang Barat",
-        "Kab. Way Kanan",
-        "Kota Bandar Lampung",
-        "Kota Metro",
-        // === KEPULAUAN BANGKA BELITUNG ===
-        "Kab. Bangka",
-        "Kab. Bangka Barat",
-        "Kab. Bangka Selatan",
-        "Kab. Bangka Tengah",
-        "Kab. Belitung",
-        "Kab. Belitung Timur",
-        "Kota Pangkalpinang",
-        // === KEPULAUAN RIAU ===
-        "Kab. Bintan",
-        "Kab. Karimun",
-        "Kab. Kepulauan Anambas",
-        "Kab. Lingga",
-        "Kab. Natuna",
-        "Kota Batam",
-        "Kota Tanjungpinang",
-        // === DKI JAKARTA ===
-        "Kab. Kepulauan Seribu",
-        "Kota Jakarta Barat",
-        "Kota Jakarta Pusat",
-        "Kota Jakarta Selatan",
-        "Kota Jakarta Timur",
-        "Kota Jakarta Utara",
-        // === JAWA BARAT ===
-        "Kab. Bandung",
-        "Kab. Bandung Barat",
-        "Kab. Bekasi",
-        "Kab. Bogor",
-        "Kab. Ciamis",
-        "Kab. Cianjur",
-        "Kab. Cirebon",
-        "Kab. Garut",
-        "Kab. Indramayu",
-        "Kab. Karawang",
-        "Kab. Kuningan",
-        "Kab. Majalengka",
-        "Kab. Pangandaran",
-        "Kab. Purwakarta",
-        "Kab. Subang",
-        "Kab. Sukabumi",
-        "Kab. Sumedang",
-        "Kab. Tasikmalaya",
-        "Kota Bandung",
-        "Kota Banjar",
-        "Kota Bekasi",
-        "Kota Bogor",
-        "Kota Cimahi",
-        "Kota Cirebon",
-        "Kota Depok",
-        "Kota Sukabumi",
-        "Kota Tasikmalaya",
-        // === JAWA TENGAH ===
-        "Kab. Banjarnegara",
-        "Kab. Banyumas",
-        "Kab. Batang",
-        "Kab. Blora",
-        "Kab. Boyolali",
-        "Kab. Brebes",
-        "Kab. Cilacap",
-        "Kab. Demak",
-        "Kab. Grobogan",
-        "Kab. Jepara",
-        "Kab. Karanganyar",
-        "Kab. Kebumen",
-        "Kab. Kendal",
-        "Kab. Klaten",
-        "Kab. Kudus",
-        "Kab. Magelang",
-        "Kab. Pati",
-        "Kab. Pekalongan",
-        "Kab. Pemalang",
-        "Kab. Purbalingga",
-        "Kab. Purworejo",
-        "Kab. Rembang",
-        "Kab. Semarang",
-        "Kab. Sragen",
-        "Kab. Sukoharjo",
-        "Kab. Tegal",
-        "Kab. Temanggung",
-        "Kab. Wonogiri",
-        "Kab. Wonosobo",
-        "Kota Magelang",
-        "Kota Pekalongan",
-        "Kota Salatiga",
-        "Kota Semarang",
-        "Kota Surakarta",
-        "Kota Tegal",
-        // === DI YOGYAKARTA ===
-        "Kab. Bantul",
-        "Kab. Gunungkidul",
-        "Kab. Kulon Progo",
-        "Kab. Sleman",
-        "Kota Yogyakarta",
-        // === JAWA TIMUR ===
-        "Kab. Bangkalan",
-        "Kab. Banyuwangi",
-        "Kab. Blitar",
-        "Kab. Bojonegoro",
-        "Kab. Bondowoso",
-        "Kab. Gresik",
-        "Kab. Jember",
-        "Kab. Jombang",
-        "Kab. Kediri",
-        "Kab. Lamongan",
-        "Kab. Lumajang",
-        "Kab. Madiun",
-        "Kab. Magetan",
-        "Kab. Malang",
-        "Kab. Mojokerto",
-        "Kab. Nganjuk",
-        "Kab. Ngawi",
-        "Kab. Pacitan",
-        "Kab. Pamekasan",
-        "Kab. Pasuruan",
-        "Kab. Ponorogo",
-        "Kab. Probolinggo",
-        "Kab. Sampang",
-        "Kab. Sidoarjo",
-        "Kab. Situbondo",
-        "Kab. Sumenep",
-        "Kab. Trenggalek",
-        "Kab. Tuban",
-        "Kab. Tulungagung",
-        "Kota Batu",
-        "Kota Blitar",
-        "Kota Kediri",
-        "Kota Madiun",
-        "Kota Malang",
-        "Kota Mojokerto",
-        "Kota Pasuruan",
-        "Kota Probolinggo",
-        "Kota Surabaya",
-        // === BANTEN ===
-        "Kab. Lebak",
-        "Kab. Pandeglang",
-        "Kab. Serang",
-        "Kab. Tangerang",
-        "Kota Cilegon",
-        "Kota Serang",
-        "Kota Tangerang",
-        "Kota Tangerang Selatan",
-        // === BALI ===
-        "Kab. Badung",
-        "Kab. Bangli",
-        "Kab. Buleleng",
-        "Kab. Gianyar",
-        "Kab. Jembrana",
-        "Kab. Karangasem",
-        "Kab. Klungkung",
-        "Kab. Tabanan",
-        "Kota Denpasar",
-        // === NUSA TENGGARA BARAT ===
-        "Kab. Bima",
-        "Kab. Dompu",
-        "Kab. Lombok Barat",
-        "Kab. Lombok Tengah",
-        "Kab. Lombok Timur",
-        "Kab. Lombok Utara",
-        "Kab. Sumbawa",
-        "Kab. Sumbawa Barat",
-        "Kota Bima",
-        "Kota Mataram",
-        // === NUSA TENGGARA TIMUR ===
-        "Kab. Alor",
-        "Kab. Belu",
-        "Kab. Ende",
-        "Kab. Flores Timur",
-        "Kab. Kupang",
-        "Kab. Lembata",
-        "Kab. Malaka",
-        "Kab. Manggarai",
-        "Kab. Manggarai Barat",
-        "Kab. Manggarai Timur",
-        "Kab. Nagekeo",
-        "Kab. Ngada",
-        "Kab. Rote Ndao",
-        "Kab. Sabu Raijua",
-        "Kab. Sikka",
-        "Kab. Sumba Barat",
-        "Kab. Sumba Barat Daya",
-        "Kab. Sumba Tengah",
-        "Kab. Sumba Timur",
-        "Kab. Timor Tengah Selatan",
-        "Kab. Timor Tengah Utara",
-        "Kota Kupang",
-        // === KALIMANTAN BARAT ===
-        "Kab. Bengkayang",
-        "Kab. Kapuas Hulu",
-        "Kab. Kayong Utara",
-        "Kab. Ketapang",
-        "Kab. Kubu Raya",
-        "Kab. Landak",
-        "Kab. Melawi",
-        "Kab. Mempawah",
-        "Kab. Sambas",
-        "Kab. Sanggau",
-        "Kab. Sekadau",
-        "Kab. Sintang",
-        "Kota Pontianak",
-        "Kota Singkawang",
-        // === KALIMANTAN TENGAH ===
-        "Kab. Barito Selatan",
-        "Kab. Barito Timur",
-        "Kab. Barito Utara",
-        "Kab. Gunung Mas",
-        "Kab. Kapuas",
-        "Kab. Katingan",
-        "Kab. Kotawaringin Barat",
-        "Kab. Kotawaringin Timur",
-        "Kab. Lamandau",
-        "Kab. Murung Raya",
-        "Kab. Pulang Pisau",
-        "Kab. Seruyan",
-        "Kab. Sukamara",
-        "Kota Palangka Raya",
-        // === KALIMANTAN SELATAN ===
-        "Kab. Balangan",
-        "Kab. Banjar",
-        "Kab. Barito Kuala",
-        "Kab. Hulu Sungai Selatan",
-        "Kab. Hulu Sungai Tengah",
-        "Kab. Hulu Sungai Utara",
-        "Kab. Kotabaru",
-        "Kab. Tabalong",
-        "Kab. Tanah Bumbu",
-        "Kab. Tanah Laut",
-        "Kab. Tapin",
-        "Kota Banjarbaru",
-        "Kota Banjarmasin",
-        // === KALIMANTAN TIMUR ===
-        "Kab. Berau",
-        "Kab. Kutai Barat",
-        "Kab. Kutai Kartanegara",
-        "Kab. Kutai Timur",
-        "Kab. Mahakam Ulu",
-        "Kab. Paser",
-        "Kab. Penajam Paser Utara",
-        "Kota Balikpapan",
-        "Kota Bontang",
-        "Kota Samarinda",
-        // === KALIMANTAN UTARA ===
-        "Kab. Bulungan",
-        "Kab. Malinau",
-        "Kab. Nunukan",
-        "Kab. Tana Tidung",
-        "Kota Tarakan",
-        // === SULAWESI UTARA ===
-        "Kab. Bolaang Mongondow",
-        "Kab. Bolaang Mongondow Selatan",
-        "Kab. Bolaang Mongondow Timur",
-        "Kab. Bolaang Mongondow Utara",
-        "Kab. Kepulauan Sangihe",
-        "Kab. Kepulauan Siau Tagulandang Biaro",
-        "Kab. Kepulauan Talaud",
-        "Kab. Minahasa",
-        "Kab. Minahasa Selatan",
-        "Kab. Minahasa Tenggara",
-        "Kab. Minahasa Utara",
-        "Kota Bitung",
-        "Kota Kotamobagu",
-        "Kota Manado",
-        "Kota Tomohon",
-        // === SULAWESI TENGAH ===
-        "Kab. Banggai",
-        "Kab. Banggai Kepulauan",
-        "Kab. Banggai Laut",
-        "Kab. Buol",
-        "Kab. Donggala",
-        "Kab. Morowali",
-        "Kab. Morowali Utara",
-        "Kab. Parigi Moutong",
-        "Kab. Poso",
-        "Kab. Sigi",
-        "Kab. Tojo Una-Una",
-        "Kab. Toli-Toli",
-        "Kota Palu",
-        // === SULAWESI SELATAN ===
-        "Kab. Bantaeng",
-        "Kab. Barru",
-        "Kab. Bone",
-        "Kab. Bulukumba",
-        "Kab. Enrekang",
-        "Kab. Gowa",
-        "Kab. Jeneponto",
-        "Kab. Kepulauan Selayar",
-        "Kab. Luwu",
-        "Kab. Luwu Timur",
-        "Kab. Luwu Utara",
-        "Kab. Maros",
-        "Kab. Pangkajene dan Kepulauan",
-        "Kab. Pinrang",
-        "Kab. Sidenreng Rappang",
-        "Kab. Sinjai",
-        "Kab. Soppeng",
-        "Kab. Takalar",
-        "Kab. Tana Toraja",
-        "Kab. Toraja Utara",
-        "Kab. Wajo",
-        "Kota Makassar",
-        "Kota Palopo",
-        "Kota Parepare",
-        // === SULAWESI TENGGARA ===
-        "Kab. Bombana",
-        "Kab. Buton",
-        "Kab. Buton Selatan",
-        "Kab. Buton Tengah",
-        "Kab. Buton Utara",
-        "Kab. Kolaka",
-        "Kab. Kolaka Timur",
-        "Kab. Kolaka Utara",
-        "Kab. Konawe",
-        "Kab. Konawe Kepulauan",
-        "Kab. Konawe Selatan",
-        "Kab. Konawe Utara",
-        "Kab. Muna",
-        "Kab. Muna Barat",
-        "Kab. Wakatobi",
-        "Kota Bau-Bau",
-        "Kota Kendari",
-        // === GORONTALO ===
-        "Kab. Boalemo",
-        "Kab. Bone Bolango",
-        "Kab. Gorontalo",
-        "Kab. Gorontalo Utara",
-        "Kab. Pohuwato",
-        "Kota Gorontalo",
-        // === SULAWESI BARAT ===
-        "Kab. Majene",
-        "Kab. Mamasa",
-        "Kab. Mamuju",
-        "Kab. Mamuju Tengah",
-        "Kab. Pasangkayu",
-        "Kab. Polewali Mandar",
-        // === MALUKU ===
-        "Kab. Buru",
-        "Kab. Buru Selatan",
-        "Kab. Kepulauan Aru",
-        "Kab. Kepulauan Tanimbar",
-        "Kab. Maluku Barat Daya",
-        "Kab. Maluku Tengah",
-        "Kab. Maluku Tenggara",
-        "Kab. Seram Bagian Barat",
-        "Kab. Seram Bagian Timur",
-        "Kota Ambon",
-        "Kota Tual",
-        // === MALUKU UTARA ===
-        "Kab. Halmahera Barat",
-        "Kab. Halmahera Selatan",
-        "Kab. Halmahera Tengah",
-        "Kab. Halmahera Timur",
-        "Kab. Halmahera Utara",
-        "Kab. Kepulauan Sula",
-        "Kab. Pulau Morotai",
-        "Kab. Pulau Taliabu",
-        "Kota Ternate",
-        "Kota Tidore Kepulauan",
-        // === PAPUA ===
-        "Kab. Biak Numfor",
-        "Kab. Deiyai",
-        "Kab. Dogiyai",
-        "Kab. Intan Jaya",
-        "Kab. Jayapura",
-        "Kab. Keerom",
-        "Kab. Kepulauan Yapen",
-        "Kab. Lanny Jaya",
-        "Kab. Mamberamo Raya",
-        "Kab. Mamberamo Tengah",
-        "Kab. Nabire",
-        "Kab. Nduga",
-        "Kab. Paniai",
-        "Kab. Puncak",
-        "Kab. Puncak Jaya",
-        "Kab. Sarmi",
-        "Kab. Supiori",
-        "Kab. Tolikara",
-        "Kab. Waropen",
-        "Kab. Yahukimo",
-        "Kab. Yalimo",
-        "Kota Jayapura",
-        // === PAPUA BARAT ===
-        "Kab. Fakfak",
-        "Kab. Kaimana",
-        "Kab. Manokwari",
-        "Kab. Manokwari Selatan",
-        "Kab. Pegunungan Arfak",
-        "Kab. Teluk Bintuni",
-        "Kab. Teluk Wondama",
-        "Kota Sorong",
-        // === PAPUA SELATAN ===
-        "Kab. Asmat",
-        "Kab. Boven Digoel",
-        "Kab. Mappi",
-        "Kab. Merauke",
-        // === PAPUA TENGAH ===
-        "Kab. Mimika",
-        "Kab. Puncak",
-        "Kab. Puncak Jaya",
-        "Kab. Tolikara",
-        // === PAPUA PEGUNUNGAN ===
-        "Kab. Jayawijaya",
-        "Kab. Pegunungan Bintang",
-        "Kab. Yahukimo",
-        // === PAPUA BARAT DAYA ===
-        "Kab. Maybrat",
-        "Kab. Raja Ampat",
-        "Kab. Sorong",
-        "Kab. Sorong Selatan",
-        "Kab. Tambrauw",
-    ];
+    // Data loaded dynamically from database
+    const kabKotaData = (__dd.kabupatenKota || []).map(function (item) {
+        return item.value;
+    });
 
     const kabKotaInput = document.getElementById("kabupaten_kota");
     const kabKotaList = document.getElementById("kabkota_list");
@@ -1250,7 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function detectFaces(canvasOrBitmap, canvas) {
-        // Try native FaceDetector first — this is the AUTHORITATIVE face check
+        // Try native FaceDetector first â€” this is the AUTHORITATIVE face check
         if (faceDetectorSupported && faceDetector) {
             try {
                 const faces = await faceDetector.detect(canvasOrBitmap);
@@ -1265,7 +660,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.warn("FaceDetector failed, using fallback:", e);
             }
         }
-        // Fallback: skin-tone — ONLY used if native API not available at all
+        // Fallback: skin-tone â€” ONLY used if native API not available at all
         // Mark as non-native so selfie can reject it
         if (canvas) {
             var regions = detectFaceRegions(canvas);
@@ -1329,8 +724,8 @@ document.addEventListener("DOMContentLoaded", function () {
      * Checks:
      * 1. Micro-motion: frames must show movement (reject perfectly still photos)
      * 2. Regional motion variance: real faces move non-uniformly (eyes blink, head tilts)
-     *    — a photo held by hand shakes UNIFORMLY across all quadrants
-     * 3. Texture sharpness (Laplacian): real camera-to-face is sharp; photo-of-screen is soft/moiré
+     *    â€” a photo held by hand shakes UNIFORMLY across all quadrants
+     * 3. Texture sharpness (Laplacian): real camera-to-face is sharp; photo-of-screen is soft/moirÃ©
      * 4. Screen glare: look for specular highlight clusters (screens reflect light)
      * 5. Color depth: real faces have natural hue gradients
      */
@@ -1369,7 +764,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (totalMotion < 0.8) {
                 result.live = false;
                 result.reason =
-                    "Tidak terdeteksi gerakan — pastikan ini wajah asli langsung, bukan foto!";
+                    "Tidak terdeteksi gerakan â€” pastikan ini wajah asli langsung, bukan foto!";
                 return result;
             }
 
@@ -1395,11 +790,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (motionCV < 0.06 && totalMotion > 1.0 && totalMotion < 15) {
                 result.live = false;
                 result.reason =
-                    "Gerakan terlalu seragam — seperti foto yang digoyang. Gunakan wajah asli!";
+                    "Gerakan terlalu seragam â€” seperti foto yang digoyang. Gunakan wajah asli!";
                 return result;
             }
         } else {
-            // Not enough frames yet — require waiting
+            // Not enough frames yet â€” require waiting
             result.live = false;
             result.reason =
                 "Tunggu sebentar... sedang memverifikasi wajah asli.";
@@ -1442,12 +837,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         var lapVariance = lapCount > 0 ? lapSum / lapCount : 0;
-        // Photo-of-screen has moiré or extreme blurriness → low Laplacian
-        // Real face has natural texture → higher Laplacian (>40)
+        // Photo-of-screen has moirÃ© or extreme blurriness â†’ low Laplacian
+        // Real face has natural texture â†’ higher Laplacian (>40)
         if (lapVariance < 40) {
             result.live = false;
             result.reason =
-                "Gambar terlalu halus/buram — pastikan ini wajah asli langsung, bukan foto!";
+                "Gambar terlalu halus/buram â€” pastikan ini wajah asli langsung, bukan foto!";
             return result;
         }
 
@@ -1470,7 +865,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (brightRatio > 0.08) {
             result.live = false;
             result.reason =
-                "Terdeteksi pantulan layar — jangan gunakan foto dari HP/layar!";
+                "Terdeteksi pantulan layar â€” jangan gunakan foto dari HP/layar!";
             return result;
         }
 
@@ -1503,7 +898,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (nonZeroBuckets <= 2) {
                 result.live = false;
                 result.reason =
-                    "Warna terlalu seragam — pastikan ini wajah asli, bukan foto layar!";
+                    "Warna terlalu seragam â€” pastikan ini wajah asli, bukan foto layar!";
                 return result;
             }
         }
@@ -1560,7 +955,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return settings.facingMode === "user";
             }
         }
-        // Desktop webcam: facingMode not reported → assumed front-facing
+        // Desktop webcam: facingMode not reported â†’ assumed front-facing
         return true;
     }
 
@@ -1655,7 +1050,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return result;
     }
 
-    // Find ALL face-like skin regions — focus on HEAD shapes only
+    // Find ALL face-like skin regions â€” focus on HEAD shapes only
     function detectFaceRegions(canvas) {
         var ctx2 = canvas.getContext("2d");
         var w = canvas.width,
@@ -1712,7 +1107,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 grid[row][col] = total > 0 && skinPx / total > 0.4;
             }
         }
-        // Flood fill — 4-directional only (tighter clusters)
+        // Flood fill â€” 4-directional only (tighter clusters)
         var visited = [];
         for (var vr = 0; vr < rows; vr++) {
             visited[vr] = [];
@@ -1740,7 +1135,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (cur.r > maxR) maxR = cur.r;
                         if (cur.c < minC) minC = cur.c;
                         if (cur.c > maxC) maxC = cur.c;
-                        // 4-directional only — prevents merging adjacent faces
+                        // 4-directional only â€” prevents merging adjacent faces
                         var dirs = [
                             [-1, 0],
                             [1, 0],
@@ -2226,12 +1621,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (currentFaceBoxes.length === 0)
                     statusText = "\u26A0 Arahkan wajah ke kamera";
                 else if (currentFaceBoxes.length === 1)
-                    statusText = "\u2713 1 wajah — siap foto";
+                    statusText = "\u2713 1 wajah â€” siap foto";
                 else
                     statusText =
                         "\u2717 " +
                         currentFaceBoxes.length +
-                        " wajah — harus 1 saja";
+                        " wajah â€” harus 1 saja";
             } else {
                 var parts = [];
                 if (currentFaceBoxes.length < 2)
@@ -2246,7 +1641,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         currentFaceBoxes.length +
                         " wajah + " +
                         currentDocBoxes.length +
-                        " berkas — siap";
+                        " berkas â€” siap";
                 } else {
                     statusText = "\u26A0 " + parts.join(", ");
                 }
@@ -2600,10 +1995,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection — STRICT: must be exactly 1 REAL face (native API)
+            // Face detection â€” STRICT: must be exactly 1 REAL face (native API)
             const faceResult = await detectFaces(result.canvas, result.canvas);
 
-            // For selfie: REQUIRE native FaceDetector — skin-tone blobs are NOT enough
+            // For selfie: REQUIRE native FaceDetector â€” skin-tone blobs are NOT enough
             if (faceDetectorSupported && !faceResult.native) {
                 showToast(
                     '<i class="fa-solid fa-face-frown"></i> Wajah tidak terdeteksi! Pastikan wajah Anda terlihat jelas di kamera.',
@@ -2641,7 +2036,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // Liveness check — prevent photo-of-photo spoofing
+            // Liveness check â€” prevent photo-of-photo spoofing
             var liveness = checkLiveness(result.canvas);
             if (!liveness.live) {
                 showToast(
@@ -2676,7 +2071,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btnCameraSelfie.textContent = "Ulangi Foto";
 
             showToast(
-                '<i class="fa-solid fa-circle-check"></i> Foto selfie tersimpan — wajah terverifikasi!',
+                '<i class="fa-solid fa-circle-check"></i> Foto selfie tersimpan â€” wajah terverifikasi!',
                 "success",
             );
         }
@@ -2780,7 +2175,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection — STRICT: must be exactly 2 faces + verify document
+            // Face detection â€” STRICT: must be exactly 2 faces + verify document
             const faceResult = await detectFaces(result.canvas, result.canvas);
 
             if (!faceResult.detected || faceResult.count === 0) {
@@ -2798,7 +2193,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 showToast(
                     '<i class="fa-solid fa-triangle-exclamation"></i> Hanya ' +
                         faceResult.count +
-                        " wajah — harus ada 2 orang (petugas piket & pengunjung)!",
+                        " wajah â€” harus ada 2 orang (petugas piket & pengunjung)!",
                 );
                 restartDetectionLoop(
                     fotoPenerimaanBox,
@@ -2811,7 +2206,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 showToast(
                     '<i class="fa-solid fa-circle-exclamation"></i> Terdeteksi ' +
                         faceResult.count +
-                        " wajah — harus tepat 2 orang saja!",
+                        " wajah â€” harus tepat 2 orang saja!",
                 );
                 restartDetectionLoop(
                     fotoPenerimaanBox,
@@ -2834,7 +2229,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             showToast(
-                '<i class="fa-solid fa-circle-check"></i> Foto penerimaan tersimpan — 2 wajah + ' +
+                '<i class="fa-solid fa-circle-check"></i> Foto penerimaan tersimpan â€” 2 wajah + ' +
                     docCheck.length +
                     " berkas terverifikasi!",
                 "success",
@@ -2860,7 +2255,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Close penerimaan camera (optional — user can skip this photo)
+    // Close penerimaan camera (optional â€” user can skip this photo)
     btnClosePenerimaan.addEventListener("click", function () {
         if (!penerimaanCameraActive) return;
         stopDetectionLoop();
@@ -2939,7 +2334,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // If keperluan is berkas-related, penerimaan is required
         if (isKeperluanBerkas() && !penerimaanDone) {
             showToast(
-                '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas — ambil foto penerimaan berkas terlebih dahulu!',
+                '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas â€” ambil foto penerimaan berkas terlebih dahulu!',
                 "warning",
             );
             fotoPenerimaanBox.closest(".form-group").classList.add("shake");
@@ -3057,29 +2452,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const keperluanList = document.getElementById("keperluan_list");
     let keperluanActiveIdx = -1;
 
-    const keperluanData = [
-        "Koordinasi/Konsultasi",
-        "Rapat",
-        "Menyerahkan Surat/Berkas",
-        "Legalisir",
-        "Audiensi",
-        "Pengambilan Dokumen",
-        "Permohonan Izin",
-        "Sosialisasi",
-        "Pembinaan",
-        "Monitoring/Evaluasi",
-        "Pelaporan",
-        "Pengaduan",
-        "Kunjungan Kerja",
-        "Tanda Tangan Dokumen",
-        "Verifikasi Data",
-        "Permohonan Rekomendasi",
-        "Asistensi",
-        "Pendataan",
-        "Kerja Sama/MoU",
-        "Undangan/Acara Resmi",
-        "Lainnya",
-    ];
+    // Data loaded dynamically from database
+    const keperluanData = (__dd.keperluan || []).map(function (item) {
+        return item.value;
+    });
 
     function renderKeperluan(filter) {
         const query = (filter || "").toLowerCase();
@@ -3181,6 +2557,118 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // ===== BAGIAN YANG DITUJU AUTOCOMPLETE =====
+    const bagianDitujuInput = document.getElementById("bagian_dituju");
+    const bagianDitujuList = document.getElementById("bagian_dituju_list");
+    let bagianDitujuActiveIdx = -1;
+
+    // Data loaded dynamically from database
+    const bagianDitujuData = (__dd.bagianDituju || []).map(function (item) {
+        return item.value;
+    });
+
+    function renderBagianDituju(filter) {
+        const query = (filter || "").toLowerCase();
+        const filtered = query
+            ? bagianDitujuData.filter(function (k) {
+                  return k.toLowerCase().includes(query);
+              })
+            : bagianDitujuData;
+
+        bagianDitujuList.innerHTML = "";
+        bagianDitujuActiveIdx = -1;
+
+        if (filtered.length === 0) {
+            bagianDitujuList.classList.remove("show");
+            return;
+        }
+
+        filtered.forEach(function (name) {
+            const div = document.createElement("div");
+            div.className = "autocomplete-item";
+            if (query) {
+                const idx = name.toLowerCase().indexOf(query);
+                div.innerHTML =
+                    name.substring(0, idx) +
+                    "<strong>" +
+                    name.substring(idx, idx + query.length) +
+                    "</strong>" +
+                    name.substring(idx + query.length);
+            } else {
+                div.textContent = name;
+            }
+            div.dataset.value = name;
+            div.addEventListener("mousedown", function (e) {
+                e.preventDefault();
+                bagianDitujuInput.value = name;
+                bagianDitujuList.classList.remove("show");
+            });
+            bagianDitujuList.appendChild(div);
+        });
+        bagianDitujuList.classList.add("show");
+    }
+
+    bagianDitujuInput.addEventListener("focus", function () {
+        renderBagianDituju(this.value);
+    });
+
+    bagianDitujuInput.addEventListener("input", function () {
+        renderBagianDituju(this.value);
+    });
+
+    bagianDitujuInput.addEventListener("blur", function () {
+        setTimeout(function () {
+            bagianDitujuList.classList.remove("show");
+        }, 150);
+    });
+
+    bagianDitujuInput.addEventListener("keydown", function (e) {
+        const items = bagianDitujuList.querySelectorAll(".autocomplete-item");
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            bagianDitujuActiveIdx = Math.min(
+                bagianDitujuActiveIdx + 1,
+                items.length - 1,
+            );
+            items.forEach(function (el, i) {
+                el.classList.toggle("active", i === bagianDitujuActiveIdx);
+            });
+            if (items[bagianDitujuActiveIdx])
+                items[bagianDitujuActiveIdx].scrollIntoView({
+                    block: "nearest",
+                });
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            bagianDitujuActiveIdx = Math.max(bagianDitujuActiveIdx - 1, 0);
+            items.forEach(function (el, i) {
+                el.classList.toggle("active", i === bagianDitujuActiveIdx);
+            });
+            if (items[bagianDitujuActiveIdx])
+                items[bagianDitujuActiveIdx].scrollIntoView({
+                    block: "nearest",
+                });
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (bagianDitujuActiveIdx >= 0 && items[bagianDitujuActiveIdx]) {
+                bagianDitujuInput.value =
+                    items[bagianDitujuActiveIdx].dataset.value;
+                bagianDitujuList.classList.remove("show");
+            }
+        } else if (e.key === "Escape") {
+            bagianDitujuList.classList.remove("show");
+        }
+    });
+
+    // Close bagian dituju dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+        if (
+            !bagianDitujuInput.contains(e.target) &&
+            !bagianDitujuList.contains(e.target)
+        ) {
+            bagianDitujuList.classList.remove("show");
+        }
+    });
+
     // ===== FORM SUBMIT VALIDATION =====
     const bukuTamuForm = document.getElementById("bukuTamuForm");
     if (bukuTamuForm) {
@@ -3253,7 +2741,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (isKeperluanBerkas() && !fotoPenerimaanInput.value) {
                 e.preventDefault();
                 showToast(
-                    '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas — foto penerimaan berkas wajib diambil!',
+                    '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas â€” foto penerimaan berkas wajib diambil!',
                     "warning",
                 );
                 fotoPenerimaanBox.closest(".form-group").classList.add("shake");

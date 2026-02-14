@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BukuTamu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class BukuTamuController extends Controller
@@ -105,6 +106,15 @@ class BukuTamuController extends Controller
     public function print($id)
     {
         $tamu = BukuTamu::findOrFail($id);
+
+        if (Auth::check()) {
+            activity('cetak')
+                ->performedOn($tamu)
+                ->causedBy(Auth::user())
+                ->withProperties(['nama_tamu' => $tamu->nama_lengkap, 'tipe' => 'buku_tamu_detail'])
+                ->log("Mencetak detail kunjungan tamu '{$tamu->nama_lengkap}'");
+        }
+
         return view('print.buku-tamu', compact('tamu'));
     }
 
@@ -142,6 +152,93 @@ class BukuTamuController extends Controller
 
         $tamuList = $query->orderBy('created_at', 'desc')->get();
 
-        return view('print.buku-tamu-bulk', compact('tamuList'));
+        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+
+        if (Auth::check()) {
+            activity('cetak')
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'jumlah' => $tamuList->count(),
+                    'tipe' => $request->query('type', 'buku_tamu_bulk'),
+                    'filter' => array_filter([
+                        'start_date' => $request->start_date,
+                        'end_date' => $request->end_date,
+                        'nama' => $request->nama,
+                    ]),
+                ])
+                ->log('Mencetak laporan buku tamu (' . $tamuList->count() . ' data)');
+        }
+
+        return view('print.buku-tamu-bulk', compact('tamuList', 'ketuaKcd'));
+    }
+
+    /**
+     * Print dropdown options data
+     */
+    public function printDropdownOptions(Request $request)
+    {
+        $category = $request->query('category', 'all');
+
+        if ($category === 'all') {
+            $options = \App\Models\DropdownOption::orderBy('category')
+                ->orderBy('sort_order')
+                ->get()
+                ->groupBy('category');
+        } else {
+            $options = collect([
+                $category => \App\Models\DropdownOption::where('category', $category)
+                    ->orderBy('sort_order')
+                    ->get()
+            ]);
+        }
+
+        $categoryLabels = \App\Models\DropdownOption::CATEGORY_LABELS;
+
+        if (Auth::check()) {
+            $catName = $category === 'all' ? 'Semua Kategori' : ($categoryLabels[$category] ?? $category);
+            activity('cetak')
+                ->causedBy(Auth::user())
+                ->withProperties(['kategori' => $catName, 'tipe' => 'dropdown_options'])
+                ->log("Mencetak data dropdown options ({$catName})");
+        }
+
+        return view('print.dropdown-options', compact('options', 'categoryLabels', 'category'));
+    }
+
+    /**
+     * Print pegawai piket data
+     */
+    public function printPegawaiPiket()
+    {
+        $pegawaiList = \App\Models\DropdownOption::where('category', \App\Models\DropdownOption::CATEGORY_PEGAWAI_PIKET)
+            ->orderBy('sort_order')
+            ->get();
+
+        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+
+        if (Auth::check()) {
+            activity('cetak')
+                ->causedBy(Auth::user())
+                ->withProperties(['jumlah' => $pegawaiList->count(), 'tipe' => 'pegawai_piket'])
+                ->log('Mencetak data pegawai piket (' . $pegawaiList->count() . ' data)');
+        }
+
+        return view('print.pegawai-piket', compact('pegawaiList', 'ketuaKcd'));
+    }
+
+    public function printDataPegawai()
+    {
+        $pegawaiList = \App\Models\Pegawai::orderBy('nama')->get();
+
+        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+
+        if (Auth::check()) {
+            activity('cetak')
+                ->causedBy(Auth::user())
+                ->withProperties(['jumlah' => $pegawaiList->count(), 'tipe' => 'data_pegawai'])
+                ->log('Mencetak data pegawai (' . $pegawaiList->count() . ' data)');
+        }
+
+        return view('print.data-pegawai', compact('pegawaiList', 'ketuaKcd'));
     }
 }

@@ -314,8 +314,8 @@
         <div class="signature-section">
             <div class="signature-box">
                 <p>Mengetahui,</p>
-                <p class="name">Kepala Cabang Dinas Wil. XIII</p>
-                <p class="nip">NIP. _____________________</p>
+                <p class="name">{{ $ketuaKcd->formatted_nama }}</p>
+                <p class="nip">{{ $ketuaKcd->formatted_nip }}</p>
             </div>
             @if($pegawai->nama_piket)
             <div class="signature-box">

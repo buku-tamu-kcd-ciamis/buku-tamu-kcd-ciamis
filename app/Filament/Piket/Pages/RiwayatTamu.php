@@ -3,6 +3,7 @@
 namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
+use App\Models\DropdownOption;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Tables;
@@ -136,25 +137,7 @@ class RiwayatTamu extends Page implements HasTable
             Forms\Components\Select::make('keperluan')
               ->label('Keperluan')
               ->searchable()
-              ->options([
-                'Koordinasi/Konsultasi' => 'Koordinasi/Konsultasi',
-                'Rapat' => 'Rapat',
-                'Audiensi' => 'Audiensi',
-                'Permohonan Izin' => 'Permohonan Izin',
-                'Sosialisasi' => 'Sosialisasi',
-                'Pembinaan' => 'Pembinaan',
-                'Monitoring/Evaluasi' => 'Monitoring/Evaluasi',
-                'Pelaporan' => 'Pelaporan',
-                'Pengaduan' => 'Pengaduan',
-                'Kunjungan Kerja' => 'Kunjungan Kerja',
-                'Verifikasi Data' => 'Verifikasi Data',
-                'Permohonan Rekomendasi' => 'Permohonan Rekomendasi',
-                'Asistensi' => 'Asistensi',
-                'Pendataan' => 'Pendataan',
-                'Kerja Sama/MoU' => 'Kerja Sama/MoU',
-                'Undangan/Acara Resmi' => 'Undangan/Acara Resmi',
-                'Lainnya' => 'Lainnya',
-              ])
+              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KEPERLUAN))
               ->placeholder('Pilih keperluan'),
           ])
           ->action(function (array $data, $livewire) {

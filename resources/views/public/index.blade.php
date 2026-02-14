@@ -116,7 +116,10 @@
                         <div class="form-group">
                             <label>Bagian Yang Dituju <span class="required">*</span></label>
                             <div class="input-wrapper">
-                                <input type="text" name="bagian_dituju" id="bagian_dituju" placeholder="" required>
+                                <div class="autocomplete-wrapper">
+                                    <input type="text" name="bagian_dituju" id="bagian_dituju" placeholder="Ketik atau pilih bagian..." autocomplete="off" required>
+                                    <div class="autocomplete-list" id="bagian_dituju_list"></div>
+                                </div>
                                 <i class="fa-solid fa-door-open input-icon"></i>
                             </div>
                         </div>
@@ -220,7 +223,11 @@
             <button type="button" class="close-btn" id="btnCloseBarcode">&times;</button>
             <h3><i class="fa-solid"></i> Survey Kepuasan Masyarakat</h3>
             <p>Scan barcode di bawah ini untuk mengisi survey</p>
-            <img src="{{ asset('img/barcode-skm.png') }}" alt="Barcode Survey Kepuasan Masyarakat">
+            @php
+                $pengaturan = \App\Models\PengaturanKcd::getSettings();
+                $barcodeUrl = $pengaturan->barcode_skm ? \Storage::url($pengaturan->barcode_skm) : asset('img/barcode-skm.png');
+            @endphp
+            <img src="{{ $barcodeUrl }}" alt="Barcode Survey Kepuasan Masyarakat">
         </div>
     </div>
 
@@ -240,5 +247,14 @@
 @endsection
 
 @push('scripts')
+    <script>
+        // Dynamic dropdown data from database
+        window.__dropdownData = {
+            jenisId: @json($jenisIdOptions ?? []),
+            keperluan: @json($keperluanOptions ?? []),
+            kabupatenKota: @json($kabupatenKotaOptions ?? []),
+            bagianDituju: @json($bagianDitujuOptions ?? []),
+        };
+    </script>
     <script src="{{ asset('js/public/buku-tamu.js') }}"></script>
 @endpush

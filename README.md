@@ -293,7 +293,7 @@ Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
   <tr>
     <td align="center">
       <a href="https://github.com/fikrihaikal17" target="_blank">
-        <img src="https://via.placeholder.com/100" width="100px;" alt="Muhammad Fikri Haikal"/><br />
+        <img src="https://github.com/fikrihaikal17.png" width="100px;" alt="Muhammad Fikri Haikal"/><br />
         <sub><b>Muhammad Fikri Haikal</b></sub>
       </a><br />
       <sub>Project Lead & Full Stack Developer</sub><br />
@@ -301,7 +301,7 @@ Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
     </td>
     <td align="center">
       <a href="https://github.com/Ptragaluhhh28" target="_blank">
-        <img src="https://via.placeholder.com/100" width="100px;" alt="Galuh Surya Putra"/><br />
+        <img src="https://github.com/Ptragaluhhh28.png" width="100px;" alt="Galuh Surya Putra"/><br />
         <sub><b>Galuh Surya Putra</b></sub>
       </a><br />
       <sub>Frontend Developer</sub><br />
@@ -309,7 +309,7 @@ Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
     </td>
     <td align="center">
       <a href="https://github.com/rasyakt" target="_blank">
-        <img src="https://via.placeholder.com/100" width="100px;" alt="Rasya MZ"/><br />
+        <img src="https://github.com/rasyakt.png" width="100px;" alt="Rasya MZ"/><br />
         <sub><b>Rasya MZ</b></sub>
       </a><br />
       <sub>System Designer & QA</sub><br />

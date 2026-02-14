@@ -9,6 +9,7 @@ Terima kasih kepada semua anggota tim yang telah berkontribusi dalam pengembanga
 ### Muhammad Fikri Haikal
 
 **Role**: Project Lead & Full Stack Developer  
+**GitHub**: [@fikrihaikal17](https://github.com/fikrihaikal17)  
 **Responsibilities**:
 
 - Project management & team coordination
@@ -34,6 +35,7 @@ Terima kasih kepada semua anggota tim yang telah berkontribusi dalam pengembanga
 ### Galuh Surya Putra
 
 **Role**: Frontend Developer  
+**GitHub**: [@Ptragaluhhh28](https://github.com/Ptragaluhhh28)  
 **Responsibilities**:
 
 - Frontend development & implementation
@@ -53,6 +55,7 @@ Terima kasih kepada semua anggota tim yang telah berkontribusi dalam pengembanga
 ### Rasya MZ
 
 **Role**: System Designer & Quality Assurance  
+**GitHub**: [@rasyakt](https://github.com/rasyakt)  
 **Responsibilities**:
 
 - Initial system design & planning

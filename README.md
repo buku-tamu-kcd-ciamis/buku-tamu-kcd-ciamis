@@ -203,11 +203,11 @@ Akses aplikasi di `http://localhost:8000`
 
 ### 8. Default Credentials
 
-| Role        | Email                | Password   |
-| ----------- | -------------------- | ---------- |
-| Super Admin | `admin@cadisdik.com` | `password` |
-| Ketua KCD   | `ketua@cadisdik.com` | `password` |
-| Piket       | `piket@cadisdik.com` | `password` |
+| Role        | Email                      | Password        |
+| ----------- | -------------------------- | --------------- |
+| Super Admin | `superadmin@cadisdik13.id` | `superadmin123` |
+| Ketua KCD   | `ketua@cadisdik13.id`      | `ketua123`      |
+| Piket       | `piket@cadisdik13.id`      | `piket123`      |
 
 ---
 
@@ -292,20 +292,26 @@ Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
 <table>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/100" width="100px;" alt="Muhammad Fikri Haikal"/><br />
-      <sub><b>Muhammad Fikri Haikal</b></sub><br />
+      <a href="https://github.com/fikrihaikal17" target="_blank">
+        <img src="https://via.placeholder.com/100" width="100px;" alt="Muhammad Fikri Haikal"/><br />
+        <sub><b>Muhammad Fikri Haikal</b></sub>
+      </a><br />
       <sub>Project Lead & Full Stack Developer</sub><br />
       <sub>System Architecture & Backend Development</sub>
     </td>
     <td align="center">
-      <img src="https://via.placeholder.com/100" width="100px;" alt="Galuh Surya Putra"/><br />
-      <sub><b>Galuh Surya Putra</b></sub><br />
+      <a href="https://github.com/Ptragaluhhh28" target="_blank">
+        <img src="https://via.placeholder.com/100" width="100px;" alt="Galuh Surya Putra"/><br />
+        <sub><b>Galuh Surya Putra</b></sub>
+      </a><br />
       <sub>Frontend Developer</sub><br />
       <sub>UI/UX & Interface Design</sub>
     </td>
     <td align="center">
-      <img src="https://via.placeholder.com/100" width="100px;" alt="Rasya MZ"/><br />
-      <sub><b>Rasya MZ</b></sub><br />
+      <a href="https://github.com/rasyakt" target="_blank">
+        <img src="https://via.placeholder.com/100" width="100px;" alt="Rasya MZ"/><br />
+        <sub><b>Rasya MZ</b></sub>
+      </a><br />
       <sub>System Designer & QA</sub><br />
       <sub>Planning & Quality Assurance</sub>
     </td>
@@ -384,10 +390,6 @@ All rights reserved © 2026 Cadisdik XIII
 ---
 
 ## Screenshots
-
-### Landing Page
-
-![Landing Page](docs/screenshots/landing-page.png)
 
 ### Admin Dashboard
 

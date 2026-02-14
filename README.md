@@ -138,7 +138,7 @@ Sistem Informasi Cadisdik XIII adalah aplikasi berbasis web yang dirancang untuk
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/username/filament-laravel.git cadisdik-xiii
+git clone https://github.com/buku-tamu-kcd-ciamis/buku-tamu-kcd-ciamis.git cadisdik-xiii
 cd cadisdik-xiii
 ```
 
@@ -287,7 +287,7 @@ Detail: Lihat [DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) dan [ISPCONFIG_DEPL
 
 ## Team
 
-Project ini dikembangkan oleh tim mahasiswa sebagai bagian dari project pengabdian masyarakat:
+Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
 
 <table>
   <tr>

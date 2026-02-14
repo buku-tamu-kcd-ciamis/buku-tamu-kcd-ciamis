@@ -85,7 +85,7 @@ ssh username@server-ip
 cd /var/www/cadisdik/
 
 # Clone project (pakai HTTPS atau SSH)
-git clone https://github.com/username/filament-laravel.git public_html
+git clone https://github.com/buku-tamu-kcd-ciamis/buku-tamu-kcd-ciamis.git public_html
 cd public_html
 
 # Set Git credentials untuk auto-pull

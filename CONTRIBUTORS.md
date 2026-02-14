@@ -129,8 +129,8 @@ Terima kasih kepada semua anggota tim yang telah berkontribusi dalam pengembanga
 
 For questions or collaboration inquiries, reach out to:
 
-- **Project Email**: [project-email@example.com]
-- **GitHub Organization**: [github.com/cadisdik-xiii]
+- **Project Email**: cadisdik13@disdik.jabarprov.go.id
+- **GitHub Repository**: [github.com/buku-tamu-kcd-ciamis](https://github.com/buku-tamu-kcd-ciamis/buku-tamu-kcd-ciamis)
 
 ---
 

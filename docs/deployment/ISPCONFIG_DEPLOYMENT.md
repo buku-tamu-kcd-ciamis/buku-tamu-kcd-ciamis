@@ -88,11 +88,11 @@ ssh web1@server-ip -p 22
 cd ~/private
 
 # Clone repository (pakai HTTPS tanpa install SSH key di GitHub)
-git clone https://github.com/username/filament-laravel.git laravel
+git clone https://github.com/buku-tamu-kcd-ciamis/buku-tamu-kcd-ciamis.git laravel
 cd laravel
 
 # Atau pakai SSH jika sudah setup deploy key
-# git clone git@github.com:username/filament-laravel.git laravel
+# git clone git@github.com:buku-tamu-kcd-ciamis/buku-tamu-kcd-ciamis.git laravel
 ```
 
 ### 3. Setup Symbolic Links

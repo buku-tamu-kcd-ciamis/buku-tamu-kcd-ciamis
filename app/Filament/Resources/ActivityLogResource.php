@@ -27,14 +27,14 @@ class ActivityLogResource extends Resource
     {
         /** @var User $user */
         $user = Auth::user();
-        return $user && $user->hasRole('Super Admin');
+        return $user && $user->role_user && $user->role_user->hasPermission('activity_log');
     }
 
     public static function canViewAny(): bool
     {
         /** @var User $user */
         $user = Auth::user();
-        return $user && $user->hasRole('Super Admin');
+        return $user && $user->role_user && $user->role_user->hasPermission('activity_log');
     }
 
     public static function getLogNameLabel(string $state): string

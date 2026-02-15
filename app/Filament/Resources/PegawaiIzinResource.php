@@ -29,7 +29,7 @@ class PegawaiIzinResource extends Resource
   {
     /** @var User $user */
     $user = Auth::user();
-    return $user && $user->hasRole('Super Admin');
+    return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }
 
   public static function form(Form $form): Form

@@ -10,6 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class KunjunganResource extends Resource
 {
@@ -22,6 +24,13 @@ class KunjunganResource extends Resource
   protected static ?string $modelLabel = 'Kunjungan';
   protected static ?string $pluralModelLabel = 'Kunjungan Tamu';
   protected static ?int $navigationSort = 1;
+
+  public static function shouldRegisterNavigation(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+    return $user && $user->role_user && $user->role_user->hasPermission('buku_tamu');
+  }
 
   public static function form(Form $form): Form
   {
@@ -118,7 +127,11 @@ class KunjunganResource extends Resource
             ->label('Ubah Status')
             ->icon('heroicon-s-pencil-square')
             ->color('warning')
-            ->visible(fn(BukuTamu $record) => $record->status !== 'selesai')
+            ->visible(function (BukuTamu $record) {
+              /** @var User $user */
+              $user = Auth::user();
+              return $record->status !== 'selesai' && $user && $user->role_user && $user->role_user->canChangeStatus();
+            })
             ->form([
               Forms\Components\Placeholder::make('info_tamu')
                 ->label('Detail Tamu')
@@ -179,7 +192,11 @@ class KunjunganResource extends Resource
             ->color('success')
             ->url(fn(BukuTamu $record) => route('buku-tamu.print', $record->id))
             ->openUrlInNewTab()
-            ->visible(fn(BukuTamu $record) => $record->status === 'selesai'),
+            ->visible(function (BukuTamu $record) {
+              /** @var User $user */
+              $user = Auth::user();
+              return $record->status === 'selesai' && $user && $user->role_user && $user->role_user->canPrint();
+            }),
         ])
           ->label(false)
           ->icon('heroicon-m-ellipsis-vertical')
@@ -191,6 +208,11 @@ class KunjunganResource extends Resource
           ->label('Cetak Laporan')
           ->icon('heroicon-o-printer')
           ->color('success')
+          ->visible(function () {
+            /** @var User $user */
+            $user = Auth::user();
+            return $user && $user->role_user && $user->role_user->canPrint();
+          })
           ->form([
             Forms\Components\DatePicker::make('start_date')
               ->label('Tanggal Mulai'),

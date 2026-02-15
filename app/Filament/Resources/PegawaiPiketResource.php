@@ -29,7 +29,7 @@ class PegawaiPiketResource extends Resource
     {
         /** @var User $user */
         $user = Auth::user();
-        return $user && $user->hasRole('Super Admin');
+        return $user && $user->role_user && $user->role_user->hasPermission('pegawai_piket');
     }
 
     public static function getEloquentQuery(): Builder

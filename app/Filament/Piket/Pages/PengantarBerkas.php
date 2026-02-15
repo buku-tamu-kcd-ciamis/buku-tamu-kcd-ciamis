@@ -13,6 +13,8 @@ use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class PengantarBerkas extends Page implements HasTable
 {
@@ -82,7 +84,11 @@ class PengantarBerkas extends Page implements HasTable
             ->label('Ubah Status')
             ->icon('heroicon-s-pencil-square')
             ->color('warning')
-            ->visible(fn(BukuTamu $record) => $record->status !== 'selesai')
+            ->visible(function (BukuTamu $record) {
+              /** @var User $user */
+              $user = Auth::user();
+              return $record->status !== 'selesai' && $user && $user->role_user && $user->role_user->canChangeStatus();
+            })
             ->form([
               Forms\Components\Placeholder::make('info_tamu')
                 ->label('Detail Tamu')
@@ -144,7 +150,11 @@ class PengantarBerkas extends Page implements HasTable
             ->color('success')
             ->url(fn(BukuTamu $record) => route('buku-tamu.print', $record->id))
             ->openUrlInNewTab()
-            ->visible(fn(BukuTamu $record) => $record->status === 'selesai'),
+            ->visible(function (BukuTamu $record) {
+              /** @var User $user */
+              $user = Auth::user();
+              return $record->status === 'selesai' && $user && $user->role_user && $user->role_user->canPrint();
+            }),
         ])
           ->label(false)
           ->icon('heroicon-m-ellipsis-vertical')
@@ -156,6 +166,11 @@ class PengantarBerkas extends Page implements HasTable
           ->label('Cetak Laporan')
           ->icon('heroicon-o-printer')
           ->color('success')
+          ->visible(function () {
+            /** @var User $user */
+            $user = Auth::user();
+            return $user && $user->role_user && $user->role_user->canPrint();
+          })
           ->form([
             Forms\Components\DatePicker::make('start_date')
               ->label('Tanggal Mulai'),

@@ -151,23 +151,41 @@
         .signature-section {
             display: flex;
             justify-content: space-around;
+            align-items: flex-start;
             margin-top: 40px;
             page-break-inside: avoid;
-            gap: 10px;
+            gap: 20px;
         }
 
         .signature-box {
             text-align: center;
-            width: 180px;
-            flex: 0 1 180px;
+            width: 220px;
+            max-width: 220px;
         }
 
         .signature-box p {
             font-size: 10pt;
+            line-height: 1.3;
+        }
+
+        .signature-label {
+            min-height: 65px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .signature-space {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
         }
 
         .signature-box .name {
-            margin-top: 70px;
+            margin-top: 10px;
             font-weight: bold;
             border-bottom: 1px solid #000;
             padding-bottom: 2px;
@@ -313,23 +331,22 @@
         <!-- SIGNATURE -->
         <div class="signature-section">
             <div class="signature-box">
-                <p>Mengetahui,</p>
+                <div class="signature-label">
+                    <p>Mengetahui,</p>
+                    <p>Kepala Cabang Dinas Pendidikan</p>
+                    <p>Wilayah XIII,</p>
+                </div>
+                <div class="signature-space"></div>
                 <p class="name">{{ $ketuaKcd->formatted_nama }}</p>
                 <p class="nip">{{ $ketuaKcd->formatted_nip }}</p>
             </div>
-            @if($pegawai->nama_piket)
             <div class="signature-box">
-                <p>Petugas Piket,</p>
-                @if($pegawai->tanda_tangan_piket)
-                <div style="margin: 10px 0;">
-                    <img src="{{ $pegawai->tanda_tangan_piket }}" alt="Tanda Tangan Piket" style="max-height: 60px; max-width: 150px;">
+                <div class="signature-label">
+                    <p>Yang Mengajukan,</p>
+                    <p>&nbsp;</p>
+                    <p>&nbsp;</p>
                 </div>
-                @endif
-                <p class="name">{{ $pegawai->nama_piket }}</p>
-            </div>
-            @endif
-            <div class="signature-box">
-                <p>Yang Mengajukan,</p>
+                <div class="signature-space"></div>
                 <p class="name">{{ $pegawai->nama_pegawai }}</p>
                 <p class="nip">NIP. {{ $pegawai->nip }}</p>
             </div>

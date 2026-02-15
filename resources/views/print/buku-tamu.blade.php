@@ -291,7 +291,11 @@
         <!-- TITLE -->
         <div class="title">
             <h3>Bukti Kunjungan Tamu</h3>
-            <p>No. {{ str_pad($tamu->id, 6, '0', STR_PAD_LEFT) }} / BT / {{ \Carbon\Carbon::parse($tamu->created_at)->format('m/Y') }}</p>
+            @if($nomorSuratSetting)
+                <p>No. {{ $nomorSuratSetting->generateNomor($tamu->id, $tamu->created_at) }}</p>
+            @else
+                <p>No. {{ str_pad($tamu->id, 6, '0', STR_PAD_LEFT) }} / BT / {{ \Carbon\Carbon::parse($tamu->created_at)->format('m/Y') }}</p>
+            @endif
         </div>
 
         <!-- DATA TABLE -->

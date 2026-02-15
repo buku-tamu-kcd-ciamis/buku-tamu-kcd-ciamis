@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\TextInput as FormsTextInput;
 
 class UserResource extends Resource
 {
@@ -34,7 +36,7 @@ class UserResource extends Resource
     {
         /** @var User $user */
         $user = Auth::user();
-        return $user && $user->hasRole('Super Admin');
+        return $user && $user->role_user && $user->role_user->hasPermission('user_management');
     }
 
     public static function form(Form $form): Form
@@ -88,10 +90,28 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('role_user.name'),
-                TextColumn::make('email')->searchable()->sortable(),
-                TextColumn::make('email_verified_at')->sortable(),
+                TextColumn::make('name')
+                    ->label('Nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('role_user.name')
+                    ->label('Role')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Super Admin' => 'danger',
+                        'Ketua KCD' => 'warning',
+                        'Piket' => 'success',
+                        default => 'gray',
+                    }),
+                TextColumn::make('email')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable(),
+                TextColumn::make('email_verified_at')
+                    ->label('Terverifikasi')
+                    ->since()
+                    ->tooltip(fn($record) => $record->email_verified_at ? \Carbon\Carbon::parse($record->email_verified_at)->format('d/m/Y H:i') : '-')
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -104,6 +124,78 @@ class UserResource extends Resource
                     Tables\Actions\EditAction::make()
                         ->label('Edit')
                         ->icon('heroicon-o-pencil-square'),
+                    Tables\Actions\Action::make('resetPassword')
+                        ->label('Reset Password')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->form([
+                            FormsTextInput::make('new_password')
+                                ->label('Password Baru')
+                                ->password()
+                                ->required()
+                                ->revealable()
+                                ->minLength(8)
+                                ->same('new_password_confirmation'),
+                            FormsTextInput::make('new_password_confirmation')
+                                ->label('Konfirmasi Password')
+                                ->password()
+                                ->required()
+                                ->revealable()
+                                ->dehydrated(false),
+                        ])
+                        ->action(function (User $record, array $data): void {
+                            $record->update([
+                                'password' => Hash::make($data['new_password']),
+                            ]);
+
+                            Notification::make()
+                                ->success()
+                                ->title('Password berhasil direset!')
+                                ->body('Password untuk ' . $record->name . ' telah diperbarui.')
+                                ->send();
+
+                            activity()
+                                ->performedOn($record)
+                                ->causedBy(Auth::user())
+                                ->event('reset_password')
+                                ->log('Password user ' . $record->name . ' direset');
+                        })
+                        ->modalHeading('Reset Password')
+                        ->modalSubmitActionLabel('Reset Password')
+                        ->modalWidth('md'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Hapus')
+                        ->icon('heroicon-o-trash')
+                        ->before(function (Tables\Actions\DeleteAction $action, User $record) {
+                            // Prevent deleting Super Admin
+                            if ($record->role_user && $record->role_user->name === 'Super Admin') {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Tidak dapat menghapus Super Admin!')
+                                    ->body('User dengan role Super Admin tidak dapat dihapus.')
+                                    ->send();
+
+                                $action->cancel();
+                                return;
+                            }
+
+                            // Check if this is the last user with this role
+                            $roleId = $record->role_user_id;
+                            $usersWithSameRole = User::where('role_user_id', $roleId)
+                                ->where('id', '!=', $record->id)
+                                ->count();
+
+                            if ($usersWithSameRole === 0) {
+                                $roleName = $record->role_user ? $record->role_user->name : 'role ini';
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Tidak dapat menghapus user!')
+                                    ->body('Minimal harus ada 1 user dengan role ' . $roleName . '. Ini adalah satu-satunya user dengan role tersebut.')
+                                    ->send();
+
+                                $action->cancel();
+                            }
+                        }),
                 ])
                     ->label(false)
                     ->icon('heroicon-m-ellipsis-vertical')
@@ -111,7 +203,44 @@ class UserResource extends Resource
                     ->color('gray'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->before(function (Tables\Actions\DeleteBulkAction $action, $records) {
+                        // Check if any selected user is Super Admin
+                        $hasSuperAdmin = $records->contains(function ($record) {
+                            return $record->role_user && $record->role_user->name === 'Super Admin';
+                        });
+
+                        if ($hasSuperAdmin) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Tidak dapat menghapus!')
+                                ->body('Terdapat Super Admin dalam pilihan. Super Admin tidak dapat dihapus.')
+                                ->send();
+
+                            $action->cancel();
+                            return;
+                        }
+
+                        // Check if deleting would leave any role without users
+                        $roleIds = $records->pluck('role_user_id')->unique();
+
+                        foreach ($roleIds as $roleId) {
+                            $selectedCount = $records->where('role_user_id', $roleId)->count();
+                            $totalCount = User::where('role_user_id', $roleId)->count();
+
+                            if ($selectedCount >= $totalCount) {
+                                $roleName = $records->firstWhere('role_user_id', $roleId)->role_user->name ?? 'role ini';
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Tidak dapat menghapus!')
+                                    ->body('Minimal harus ada 1 user dengan role ' . $roleName . '. Penghapusan ini akan menghapus semua user dengan role tersebut.')
+                                    ->send();
+
+                                $action->cancel();
+                                return;
+                            }
+                        }
+                    }),
             ]);
     }
 

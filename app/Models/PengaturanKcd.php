@@ -69,6 +69,6 @@ class PengaturanKcd extends Model
       return asset('img/barcode-skm.png'); // Default barcode
     }
 
-    return Storage::disk('public')->url($this->barcode_skm);
+    return Storage::url($this->barcode_skm);
   }
 }

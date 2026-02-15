@@ -30,7 +30,7 @@ class DropdownOptionResource extends Resource
   {
     /** @var User $user */
     $user = Auth::user();
-    return $user && $user->hasRole('Super Admin');
+    return $user && $user->role_user && $user->role_user->hasPermission('dropdown_options');
   }
 
   public static function form(Form $form): Form

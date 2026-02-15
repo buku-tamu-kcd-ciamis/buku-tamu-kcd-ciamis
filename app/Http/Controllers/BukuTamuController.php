@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BukuTamu;
+use App\Models\NomorSuratSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -106,6 +107,7 @@ class BukuTamuController extends Controller
     public function print($id)
     {
         $tamu = BukuTamu::findOrFail($id);
+        $nomorSuratSetting = NomorSuratSetting::getByJenis('buku_tamu');
 
         if (Auth::check()) {
             activity('cetak')
@@ -115,7 +117,7 @@ class BukuTamuController extends Controller
                 ->log("Mencetak detail kunjungan tamu '{$tamu->nama_lengkap}'");
         }
 
-        return view('print.buku-tamu', compact('tamu'));
+        return view('print.buku-tamu', compact('tamu', 'nomorSuratSetting'));
     }
 
     /**

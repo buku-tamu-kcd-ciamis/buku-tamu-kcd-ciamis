@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ===== BUKU TAMU - CADISDIK XIII =====
  * JavaScript untuk halaman buku tamu
  */
@@ -645,7 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function detectFaces(canvasOrBitmap, canvas) {
-        // Try native FaceDetector first â€” this is the AUTHORITATIVE face check
+        // Try native FaceDetector first — this is the AUTHORITATIVE face check
         if (faceDetectorSupported && faceDetector) {
             try {
                 const faces = await faceDetector.detect(canvasOrBitmap);
@@ -660,7 +660,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.warn("FaceDetector failed, using fallback:", e);
             }
         }
-        // Fallback: skin-tone â€” ONLY used if native API not available at all
+        // Fallback: skin-tone — ONLY used if native API not available at all
         // Mark as non-native so selfie can reject it
         if (canvas) {
             var regions = detectFaceRegions(canvas);
@@ -724,8 +724,8 @@ document.addEventListener("DOMContentLoaded", function () {
      * Checks:
      * 1. Micro-motion: frames must show movement (reject perfectly still photos)
      * 2. Regional motion variance: real faces move non-uniformly (eyes blink, head tilts)
-     *    â€” a photo held by hand shakes UNIFORMLY across all quadrants
-     * 3. Texture sharpness (Laplacian): real camera-to-face is sharp; photo-of-screen is soft/moirÃ©
+     *    — a photo held by hand shakes UNIFORMLY across all quadrants
+     * 3. Texture sharpness (Laplacian): real camera-to-face is sharp; photo-of-screen is soft/moiré
      * 4. Screen glare: look for specular highlight clusters (screens reflect light)
      * 5. Color depth: real faces have natural hue gradients
      */
@@ -764,7 +764,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (totalMotion < 0.8) {
                 result.live = false;
                 result.reason =
-                    "Tidak terdeteksi gerakan â€” pastikan ini wajah asli langsung, bukan foto!";
+                    "Tidak terdeteksi gerakan — pastikan ini wajah asli langsung, bukan foto!";
                 return result;
             }
 
@@ -790,11 +790,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (motionCV < 0.06 && totalMotion > 1.0 && totalMotion < 15) {
                 result.live = false;
                 result.reason =
-                    "Gerakan terlalu seragam â€” seperti foto yang digoyang. Gunakan wajah asli!";
+                    "Gerakan terlalu seragam — seperti foto yang digoyang. Gunakan wajah asli!";
                 return result;
             }
         } else {
-            // Not enough frames yet â€” require waiting
+            // Not enough frames yet — require waiting
             result.live = false;
             result.reason =
                 "Tunggu sebentar... sedang memverifikasi wajah asli.";
@@ -837,12 +837,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         var lapVariance = lapCount > 0 ? lapSum / lapCount : 0;
-        // Photo-of-screen has moirÃ© or extreme blurriness â†’ low Laplacian
-        // Real face has natural texture â†’ higher Laplacian (>40)
+        // Photo-of-screen has moiré or extreme blurriness → low Laplacian
+        // Real face has natural texture → higher Laplacian (>40)
         if (lapVariance < 40) {
             result.live = false;
             result.reason =
-                "Gambar terlalu halus/buram â€” pastikan ini wajah asli langsung, bukan foto!";
+                "Gambar terlalu halus/buram — pastikan ini wajah asli langsung, bukan foto!";
             return result;
         }
 
@@ -865,7 +865,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (brightRatio > 0.08) {
             result.live = false;
             result.reason =
-                "Terdeteksi pantulan layar â€” jangan gunakan foto dari HP/layar!";
+                "Terdeteksi pantulan layar — jangan gunakan foto dari HP/layar!";
             return result;
         }
 
@@ -898,7 +898,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (nonZeroBuckets <= 2) {
                 result.live = false;
                 result.reason =
-                    "Warna terlalu seragam â€” pastikan ini wajah asli, bukan foto layar!";
+                    "Warna terlalu seragam — pastikan ini wajah asli, bukan foto layar!";
                 return result;
             }
         }
@@ -955,7 +955,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return settings.facingMode === "user";
             }
         }
-        // Desktop webcam: facingMode not reported â†’ assumed front-facing
+        // Desktop webcam: facingMode not reported → assumed front-facing
         return true;
     }
 
@@ -1050,7 +1050,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return result;
     }
 
-    // Find ALL face-like skin regions â€” focus on HEAD shapes only
+    // Find ALL face-like skin regions — focus on HEAD shapes only
     function detectFaceRegions(canvas) {
         var ctx2 = canvas.getContext("2d");
         var w = canvas.width,
@@ -1107,7 +1107,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 grid[row][col] = total > 0 && skinPx / total > 0.4;
             }
         }
-        // Flood fill â€” 4-directional only (tighter clusters)
+        // Flood fill — 4-directional only (tighter clusters)
         var visited = [];
         for (var vr = 0; vr < rows; vr++) {
             visited[vr] = [];
@@ -1135,7 +1135,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (cur.r > maxR) maxR = cur.r;
                         if (cur.c < minC) minC = cur.c;
                         if (cur.c > maxC) maxC = cur.c;
-                        // 4-directional only â€” prevents merging adjacent faces
+                        // 4-directional only — prevents merging adjacent faces
                         var dirs = [
                             [-1, 0],
                             [1, 0],
@@ -1621,12 +1621,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (currentFaceBoxes.length === 0)
                     statusText = "\u26A0 Arahkan wajah ke kamera";
                 else if (currentFaceBoxes.length === 1)
-                    statusText = "\u2713 1 wajah â€” siap foto";
+                    statusText = "\u2713 1 wajah — siap foto";
                 else
                     statusText =
                         "\u2717 " +
                         currentFaceBoxes.length +
-                        " wajah â€” harus 1 saja";
+                        " wajah — harus 1 saja";
             } else {
                 var parts = [];
                 if (currentFaceBoxes.length < 2)
@@ -1641,7 +1641,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         currentFaceBoxes.length +
                         " wajah + " +
                         currentDocBoxes.length +
-                        " berkas â€” siap";
+                        " berkas — siap";
                 } else {
                     statusText = "\u26A0 " + parts.join(", ");
                 }
@@ -1995,10 +1995,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection â€” STRICT: must be exactly 1 REAL face (native API)
+            // Face detection — STRICT: must be exactly 1 REAL face (native API)
             const faceResult = await detectFaces(result.canvas, result.canvas);
 
-            // For selfie: REQUIRE native FaceDetector â€” skin-tone blobs are NOT enough
+            // For selfie: REQUIRE native FaceDetector — skin-tone blobs are NOT enough
             if (faceDetectorSupported && !faceResult.native) {
                 showToast(
                     '<i class="fa-solid fa-face-frown"></i> Wajah tidak terdeteksi! Pastikan wajah Anda terlihat jelas di kamera.',
@@ -2036,7 +2036,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // Liveness check â€” prevent photo-of-photo spoofing
+            // Liveness check — prevent photo-of-photo spoofing
             var liveness = checkLiveness(result.canvas);
             if (!liveness.live) {
                 showToast(
@@ -2071,7 +2071,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btnCameraSelfie.textContent = "Ulangi Foto";
 
             showToast(
-                '<i class="fa-solid fa-circle-check"></i> Foto selfie tersimpan â€” wajah terverifikasi!',
+                '<i class="fa-solid fa-circle-check"></i> Foto selfie tersimpan - wajah terverifikasi!',
                 "success",
             );
         }
@@ -2175,7 +2175,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection â€” STRICT: must be exactly 2 faces + verify document
+            // Face detection — STRICT: must be exactly 2 faces + verify document
             const faceResult = await detectFaces(result.canvas, result.canvas);
 
             if (!faceResult.detected || faceResult.count === 0) {
@@ -2193,7 +2193,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 showToast(
                     '<i class="fa-solid fa-triangle-exclamation"></i> Hanya ' +
                         faceResult.count +
-                        " wajah â€” harus ada 2 orang (petugas piket & pengunjung)!",
+                        " wajah — harus ada 2 orang (petugas piket & pengunjung)!",
                 );
                 restartDetectionLoop(
                     fotoPenerimaanBox,
@@ -2206,7 +2206,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 showToast(
                     '<i class="fa-solid fa-circle-exclamation"></i> Terdeteksi ' +
                         faceResult.count +
-                        " wajah â€” harus tepat 2 orang saja!",
+                        " wajah — harus tepat 2 orang saja!",
                 );
                 restartDetectionLoop(
                     fotoPenerimaanBox,
@@ -2229,7 +2229,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             showToast(
-                '<i class="fa-solid fa-circle-check"></i> Foto penerimaan tersimpan â€” 2 wajah + ' +
+                '<i class="fa-solid fa-circle-check"></i> Foto penerimaan tersimpan - 2 wajah + ' +
                     docCheck.length +
                     " berkas terverifikasi!",
                 "success",
@@ -2255,7 +2255,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Close penerimaan camera (optional â€” user can skip this photo)
+    // Close penerimaan camera (optional — user can skip this photo)
     btnClosePenerimaan.addEventListener("click", function () {
         if (!penerimaanCameraActive) return;
         stopDetectionLoop();
@@ -2334,7 +2334,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // If keperluan is berkas-related, penerimaan is required
         if (isKeperluanBerkas() && !penerimaanDone) {
             showToast(
-                '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas â€” ambil foto penerimaan berkas terlebih dahulu!',
+                '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas — ambil foto penerimaan berkas terlebih dahulu!',
                 "warning",
             );
             fotoPenerimaanBox.closest(".form-group").classList.add("shake");
@@ -2741,7 +2741,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (isKeperluanBerkas() && !fotoPenerimaanInput.value) {
                 e.preventDefault();
                 showToast(
-                    '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas â€” foto penerimaan berkas wajib diambil!',
+                    '<i class="fa-solid fa-circle-exclamation"></i> Keperluan Anda terkait berkas — foto penerimaan berkas wajib diambil!',
                     "warning",
                 );
                 fotoPenerimaanBox.closest(".form-group").classList.add("shake");

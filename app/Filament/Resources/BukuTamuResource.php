@@ -27,6 +27,13 @@ class BukuTamuResource extends Resource
     protected static ?string $pluralModelLabel = 'Data Buku Tamu';
     protected static ?int $navigationSort = 1;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        return $user && $user->role_user && $user->role_user->hasPermission('buku_tamu');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -114,7 +121,7 @@ class BukuTamuResource extends Resource
                         ->visible(function (BukuTamu $record) {
                             /** @var User $user */
                             $user = Auth::user();
-                            return $record->status !== 'selesai' && $user && !$user->hasRole('Ketua KCD');
+                            return $record->status !== 'selesai' && $user && $user->role_user && $user->role_user->canChangeStatus();
                         })
                         ->form([
                             Forms\Components\Placeholder::make('info_tamu')
@@ -179,7 +186,7 @@ class BukuTamuResource extends Resource
                         ->visible(function (BukuTamu $record) {
                             /** @var User $user */
                             $user = Auth::user();
-                            return $record->status === 'selesai' && $user && !$user->hasRole('Ketua KCD');
+                            return $record->status === 'selesai' && $user && $user->role_user && $user->role_user->canPrint();
                         }),
                     Tables\Actions\DeleteAction::make()
                         ->label('Hapus')
@@ -208,7 +215,7 @@ class BukuTamuResource extends Resource
                     ->visible(function () {
                         /** @var User $user */
                         $user = Auth::user();
-                        return $user && !$user->hasRole('Ketua KCD');
+                        return $user && $user->role_user && $user->role_user->canPrint();
                     })
                     ->form([
                         Forms\Components\DatePicker::make('start_date')

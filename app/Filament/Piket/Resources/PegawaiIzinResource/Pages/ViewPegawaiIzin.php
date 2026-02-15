@@ -8,6 +8,8 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Actions;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ViewPegawaiIzin extends ViewRecord
 {
@@ -21,7 +23,12 @@ class ViewPegawaiIzin extends ViewRecord
                 ->icon('heroicon-o-printer')
                 ->color('success')
                 ->url(fn() => route('piket.pegawai-izin.print', ['id' => $this->record->id]))
-                ->openUrlInNewTab(),
+                ->openUrlInNewTab()
+                ->visible(function () {
+                    /** @var User $user */
+                    $user = Auth::user();
+                    return $user && $user->role_user && $user->role_user->canPrint();
+                }),
         ];
     }
 

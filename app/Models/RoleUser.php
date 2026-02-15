@@ -5,10 +5,27 @@ namespace App\Models;
 use App\Traits\UuidTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class RoleUser extends Model
 {
-    use HasFactory, UuidTrait;
+    use HasFactory, UuidTrait, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'permissions', 'need_approval'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('role')
+            ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+                'created' => 'Role ditambahkan: ' . ($this->name ?? ''),
+                'updated' => 'Role diperbarui: ' . ($this->name ?? ''),
+                'deleted' => 'Role dihapus: ' . ($this->name ?? ''),
+                default => "Role {$eventName}",
+            });
+    }
 
     /**
      * The attributes that are mass assignable.

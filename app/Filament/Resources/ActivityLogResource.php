@@ -47,7 +47,12 @@ class ActivityLogResource extends Resource
             'user' => 'User',
             'dropdown_option' => 'Dropdown Option',
             'pegawai' => 'Data Pegawai',
-            'pengaturan' => 'Pengaturan',
+            'pengaturan' => 'Pengaturan KCD',
+            'faq' => 'Manajemen FAQ',
+            'nomor_surat' => 'Nomor Surat',
+            'role' => 'Role User',
+            'profil' => 'Profil',
+            'pengaturan_akses' => 'Pengaturan Akses',
             default => ucfirst(str_replace('_', ' ', $state)),
         };
     }
@@ -63,6 +68,11 @@ class ActivityLogResource extends Resource
             'dropdown_option' => 'primary',
             'pegawai' => 'info',
             'pengaturan' => 'warning',
+            'faq' => 'success',
+            'nomor_surat' => 'primary',
+            'role' => 'danger',
+            'profil' => 'warning',
+            'pengaturan_akses' => 'danger',
             default => 'gray',
         };
     }
@@ -87,7 +97,12 @@ class ActivityLogResource extends Resource
             'user' => 'User',
             'dropdown_option' => 'Dropdown Option',
             'pegawai' => 'Data Pegawai',
-            'pengaturan' => 'Pengaturan',
+            'pengaturan' => 'Pengaturan KCD',
+            'faq' => 'Manajemen FAQ',
+            'nomor_surat' => 'Nomor Surat',
+            'role' => 'Role User',
+            'profil' => 'Profil',
+            'pengaturan_akses' => 'Pengaturan Akses',
         ];
     }
 

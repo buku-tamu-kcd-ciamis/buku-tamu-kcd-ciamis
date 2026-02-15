@@ -81,6 +81,18 @@ class EditProfile extends BaseEditProfile
 
   protected function afterSave(): void
   {
+    /** @var \App\Models\User $user */
+    $user = \Illuminate\Support\Facades\Auth::user();
+
+    if ($user) {
+      activity()
+        ->causedBy($user)
+        ->performedOn($user)
+        ->useLog('profil')
+        ->event('updated')
+        ->log('Profil diperbarui oleh ' . $user->name);
+    }
+
     // Inject toast langsung via JS — paling reliable di Livewire 3
     $this->js(<<<'JS'
       (function() {

@@ -166,31 +166,17 @@ class UserResource extends Resource
                     Tables\Actions\DeleteAction::make()
                         ->label('Hapus')
                         ->icon('heroicon-o-trash')
+                        ->hidden(fn(User $record): bool => !$record->isDeletable())
                         ->before(function (Tables\Actions\DeleteAction $action, User $record) {
-                            // Prevent deleting Super Admin
-                            if ($record->role_user && $record->role_user->name === 'Super Admin') {
-                                Notification::make()
-                                    ->danger()
-                                    ->title('Tidak dapat menghapus Super Admin!')
-                                    ->body('User dengan role Super Admin tidak dapat dihapus.')
-                                    ->send();
+                            if (!$record->isDeletable()) {
+                                $reason = $record->hasRole('Super Admin')
+                                    ? 'User dengan role Super Admin tidak dapat dihapus.'
+                                    : 'Minimal harus ada 1 user dengan role ' . ($record->role_user->name ?? 'ini') . '. Ini adalah satu-satunya user dengan role tersebut.';
 
-                                $action->cancel();
-                                return;
-                            }
-
-                            // Check if this is the last user with this role
-                            $roleId = $record->role_user_id;
-                            $usersWithSameRole = User::where('role_user_id', $roleId)
-                                ->where('id', '!=', $record->id)
-                                ->count();
-
-                            if ($usersWithSameRole === 0) {
-                                $roleName = $record->role_user ? $record->role_user->name : 'role ini';
                                 Notification::make()
                                     ->danger()
                                     ->title('Tidak dapat menghapus user!')
-                                    ->body('Minimal harus ada 1 user dengan role ' . $roleName . '. Ini adalah satu-satunya user dengan role tersebut.')
+                                    ->body($reason)
                                     ->send();
 
                                 $action->cancel();
@@ -205,42 +191,43 @@ class UserResource extends Resource
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
                     ->before(function (Tables\Actions\DeleteBulkAction $action, $records) {
-                        // Check if any selected user is Super Admin
-                        $hasSuperAdmin = $records->contains(function ($record) {
-                            return $record->role_user && $record->role_user->name === 'Super Admin';
-                        });
+                        // Check each record for deletability
+                        $undeletable = $records->filter(fn(User $record) => !$record->isDeletable());
 
-                        if ($hasSuperAdmin) {
-                            Notification::make()
-                                ->danger()
-                                ->title('Tidak dapat menghapus!')
-                                ->body('Terdapat Super Admin dalam pilihan. Super Admin tidak dapat dihapus.')
-                                ->send();
+                        if ($undeletable->isNotEmpty()) {
+                            $hasSuperAdmin = $undeletable->contains(fn(User $r) => $r->hasRole('Super Admin'));
 
-                            $action->cancel();
-                            return;
-                        }
-
-                        // Check if deleting would leave any role without users
-                        $roleIds = $records->pluck('role_user_id')->unique();
-
-                        foreach ($roleIds as $roleId) {
-                            $selectedCount = $records->where('role_user_id', $roleId)->count();
-                            $totalCount = User::where('role_user_id', $roleId)->count();
-
-                            if ($selectedCount >= $totalCount) {
-                                $roleName = $records->firstWhere('role_user_id', $roleId)->role_user->name ?? 'role ini';
+                            if ($hasSuperAdmin) {
                                 Notification::make()
                                     ->danger()
                                     ->title('Tidak dapat menghapus!')
-                                    ->body('Minimal harus ada 1 user dengan role ' . $roleName . '. Penghapusan ini akan menghapus semua user dengan role tersebut.')
+                                    ->body('Terdapat Super Admin dalam pilihan. Super Admin tidak dapat dihapus.')
                                     ->send();
+                            } else {
+                                // Check if deleting would leave any role without users
+                                $roleIds = $records->pluck('role_user_id')->unique();
+                                $affectedRoles = [];
 
-                                $action->cancel();
-                                return;
+                                foreach ($roleIds as $roleId) {
+                                    $selectedCount = $records->where('role_user_id', $roleId)->count();
+                                    $totalCount = User::where('role_user_id', $roleId)->count();
+
+                                    if ($selectedCount >= $totalCount) {
+                                        $affectedRoles[] = $records->firstWhere('role_user_id', $roleId)->role_user->name ?? 'role ini';
+                                    }
+                                }
+
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Tidak dapat menghapus!')
+                                    ->body('Minimal harus ada 1 user dengan role: ' . implode(', ', $affectedRoles) . '. Penghapusan ini akan menghapus semua user dengan role tersebut.')
+                                    ->send();
                             }
+
+                            $action->cancel();
                         }
-                    }),
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ]);
     }
 

@@ -68,16 +68,18 @@ class FaqResource extends Resource
             ->options(Faq::TARGET_LABELS)
             ->default('semua')
             ->required()
-            ->helperText('Pilih panel mana yang akan menampilkan FAQ ini.'),
+            ->native(false)
+            ->helperText('Panel mana yang menampilkan FAQ ini.'),
           Forms\Components\TextInput::make('sort_order')
             ->label('Urutan')
             ->numeric()
             ->default(0)
-            ->helperText('Angka kecil tampil lebih dulu.'),
+            ->helperText('Urutan tampil FAQ (otomatis untuk FAQ baru).')
+            ->hiddenOn('create'),
           Forms\Components\Toggle::make('is_active')
             ->label('Aktif')
             ->default(true)
-            ->helperText('FAQ yang nonaktif tidak akan tampil.')
+            ->helperText('FAQ nonaktif tidak akan tampil.')
             ->inline(false),
         ]),
     ]);
@@ -89,7 +91,9 @@ class FaqResource extends Resource
       ->columns([
         Tables\Columns\TextColumn::make('sort_order')
           ->label('#')
-          ->sortable()
+          ->state(function ($rowLoop) {
+            return $rowLoop->iteration;
+          })
           ->width('60px'),
         Tables\Columns\TextColumn::make('question')
           ->label('Pertanyaan')

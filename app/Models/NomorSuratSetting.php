@@ -4,9 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class NomorSuratSetting extends Model
 {
+  use LogsActivity;
+
+  public function getActivitylogOptions(): LogOptions
+  {
+    return LogOptions::defaults()
+      ->logOnly(['jenis_surat', 'nama_jenis', 'template', 'kode_surat', 'padding_length', 'is_active'])
+      ->logOnlyDirty()
+      ->dontSubmitEmptyLogs()
+      ->useLogName('nomor_surat')
+      ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
+        'created' => 'Template nomor surat ditambahkan: ' . ($this->nama_jenis ?? ''),
+        'updated' => 'Template nomor surat diperbarui: ' . ($this->nama_jenis ?? ''),
+        'deleted' => 'Template nomor surat dihapus: ' . ($this->nama_jenis ?? ''),
+        default => "Nomor surat {$eventName}",
+      });
+  }
+
   protected $fillable = [
     'jenis_surat',
     'nama_jenis',

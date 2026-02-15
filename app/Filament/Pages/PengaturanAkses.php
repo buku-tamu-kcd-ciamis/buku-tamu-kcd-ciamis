@@ -137,7 +137,8 @@ class PengaturanAkses extends Page implements HasForms
 
     activity()
       ->causedBy(Auth::user())
-      ->event('update_permissions')
+      ->useLog('pengaturan_akses')
+      ->event('updated')
       ->log('Pengaturan akses role diperbarui');
 
     Notification::make()

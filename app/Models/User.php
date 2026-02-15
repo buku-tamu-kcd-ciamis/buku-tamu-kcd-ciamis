@@ -68,6 +68,43 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Check if this user can be safely deleted.
+     * Returns false if user is Super Admin or is the last user with their role.
+     */
+    public function isDeletable(): bool
+    {
+        // Super Admin cannot be deleted
+        if ($this->hasRole('Super Admin')) {
+            return false;
+        }
+
+        // Cannot delete if this is the last user with this role
+        if ($this->role_user_id) {
+            $othersWithSameRole = static::where('role_user_id', $this->role_user_id)
+                ->where('id', '!=', $this->id)
+                ->count();
+
+            if ($othersWithSameRole === 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Boot method — add deleting protection at model level.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if (!$user->isDeletable()) {
+                return false;
+            }
+        });
+    }
+
+    /**
      * Get the dashboard route for this user's role
      */
     public function getDashboardRoute(): string

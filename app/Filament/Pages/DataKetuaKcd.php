@@ -107,6 +107,14 @@ class DataKetuaKcd extends Page implements HasForms
     $settings = PengaturanKcd::getSettings();
     $settings->update($data);
 
+    activity()
+      ->causedBy(Auth::user())
+      ->performedOn($settings)
+      ->useLog('pengaturan')
+      ->event('updated')
+      ->withProperties(['attributes' => $data])
+      ->log('Data Ketua KCD diperbarui: ' . ($data['nama_ketua'] ?? ''));
+
     Notification::make()
       ->title('Data Ketua KCD berhasil disimpan!')
       ->body('Perubahan akan langsung ditampilkan di seluruh halaman cetak.')

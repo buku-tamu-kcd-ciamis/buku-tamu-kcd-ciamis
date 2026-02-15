@@ -44,8 +44,13 @@ class PengaturanAkses extends Page implements HasForms
     $ketuaRole = RoleUser::where('name', 'Ketua KCD')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
 
-    $this->ketuaKcd = $ketuaRole?->permissions ?? RoleUser::getDefaultPermissions();
-    $this->piket = $piketRole?->permissions ?? RoleUser::getDefaultPermissions();
+    $ketuaPermissions = array_merge(RoleUser::getDefaultPermissions(), $ketuaRole?->permissions ?? []);
+    $piketPermissions = array_merge(RoleUser::getDefaultPermissions(), $piketRole?->permissions ?? []);
+
+    $this->form->fill([
+      'ketuaKcd' => $ketuaPermissions,
+      'piket' => $piketPermissions,
+    ]);
   }
 
   public function form(Form $form): Form
@@ -67,6 +72,9 @@ class PengaturanAkses extends Page implements HasForms
               Forms\Components\Toggle::make('ketuaKcd.pegawai_izin')
                 ->label('Izin Pegawai')
                 ->helperText('Halaman data izin pegawai'),
+              Forms\Components\Toggle::make('ketuaKcd.rekap_izin')
+                ->label('Rekap Izin Pegawai')
+                ->helperText('Halaman rekap dan statistik izin pegawai'),
               Forms\Components\Toggle::make('ketuaKcd.data_pegawai')
                 ->label('Data Pegawai')
                 ->helperText('Halaman data pegawai'),
@@ -124,15 +132,17 @@ class PengaturanAkses extends Page implements HasForms
 
   public function save(): void
   {
+    $data = $this->form->getState();
+
     $ketuaRole = RoleUser::where('name', 'Ketua KCD')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
 
     if ($ketuaRole) {
-      $ketuaRole->update(['permissions' => $this->ketuaKcd]);
+      $ketuaRole->update(['permissions' => $data['ketuaKcd']]);
     }
 
     if ($piketRole) {
-      $piketRole->update(['permissions' => $this->piket]);
+      $piketRole->update(['permissions' => $data['piket']]);
     }
 
     activity()

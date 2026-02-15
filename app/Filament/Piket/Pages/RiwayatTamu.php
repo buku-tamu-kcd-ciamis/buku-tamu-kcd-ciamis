@@ -93,19 +93,7 @@ class RiwayatTamu extends Page implements HasTable
           Tables\Actions\Action::make('lihat_detail')
             ->label('Lihat Detail')
             ->icon('heroicon-s-eye')
-            ->modalHeading('Detail Riwayat Kunjungan')
-            ->modalContent(function ($record) {
-              $kunjungan = BukuTamu::where('nik', $record->nik)
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-              return view('filament.piket.modals.riwayat-detail', [
-                'tamu' => $record,
-                'kunjungan' => $kunjungan
-              ]);
-            })
-            ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Tutup'),
+            ->url(fn($record) => \App\Filament\Piket\Pages\ViewRiwayatTamu::getUrl(['nik' => $record->nik])),
         ])
           ->label(false)
           ->icon('heroicon-m-ellipsis-vertical')

@@ -32,30 +32,21 @@ class ListDropdownOptions extends ListRecords
               Forms\Components\FileUpload::make('barcode_skm')
                 ->label('Barcode/QR Code')
                 ->image()
-                ->imageEditor()
-                ->imageEditorAspectRatios(['1:1', '4:3', '16:9', null])
+                ->disk('public')
                 ->directory('barcode')
                 ->visibility('public')
+                ->imageEditor()
+                ->imageEditorAspectRatios(['1:1', '4:3', '16:9', null])
                 ->maxSize(2048)
                 ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])
                 ->helperText('Upload gambar barcode/QR Code (max 2MB). Format: PNG, JPG, JPEG, atau WebP.')
-                ->columnSpanFull()
-                ->afterStateUpdated(function ($state, Forms\Set $set) {
-                  if ($state) {
-                    $set('barcode_preview', $state);
-                  }
-                }),
+                ->columnSpanFull(),
               Forms\Components\Placeholder::make('current_barcode')
                 ->label('Barcode Saat Ini')
                 ->content(function () {
                   $settings = \App\Models\PengaturanKcd::getSettings();
-                  if ($settings->barcode_skm) {
-                    return new \Illuminate\Support\HtmlString(
-                      '<div class="text-center"><img src="' . Storage::url($settings->barcode_skm) . '" alt="Current Barcode" class="max-w-xs mx-auto" style="max-width: 200px;"></div>'
-                    );
-                  }
                   return new \Illuminate\Support\HtmlString(
-                    '<div class="text-center"><img src="' . asset('img/barcode-skm.png') . '" alt="Default Barcode" class="max-w-xs mx-auto" style="max-width: 200px;"><p class="text-sm text-gray-500 mt-2">Barcode default</p></div>'
+                    '<div class="text-center"><img src="' . $settings->barcode_skm_url . '" alt="Current Barcode" class="max-w-xs mx-auto" style="max-width: 200px;"></div>'
                   );
                 })
                 ->columnSpanFull(),

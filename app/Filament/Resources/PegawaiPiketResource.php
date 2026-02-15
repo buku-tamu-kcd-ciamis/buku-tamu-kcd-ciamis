@@ -120,6 +120,7 @@ class PegawaiPiketResource extends Resource
             ->defaultSort('sort_order')
             ->defaultPaginationPageOption(25)
             ->paginationPageOptions([10, 25, 50])
+            ->actionsColumnLabel('')
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Status')
@@ -136,19 +137,16 @@ class PegawaiPiketResource extends Resource
                         ->modalDescription('Apakah Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan.')
                         ->successNotificationTitle('Data berhasil dihapus'),
                 ])
-                    ->label(false)
-                    ->icon('heroicon-m-ellipsis-vertical')
                     ->iconButton()
+                    ->icon('heroicon-m-ellipsis-vertical')
                     ->color('gray'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->requiresConfirmation()
-                        ->modalHeading('Hapus Data Terpilih')
-                        ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
-                        ->successNotificationTitle('Data berhasil dihapus'),
-                ]),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Data Terpilih')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
+                    ->successNotificationTitle('Data berhasil dihapus'),
             ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -57,5 +58,17 @@ class PengaturanKcd extends Model
   public function getFormattedNipAttribute(): string
   {
     return $this->nip_ketua ? 'NIP. ' . $this->nip_ketua : 'NIP. ..............................';
+  }
+
+  /**
+   * Get full URL for barcode SKM image.
+   */
+  public function getBarcodeSkMUrlAttribute(): ?string
+  {
+    if (!$this->barcode_skm) {
+      return asset('img/barcode-skm.png'); // Default barcode
+    }
+
+    return Storage::disk('public')->url($this->barcode_skm);
   }
 }

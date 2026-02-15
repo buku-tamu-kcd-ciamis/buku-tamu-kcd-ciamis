@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class BukuTamuResource extends Resource
 {
@@ -104,37 +105,35 @@ class BukuTamuResource extends Resource
                         return $query->when($data['tanggal'], fn($q, $date) => $q->whereDate('created_at', $date));
                     }),
             ])
-            ->actionsAlignment('center')
-            ->actionsColumnLabel('Aksi')
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\Action::make('ubah_status')
                         ->label('Ubah Status')
                         ->icon('heroicon-s-pencil-square')
                         ->color('warning')
-                        ->visible(function () {
+                        ->visible(function (BukuTamu $record) {
                             /** @var User $user */
                             $user = Auth::user();
-                            return $user && !$user->hasRole('Ketua KCD');
+                            return $record->status !== 'selesai' && $user && !$user->hasRole('Ketua KCD');
                         })
                         ->form([
                             Forms\Components\Placeholder::make('info_tamu')
                                 ->label('Detail Tamu')
-                                ->content(fn(BukuTamu $record) => new \Illuminate\Support\HtmlString(
-                                    '<div style="background:#f9fafb;border-radius:8px;padding:12px;font-size:13px;line-height:1.8">' .
-                                        '<div style="display:flex;gap:16px;margin-bottom:12px;">' .
-                                        '<div style="display:flex;gap:12px;">' .
-                                        ($record->foto_selfie ? '<img src="' . e($record->foto_selfie) . '" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:2px solid #e5e7eb;" />' : '') .
-                                        ($record->tanda_tangan ? '<div><strong style="font-size:11px;color:#6b7280;">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan) . '" style="width:80px;height:50px;border:1px solid #e5e7eb;border-radius:4px;background:#fff;" /></div>' : '') .
+                                ->content(fn(BukuTamu $record) => new HtmlString(
+                                    '<div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 text-sm leading-relaxed">' .
+                                        '<div class="flex gap-4 mb-3">' .
+                                        '<div class="flex gap-3">' .
+                                        ($record->foto_selfie ? '<img src="' . e($record->foto_selfie) . '" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600" />' : '') .
+                                        ($record->tanda_tangan ? '<div><strong class="text-xs text-gray-600 dark:text-gray-300">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan) . '" class="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700" /></div>' : '') .
                                         '</div>' .
-                                        '<div style="flex:1;">' .
-                                        '<strong style="font-size:15px;">' . e($record->nama_lengkap) . '</strong><br>' .
-                                        '<span style="color:#6b7280;">NIK: ' . e($record->nik) . '</span><br>' .
-                                        '<span style="color:#6b7280;">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
+                                        '<div class="flex-1">' .
+                                        '<strong class="text-base dark:text-white">' . e($record->nama_lengkap) . '</strong><br>' .
+                                        '<span class="text-gray-600 dark:text-gray-300">NIK: ' . e($record->nik) . '</span><br>' .
+                                        '<span class="text-gray-600 dark:text-gray-300">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
                                         '</div>' .
                                         '</div>' .
-                                        ($record->foto_penerimaan ? '<div style="margin-bottom:12px;"><strong style="font-size:11px;color:#6b7280;">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan) . '" style="width:120px;height:80px;border:1px solid #e5e7eb;border-radius:4px;object-fit:cover;" /></div>' : '') .
-                                        '<div style="border-top:1px solid #e5e7eb;padding-top:8px;margin-top:8px;">' .
+                                        ($record->foto_penerimaan ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-300">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
+                                        '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
                                         '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
                                         '<strong>Bagian Dituju:</strong> ' . e($record->bagian_dituju) . '<br>' .
                                         '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
@@ -148,7 +147,12 @@ class BukuTamuResource extends Resource
                                 ->allowHtml(false)
                                 ->placeholder('Pilih nama penerima'),
                             Forms\Components\Select::make('status')
-                                ->options(BukuTamu::STATUS_LABELS)
+                                ->options([
+                                    'menunggu' => 'Menunggu',
+                                    'diproses' => 'Diproses',
+                                    'selesai' => 'Selesai',
+                                    'dibatalkan' => 'Dibatalkan',
+                                ])
                                 ->required(),
                             Forms\Components\Textarea::make('catatan')
                                 ->label('Catatan')
@@ -193,7 +197,7 @@ class BukuTamuResource extends Resource
                 ])
                     ->label(false)
                     ->icon('heroicon-m-ellipsis-vertical')
-                    ->iconButton()
+                    ->button()
                     ->color('gray'),
             ])
             ->headerActions([
@@ -243,19 +247,17 @@ class BukuTamuResource extends Resource
                     ->modalSubmitActionLabel('Cetak'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->visible(function () {
-                            /** @var User $user */
-                            $user = Auth::user();
-                            return $user && $user->hasRole('Super Admin');
-                        })
-                        ->requiresConfirmation()
-                        ->modalHeading('Hapus Data Terpilih')
-                        ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
-                        ->modalSubmitActionLabel('Hapus')
-                        ->successNotificationTitle('Data berhasil dihapus'),
-                ])
+                Tables\Actions\DeleteBulkAction::make()
+                    ->visible(function () {
+                        /** @var User $user */
+                        $user = Auth::user();
+                        return $user && $user->hasRole('Super Admin');
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Data Terpilih')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
+                    ->modalSubmitActionLabel('Hapus')
+                    ->successNotificationTitle('Data berhasil dihapus'),
             ]);
     }
 

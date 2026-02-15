@@ -138,6 +138,7 @@ class DataPegawaiResource extends Resource
       ->defaultSort('nama')
       ->defaultPaginationPageOption(25)
       ->paginationPageOptions([10, 25, 50])
+      ->actionsColumnLabel('')
       ->filters([
         Tables\Filters\TernaryFilter::make('is_active')
           ->label('Status')
@@ -154,16 +155,13 @@ class DataPegawaiResource extends Resource
             ->modalDescription('Apakah Anda yakin ingin menghapus data pegawai ini? Data yang dihapus tidak dapat dikembalikan.')
             ->successNotificationTitle('Data pegawai berhasil dihapus'),
         ])
-          ->label(false)
-          ->icon('heroicon-m-ellipsis-vertical')
           ->iconButton()
+          ->icon('heroicon-m-ellipsis-vertical')
           ->color('gray'),
       ])
       ->bulkActions([
-        Tables\Actions\BulkActionGroup::make([
-          Tables\Actions\DeleteBulkAction::make()
-            ->requiresConfirmation(),
-        ]),
+        Tables\Actions\DeleteBulkAction::make()
+          ->requiresConfirmation(),
       ]);
   }
 

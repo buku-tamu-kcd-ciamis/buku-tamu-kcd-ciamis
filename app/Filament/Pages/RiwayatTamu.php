@@ -97,43 +97,6 @@ class RiwayatTamu extends Page implements HasTable
       ->defaultSort('total_kunjungan', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\Action::make('lihat_detail')
-            ->label('Lihat Detail')
-            ->icon('heroicon-s-eye')
-            ->modalHeading('Detail Riwayat Kunjungan')
-            ->modalContent(function ($record) {
-              $kunjungan = BukuTamu::where('nik', $record->nik)
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-              return view('filament.piket.modals.riwayat-detail', [
-                'tamu' => $record,
-                'kunjungan' => $kunjungan
-              ]);
-            })
-            ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Tutup'),
-          Tables\Actions\DeleteAction::make()
-            ->label('Hapus')
-            ->icon('heroicon-s-trash')
-            ->visible(function () {
-              /** @var User $user */
-              $user = Auth::user();
-              return $user && $user->hasRole('Super Admin');
-            })
-            ->requiresConfirmation()
-            ->modalHeading('Hapus Data Pengunjung')
-            ->modalDescription('Apakah Anda yakin ingin menghapus data pengunjung ini? Semua riwayat kunjungan akan ikut terhapus.')
-            ->modalSubmitActionLabel('Hapus')
-            ->successNotificationTitle('Data berhasil dihapus'),
-        ])
-          ->label(false)
-          ->icon('heroicon-m-ellipsis-vertical')
-          ->button()
-          ->color('gray'),
-      ])
       ->headerActions([
         Tables\Actions\Action::make('print_bulk')
           ->label('Cetak Laporan')
@@ -184,19 +147,17 @@ class RiwayatTamu extends Page implements HasTable
           ->modalSubmitActionLabel('Cetak'),
       ])
       ->bulkActions([
-        Tables\Actions\BulkActionGroup::make([
-          Tables\Actions\DeleteBulkAction::make()
-            ->visible(function () {
-              /** @var User $user */
-              $user = Auth::user();
-              return $user && $user->hasRole('Super Admin');
-            })
-            ->requiresConfirmation()
-            ->modalHeading('Hapus Data Terpilih')
-            ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
-            ->modalSubmitActionLabel('Hapus')
-            ->successNotificationTitle('Data berhasil dihapus'),
-        ])
+        Tables\Actions\DeleteBulkAction::make()
+          ->visible(function () {
+            /** @var User $user */
+            $user = Auth::user();
+            return $user && $user->hasRole('Super Admin');
+          })
+          ->requiresConfirmation()
+          ->modalHeading('Hapus Data Terpilih')
+          ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
+          ->modalSubmitActionLabel('Hapus')
+          ->successNotificationTitle('Data berhasil dihapus'),
       ]);
   }
 

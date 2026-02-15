@@ -76,3 +76,10 @@
     align-items: center !important;
     justify-content: center !important;
 }
+
+/* Hide actions column header label completely */
+.fi-ta-header-cell-label:has(+ .fi-ta-actions),
+th.fi-ta-header-cell.fi-table-header-cell-actions,
+.fi-ta-actions-header-cell .fi-ta-header-cell-label {
+    display: none !important;
+}

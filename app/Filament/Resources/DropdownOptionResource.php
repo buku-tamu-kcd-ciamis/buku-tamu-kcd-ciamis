@@ -129,7 +129,7 @@ class DropdownOptionResource extends Resource
             'jenis_id' => 'info',
             'keperluan' => 'success',
             'kabupaten_kota' => 'warning',
-            'bagian_dituju' => 'orange',
+            'bagian_dituju' => 'danger',
             'pegawai_piket' => 'primary',
             default => 'gray',
           })
@@ -205,7 +205,7 @@ class DropdownOptionResource extends Resource
               'jenis_id' => 'info',
               'keperluan' => 'success',
               'kabupaten_kota' => 'warning',
-              'bagian_dituju' => 'orange',
+              'bagian_dituju' => 'danger',
               'pegawai_piket' => 'primary',
               default => 'gray',
             })

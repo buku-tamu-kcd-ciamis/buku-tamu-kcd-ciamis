@@ -100,7 +100,8 @@ class ListDropdownOptions extends ListRecords
     return [
       'semua' => Tab::make('Semua')
         ->icon('heroicon-o-squares-2x2')
-        ->badge(DropdownOption::count()),
+        ->badge(DropdownOption::count())
+        ->badgeColor('gray'),
       'jenis_id' => Tab::make('Jenis ID')
         ->icon('heroicon-o-identification')
         ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_JENIS_ID)->count())
@@ -119,8 +120,13 @@ class ListDropdownOptions extends ListRecords
       'bagian_dituju' => Tab::make('Bagian Dituju')
         ->icon('heroicon-o-building-office')
         ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_BAGIAN_DITUJU)->count())
-        ->badgeColor('orange')
+        ->badgeColor('danger')
         ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_BAGIAN_DITUJU)),
+      'pegawai_piket' => Tab::make('Pegawai Piket')
+        ->icon('heroicon-o-user-group')
+        ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)->count())
+        ->badgeColor('primary')
+        ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)),
     ];
   }
 

@@ -65,6 +65,7 @@ class RoleUser extends Model
             'dropdown_options' => false,
             'pegawai_piket' => false,
             'user_management' => false,
+            'profil_ketua_kcd' => false,
             'can_print' => false,
             'can_change_status' => false,
         ];
@@ -84,6 +85,7 @@ class RoleUser extends Model
             'dropdown_options' => 'Manajemen Buku Tamu',
             'pegawai_piket' => 'Data Pegawai Piket',
             'user_management' => 'Manajemen User',
+            'profil_ketua_kcd' => 'Profil Ketua KCD',
         ];
     }
 

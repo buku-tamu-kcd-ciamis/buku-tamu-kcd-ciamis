@@ -87,6 +87,9 @@ class PengaturanAkses extends Page implements HasForms
               Forms\Components\Toggle::make('ketuaKcd.user_management')
                 ->label('Manajemen User')
                 ->helperText('Halaman kelola user dan role'),
+              Forms\Components\Toggle::make('ketuaKcd.profil_ketua_kcd')
+                ->label('Profil Ketua KCD')
+                ->helperText('Halaman profil data diri Ketua KCD (perubahan perlu verifikasi Super Admin)'),
             ])
             ->columns(2),
           Forms\Components\Fieldset::make('Aksi')

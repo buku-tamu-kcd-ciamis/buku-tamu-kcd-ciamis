@@ -17,11 +17,11 @@
         $statusCounts = $allKunjungan->groupBy('status')->map->count();
 
         $statusConfig = [
-            'menunggu'   => ['badge' => 'bg-amber-500 text-white', 'num_bg' => 'bg-amber-500 text-white shadow-lg', 'num_idle' => 'bg-amber-500/20 text-amber-500 dark:bg-amber-500/30 dark:text-amber-400', 'border_active' => 'border-amber-400 dark:border-amber-500', 'accent' => 'border-amber-500'],
-            'diproses'   => ['badge' => 'bg-blue-500 text-white', 'num_bg' => 'bg-blue-500 text-white shadow-lg', 'num_idle' => 'bg-blue-500/20 text-blue-500 dark:bg-blue-500/30 dark:text-blue-400', 'border_active' => 'border-blue-400 dark:border-blue-500', 'accent' => 'border-blue-500'],
-            'selesai'    => ['badge' => 'bg-emerald-500 text-white', 'num_bg' => 'bg-emerald-500 text-white shadow-lg', 'num_idle' => 'bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/30 dark:text-emerald-400', 'border_active' => 'border-emerald-400 dark:border-emerald-500', 'accent' => 'border-emerald-500'],
-            'ditolak'    => ['badge' => 'bg-red-500 text-white', 'num_bg' => 'bg-red-500 text-white shadow-lg', 'num_idle' => 'bg-red-500/20 text-red-500 dark:bg-red-500/30 dark:text-red-400', 'border_active' => 'border-red-400 dark:border-red-500', 'accent' => 'border-red-500'],
-            'dibatalkan' => ['badge' => 'bg-gray-500 text-white', 'num_bg' => 'bg-gray-500 text-white shadow-lg', 'num_idle' => 'bg-gray-500/20 text-gray-500 dark:bg-gray-500/30 dark:text-gray-400', 'border_active' => 'border-gray-400 dark:border-gray-500', 'accent' => 'border-gray-400'],
+            'menunggu'   => ['badge' => 'bg-yellow-500 text-white', 'num_bg' => 'bg-yellow-500 text-white shadow-lg', 'num_idle' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/30 dark:text-yellow-300', 'border_active' => 'border-yellow-400 dark:border-yellow-500', 'accent' => 'border-yellow-500'],
+            'diproses'   => ['badge' => 'bg-blue-500 text-white', 'num_bg' => 'bg-blue-500 text-white shadow-lg', 'num_idle' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/30 dark:text-blue-300', 'border_active' => 'border-blue-400 dark:border-blue-500', 'accent' => 'border-blue-500'],
+            'selesai'    => ['badge' => 'bg-green-500 text-white', 'num_bg' => 'bg-green-500 text-white shadow-lg', 'num_idle' => 'bg-green-100 text-green-700 dark:bg-green-500/30 dark:text-green-300', 'border_active' => 'border-green-400 dark:border-green-500', 'accent' => 'border-green-500'],
+            'ditolak'    => ['badge' => 'bg-red-500 text-white', 'num_bg' => 'bg-red-500 text-white shadow-lg', 'num_idle' => 'bg-red-100 text-red-700 dark:bg-red-500/30 dark:text-red-300', 'border_active' => 'border-red-400 dark:border-red-500', 'accent' => 'border-red-500'],
+            'dibatalkan' => ['badge' => 'bg-red-500 text-white', 'num_bg' => 'bg-red-500 text-white shadow-lg', 'num_idle' => 'bg-red-100 text-red-700 dark:bg-red-500/30 dark:text-red-300', 'border_active' => 'border-red-400 dark:border-red-500', 'accent' => 'border-red-500'],
         ];
         $statusLabels = \App\Models\BukuTamu::STATUS_LABELS;
     @endphp
@@ -30,64 +30,85 @@
 
         {{-- ===== PROFIL PENGUNJUNG ===== --}}
         <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
-            <div class="p-6">
-                <div class="mb-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Nama Lengkap</p>
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $tamu->nama_lengkap }}</h2>
+            {{-- Header --}}
+            <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-primary-500/10 dark:bg-primary-500/20 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Informasi Pengunjung</h3>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+                {{-- Nama Pengunjung --}}
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">Nama Pengunjung</p>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $tamu->nama_lengkap }}</h2>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-                    {{-- Jenis ID --}}
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Jenis ID</p>
-                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/></svg>
-                            {{ $tamu->jenis_id ?? 'KTP' }}
+                {{-- Data Grid --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Left Column --}}
+                    <div class="space-y-4">
+                        {{-- Jenis ID & Nomor --}}
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">{{ $tamu->jenis_id ?? 'KTP' }}</p>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/></svg>
+                                <span class="text-base font-semibold text-gray-900 dark:text-white">{{ $tamu->nik }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Jabatan --}}
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">Jabatan</p>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <span class="text-base font-semibold text-gray-900 dark:text-white">{{ $tamu->jabatan ?? '-' }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Instansi --}}
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">Instansi</p>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <span class="text-base font-semibold text-gray-900 dark:text-white">{{ $tamu->instansi ?? '-' }}</span>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Nomor ID --}}
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Nomor ID</p>
-                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
-                            {{ $tamu->nik }}
+                    {{-- Right Column --}}
+                    <div class="space-y-4">
+                        {{-- No. HP --}}
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">No. HP</p>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                <span class="text-base font-semibold text-gray-900 dark:text-white">{{ $formattedPhone }}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- Instansi --}}
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Instansi</p>
-                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            {{ $tamu->instansi ?? '-' }}
+                        {{-- Kabupaten/Kota --}}
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">Kabupaten/Kota</p>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span class="text-base font-semibold text-gray-900 dark:text-white">{{ $tamu->kabupaten_kota ?? '-' }}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- Jabatan --}}
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Jabatan</p>
-                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                            {{ $tamu->jabatan ?? '-' }}
-                        </div>
-                    </div>
-
-                    {{-- No HP --}}
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">No. HP</p>
-                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                            {{ $formattedPhone }}
-                        </div>
-                    </div>
-
-                    {{-- Email --}}
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Email</p>
-                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                            {{ $tamu->email ?? '-' }}
+                        {{-- Email --}}
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">Email</p>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <span class="text-base font-semibold text-gray-900 dark:text-white break-all">{{ $tamu->email ?? '-' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -185,9 +206,8 @@
                             {{-- Numbered circle --}}
                             <div class="flex-shrink-0">
                                 <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base transition-all duration-300"
-                                     :class="openItem === {{ $index }} ? '{{ $sts['num_bg'] }}' : '{{ $sts['num_idle'] }}'"
-                                     style="isolation: isolate;">
-                                    <span style="position: relative; z-index: 50;">{{ $globalIndex + 1 }}</span>
+                                     :class="openItem === {{ $index }} ? '{{ $sts['num_bg'] }}' : '{{ $sts['num_idle'] }}'">
+                                    {{ $globalIndex + 1 }}
                                 </div>
                             </div>
                             {{-- Title: Keperluan + Date --}}

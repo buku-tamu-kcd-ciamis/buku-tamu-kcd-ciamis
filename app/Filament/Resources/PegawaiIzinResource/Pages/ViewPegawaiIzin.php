@@ -89,17 +89,22 @@ class ViewPegawaiIzin extends ViewRecord
             ->label('Tanggal Selesai')
             ->date('d F Y')
             ->icon('heroicon-o-calendar'),
-          Infolists\Components\TextEntry::make('keterangan')
-            ->label('Keterangan')
-            ->icon('heroicon-o-document-text')
-            ->placeholder('-')
-            ->columnSpanFull(),
           Infolists\Components\TextEntry::make('nama_piket')
             ->label('Nama Piket')
             ->icon('heroicon-o-user-circle')
             ->placeholder('-'),
+          Infolists\Components\TextEntry::make('keterangan')
+            ->label('Keterangan')
+            ->icon('heroicon-o-document-text')
+            ->placeholder('-'),
+        ]),
+
+      // === Tanda Tangan Piket ===
+      Infolists\Components\Section::make('Tanda Tangan Piket')
+        ->icon('heroicon-o-pencil-square')
+        ->schema([
           Infolists\Components\ViewEntry::make('tanda_tangan_piket')
-            ->label('Tanda Tangan Piket')
+            ->label('')
             ->view('filament.infolists.components.signature-base64-entry'),
         ]),
 

@@ -11,10 +11,11 @@ use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Infolists\Infolist;
 use Filament\Infolists;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 
 class ViewRekapIzinPegawai extends Page implements HasInfolists
 {
-  use InteractsWithInfolists;
+  use InteractsWithInfolists, WithPagination;
 
   protected static string $resource = RekapIzinPegawaiResource::class;
 
@@ -22,7 +23,7 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
 
   public string $nip = '';
   public $rekap = null;
-  public $riwayat = null;
+  public $allRiwayat = null;
 
   public function mount(string $record): void
   {
@@ -54,10 +55,17 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
       abort(404);
     }
 
-    // Ambil semua riwayat izin
-    $this->riwayat = PegawaiIzin::where('nip', $this->nip)
+    // Ambil semua riwayat izin untuk stats
+    $this->allRiwayat = PegawaiIzin::where('nip', $this->nip)
       ->orderBy('tanggal_mulai', 'desc')
       ->get();
+  }
+
+  public function getRiwayatPaginated()
+  {
+    return PegawaiIzin::where('nip', $this->nip)
+      ->orderBy('tanggal_mulai', 'desc')
+      ->paginate(5);
   }
 
   public function rekapInfolist(Infolist $infolist): Infolist
@@ -78,16 +86,6 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
         'total_lainnya' => (int) $this->rekap->total_lainnya,
         'terakhir_izin' => $this->rekap->terakhir_izin,
         'sedang_izin' => (int) $this->rekap->sedang_izin,
-        'riwayat' => $this->riwayat->map(fn($item) => [
-          'id' => $item->id,
-          'jenis_izin' => $item->jenis_izin,
-          'tanggal_mulai' => $item->tanggal_mulai->translatedFormat('d F Y'),
-          'tanggal_selesai' => $item->tanggal_selesai->translatedFormat('d F Y'),
-          'durasi' => $item->tanggal_mulai->diffInDays($item->tanggal_selesai) + 1,
-          'keterangan' => $item->keterangan,
-          'status' => $item->status,
-          'nama_piket' => $item->nama_piket,
-        ])->toArray(),
       ])
       ->schema([
         // === Informasi Pegawai ===
@@ -200,52 +198,6 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
               ->badge()
               ->suffix(' kali')
               ->color('gray'),
-          ]),
-
-        // === Riwayat Izin ===
-        Infolists\Components\Section::make('Riwayat Izin (' . $this->riwayat->count() . ' data)')
-          ->icon('heroicon-o-clipboard-document-list')
-          ->schema([
-            Infolists\Components\RepeatableEntry::make('riwayat')
-              ->label('')
-              ->columns(4)
-              ->schema([
-                Infolists\Components\TextEntry::make('jenis_izin')
-                  ->label('Jenis Izin')
-                  ->badge()
-                  ->formatStateUsing(fn($state) => PegawaiIzin::JENIS_IZIN_LABELS[$state] ?? ucfirst($state))
-                  ->color(fn($state) => match ($state) {
-                    'sakit' => 'danger',
-                    'cuti' => 'info',
-                    'dinas_luar' => 'warning',
-                    'izin_pribadi' => 'primary',
-                    default => 'gray',
-                  }),
-                Infolists\Components\TextEntry::make('tanggal_mulai')
-                  ->label('Tanggal Mulai')
-                  ->icon('heroicon-o-calendar'),
-                Infolists\Components\TextEntry::make('tanggal_selesai')
-                  ->label('Tanggal Selesai')
-                  ->icon('heroicon-o-calendar'),
-                Infolists\Components\TextEntry::make('durasi')
-                  ->label('Durasi')
-                  ->suffix(' hari')
-                  ->icon('heroicon-o-clock'),
-                Infolists\Components\TextEntry::make('keterangan')
-                  ->label('Keterangan')
-                  ->icon('heroicon-o-document-text')
-                  ->placeholder('-')
-                  ->columnSpan(2),
-                Infolists\Components\TextEntry::make('status')
-                  ->label('Status')
-                  ->badge()
-                  ->formatStateUsing(fn($state) => ucfirst($state))
-                  ->color(fn($state) => $state === 'aktif' ? 'success' : 'gray'),
-                Infolists\Components\TextEntry::make('nama_piket')
-                  ->label('Petugas Piket')
-                  ->icon('heroicon-o-user-circle')
-                  ->placeholder('-'),
-              ]),
           ]),
       ]);
   }

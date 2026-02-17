@@ -65,17 +65,6 @@ class PegawaiPiketResource extends Resource
                         ->placeholder('Otomatis terisi dari nama...')
                         ->helperText('ID internal untuk database. Otomatis terisi dari nama, bisa diubah jika perlu.')
                         ->columnSpanFull(),
-                    Forms\Components\TextInput::make('sort_order')
-                        ->label('Urutan')
-                        ->numeric()
-                        ->default(
-                            fn(Forms\Get $get, string $operation) =>
-                            $operation === 'create'
-                                ? (DropdownOption::where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)->max('sort_order') ?? 0) + 1
-                                : 0
-                        )
-                        ->placeholder('Otomatis diurutkan...')
-                        ->helperText('Urutan tampil dalam dropdown (kecil = lebih atas).'),
                     Forms\Components\Toggle::make('is_active')
                         ->label('Aktif')
                         ->default(true)
@@ -99,10 +88,6 @@ class PegawaiPiketResource extends Resource
                     ->searchable()
                     ->toggleable()
                     ->limit(40),
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Urutan')
-                    ->sortable()
-                    ->alignCenter(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Status')
                     ->boolean()
@@ -117,7 +102,7 @@ class PegawaiPiketResource extends Resource
                     ->tooltip(fn($record) => $record->updated_at?->format('d/m/Y H:i'))
                     ->sortable(),
             ])
-            ->defaultSort('sort_order')
+            ->defaultSort('label')
             ->defaultPaginationPageOption(25)
             ->paginationPageOptions([10, 25, 50])
             ->actionsColumnLabel('')

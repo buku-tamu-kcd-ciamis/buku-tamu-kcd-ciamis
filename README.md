@@ -312,7 +312,7 @@ Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
     <td align="center">
       <a href="https://github.com/rasyakt" target="_blank">
         <img src="https://github.com/rasyakt.png" width="100px;" alt="Rasya MZ"/><br />
-        <sub><b>Rasya MZ</b></sub>
+        <sub><b>Rasya Syahreza Maulana Zen</b></sub>
       </a><br />
       <sub>System Designer & QA</sub><br />
       <sub>Planning & Quality Assurance</sub>

@@ -7,9 +7,11 @@ use App\Models\User;
 use Filament\Actions;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Models\Activity;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Writer\XLSX\Options;
@@ -111,12 +113,26 @@ class ListActivityLogs extends ListRecords
                 ->label('Backup & Hapus Semua')
                 ->icon('heroicon-o-trash')
                 ->color('danger')
-                ->requiresConfirmation()
+                ->form([
+                    TextInput::make('password')
+                        ->label('Password Super Admin')
+                        ->password()
+                        ->revealable()
+                        ->required()
+                        ->helperText('Masukkan password akun Super Admin untuk konfirmasi penghapusan.')
+                        ->rule(function () {
+                            return function (string $attribute, $value, $fail) {
+                                if (!Hash::check($value, Auth::user()->password)) {
+                                    $fail('Password yang dimasukkan salah.');
+                                }
+                            };
+                        }),
+                ])
                 ->modalIcon('heroicon-o-exclamation-triangle')
                 ->modalHeading('Backup & Hapus Semua Log')
-                ->modalDescription('PERHATIAN! Tindakan ini akan: 1) Mengunduh backup Excel seluruh log aktivitas, 2) Menghapus SEMUA data log dari database. Tindakan ini TIDAK DAPAT DIBATALKAN. Pastikan file backup berhasil terunduh sebelum melanjutkan.')
+                ->modalDescription('PERHATIAN! Tindakan ini akan: 1) Mengunduh backup Excel seluruh log aktivitas, 2) Menghapus SEMUA data log dari database. Tindakan ini TIDAK DAPAT DIBATALKAN. Masukkan password untuk melanjutkan.')
                 ->modalSubmitActionLabel('Ya, Backup & Hapus Semua')
-                ->action(function () {
+                ->action(function (array $data) {
                     $totalLogs = Activity::count();
 
                     if ($totalLogs === 0) {

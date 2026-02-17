@@ -66,6 +66,8 @@ class RoleUser extends Model
             'pegawai_piket' => false,
             'user_management' => false,
             'profil_ketua_kcd' => false,
+            'riwayat_tamu' => false,
+            'pengantar_berkas' => false,
             'can_print' => false,
             'can_change_status' => false,
         ];
@@ -86,6 +88,8 @@ class RoleUser extends Model
             'pegawai_piket' => 'Data Pegawai Piket',
             'user_management' => 'Manajemen User',
             'profil_ketua_kcd' => 'Profil Ketua KCD',
+            'riwayat_tamu' => 'Riwayat Pengunjung',
+            'pengantar_berkas' => 'Pengantar Berkas',
         ];
     }
 

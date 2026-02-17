@@ -90,6 +90,9 @@ class PengaturanAkses extends Page implements HasForms
               Forms\Components\Toggle::make('ketuaKcd.profil_ketua_kcd')
                 ->label('Profil Ketua KCD')
                 ->helperText('Halaman profil data diri Ketua KCD (perubahan perlu verifikasi Super Admin)'),
+              Forms\Components\Toggle::make('ketuaKcd.riwayat_tamu')
+                ->label('Riwayat Pengunjung')
+                ->helperText('Halaman riwayat pengunjung di panel admin'),
             ])
             ->columns(2),
           Forms\Components\Fieldset::make('Aksi')
@@ -114,6 +117,12 @@ class PengaturanAkses extends Page implements HasForms
               Forms\Components\Toggle::make('piket.buku_tamu')
                 ->label('Kunjungan Tamu')
                 ->helperText('Halaman kunjungan tamu di panel piket'),
+              Forms\Components\Toggle::make('piket.pengantar_berkas')
+                ->label('Pengantar Berkas')
+                ->helperText('Halaman daftar pengantar berkas di panel piket'),
+              Forms\Components\Toggle::make('piket.riwayat_tamu')
+                ->label('Riwayat Pengunjung')
+                ->helperText('Halaman riwayat pengunjung di panel piket'),
               Forms\Components\Toggle::make('piket.pegawai_izin')
                 ->label('Izin Pegawai')
                 ->helperText('Halaman izin pegawai di panel piket'),

@@ -30,7 +30,9 @@ class RiwayatTamu extends Page implements HasTable
   {
     /** @var User $user */
     $user = Auth::user();
-    return $user && $user->hasAnyRole(['Super Admin', 'Ketua KCD']);
+    if (!$user) return false;
+    if ($user->hasRole('Super Admin')) return true;
+    return $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
   }
 
   public function getTableRecordKey($record): string

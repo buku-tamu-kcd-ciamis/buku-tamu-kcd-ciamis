@@ -27,6 +27,13 @@ class PengantarBerkas extends Page implements HasTable
   protected static ?int $navigationSort = 2;
   protected static string $view = 'filament.piket.pages.pengantar-berkas';
 
+  public static function shouldRegisterNavigation(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+    return $user && $user->role_user && $user->role_user->hasPermission('pengantar_berkas');
+  }
+
   public function table(Table $table): Table
   {
     return $table

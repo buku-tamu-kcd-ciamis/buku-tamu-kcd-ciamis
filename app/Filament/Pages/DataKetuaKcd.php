@@ -89,7 +89,7 @@ class DataKetuaKcd extends Page implements HasForms
                                     <div class='rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-6 max-w-sm mx-auto text-center' style='font-family: Times New Roman, serif;'>
                                         <p class='text-sm text-gray-700 dark:text-gray-200 mb-1'>Ciamis, " . now()->translatedFormat('d F Y') . "</p>
                                         <p class='text-sm text-gray-700 dark:text-gray-200 mt-2'>{$jabatan},</p>
-                                        <p class='text-sm font-bold text-gray-900 dark:text-white mt-16 pb-1 inline-block' style='border-bottom: 2px solid #000;'>{$nama}</p>
+                                        <p class='text-sm font-bold text-gray-900 dark:text-white mt-16 pb-1 inline-block' style='border-bottom: 2px solid currentColor;'>{$nama}</p>
                                         <br><span class='text-xs text-gray-700 dark:text-gray-200 mt-1 inline-block'>{$nip}</span>
                                     </div>
                                 ");

@@ -19,14 +19,14 @@
                     </p>
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                         @foreach($pendingRequest->getChangedFields() as $field => $changes)
-                            <div class="bg-yellow-100 dark:bg-yellow-900/40 rounded-lg p-2">
+                            <div class="bg-yellow-100 dark:bg-yellow-900/50 rounded-lg p-2 border border-yellow-200 dark:border-yellow-700/50">
                                 <span class="font-medium text-yellow-900 dark:text-yellow-100">
                                     {{ \App\Models\ProfileChangeRequest::getFieldLabels()[$field] ?? $field }}:
                                 </span>
                                 <div class="mt-1">
-                                    <span class="line-through text-yellow-600 dark:text-yellow-400">{{ $changes['old'] ?: '(kosong)' }}</span>
-                                    <span class="text-yellow-800 dark:text-yellow-200 mx-1">&rarr;</span>
-                                    <span class="font-semibold text-yellow-900 dark:text-yellow-100">{{ $changes['new'] }}</span>
+                                    <span class="line-through text-yellow-700 dark:text-yellow-300">{{ $changes['old'] ?: '(kosong)' }}</span>
+                                    <span class="text-yellow-900 dark:text-yellow-100 mx-1">&rarr;</span>
+                                    <span class="font-semibold text-yellow-900 dark:text-yellow-50">{{ $changes['new'] }}</span>
                                 </div>
                             </div>
                         @endforeach
@@ -77,47 +77,47 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 @if($request->isPending())
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                        <x-heroicon-o-clock class="h-3.5 w-3.5" />
+                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm" style="background-color: #eab308; color: #fff;">
+                                        <x-heroicon-o-clock class="h-4 w-4" />
                                         Menunggu Verifikasi
                                     </span>
                                 @elseif($request->isApproved())
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                        <x-heroicon-o-check-circle class="h-3.5 w-3.5" />
+                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm" style="background-color: #22c55e; color: #fff;">
+                                        <x-heroicon-o-check-circle class="h-4 w-4" />
                                         Disetujui
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                        <x-heroicon-o-x-circle class="h-3.5 w-3.5" />
+                                    <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm" style="background-color: #ef4444; color: #fff;">
+                                        <x-heroicon-o-x-circle class="h-4 w-4" />
                                         Ditolak
                                     </span>
                                 @endif
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                <span class="text-xs text-gray-600 dark:text-gray-300">
                                     {{ $request->created_at->translatedFormat('d M Y, H:i') }}
                                 </span>
                             </div>
                             @if($request->reviewed_at)
-                                <span class="text-xs text-gray-400">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
                                     Diproses: {{ $request->reviewed_at->translatedFormat('d M Y, H:i') }}
                                 </span>
                             @endif
                         </div>
 
                         {{-- Changed fields --}}
-                        <div class="mt-2 flex flex-wrap gap-2">
+                        <div class="mt-3 flex flex-wrap gap-2">
                             @foreach($request->getChangedFields() as $field => $changes)
-                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
-                                    {{ \App\Models\ProfileChangeRequest::getFieldLabels()[$field] ?? $field }}:
-                                    <span class="line-through">{{ $changes['old'] ?: '(kosong)' }}</span>
-                                    &rarr;
-                                    <span class="font-medium">{{ $changes['new'] }}</span>
+                                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2.5 py-1.5 rounded border border-gray-200 dark:border-gray-600">
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ \App\Models\ProfileChangeRequest::getFieldLabels()[$field] ?? $field }}:</span>
+                                    <span class="line-through text-gray-500 dark:text-gray-400">{{ $changes['old'] ?: '(kosong)' }}</span>
+                                    <span class="mx-1 text-gray-400">&rarr;</span>
+                                    <span class="font-semibold text-gray-900 dark:text-white">{{ $changes['new'] }}</span>
                                 </span>
                             @endforeach
                         </div>
 
                         @if($request->isRejected() && $request->alasan_reject)
-                            <div class="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded p-2">
-                                <span class="font-medium">Alasan:</span> {{ $request->alasan_reject }}
+                            <div class="mt-3 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                                <span class="font-semibold">Alasan:</span> {{ $request->alasan_reject }}
                             </div>
                         @endif
                     </div>

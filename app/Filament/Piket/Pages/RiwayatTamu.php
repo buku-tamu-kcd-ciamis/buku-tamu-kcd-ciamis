@@ -10,8 +10,10 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
+use App\Models\User;
 
 class RiwayatTamu extends Page implements HasTable
 {
@@ -23,6 +25,13 @@ class RiwayatTamu extends Page implements HasTable
   protected static ?string $title = 'Riwayat Pengunjung';
   protected static ?int $navigationSort = 3;
   protected static string $view = 'filament.piket.pages.riwayat-tamu';
+
+  public static function shouldRegisterNavigation(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+    return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
+  }
 
   public function getTableRecordKey($record): string
   {

@@ -64,7 +64,7 @@
         </div>
     </form>
 
-    {{-- Riwayat Pengajuan (hanya untuk Ketua KCD) --}}
+    {{-- Riwayat Pengajuan (hanya untuk Kepala Cabang Dinas) --}}
     @if(!$this->isSuperAdmin && $latestRequests->isNotEmpty())
         <div class="mt-8">
             <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">

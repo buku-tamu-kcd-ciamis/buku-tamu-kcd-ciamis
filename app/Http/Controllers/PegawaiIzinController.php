@@ -27,8 +27,8 @@ class PegawaiIzinController extends Controller
 
         $activity->log("Mencetak surat izin {$pegawai->jenis_izin} atas nama {$pegawai->nama_pegawai}");
 
-        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+        $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
-        return view('print.surat-izin-pegawai', compact('pegawai', 'ketuaKcd'));
+        return view('print.surat-izin-pegawai', compact('pegawai', 'kepalaCabdin'));
     }
 }

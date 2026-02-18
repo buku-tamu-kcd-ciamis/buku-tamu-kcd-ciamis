@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile(\App\Filament\Pages\EditProfile::class)
             ->darkMode(true)
-            ->brandName('Cadisdik XIII — Admin')
+            ->brandName(fn() => 'Cadisdik XIII — ' . (auth()->user()?->role_user?->name ?? 'Admin'))
             ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
                 'primary' => Color::Green,

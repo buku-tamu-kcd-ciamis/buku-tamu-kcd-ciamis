@@ -142,12 +142,12 @@ class VerifikasiProfilResource extends Resource
                   'new_data' => $record->new_data,
                   'pengaju' => $record->user?->name,
                 ])
-                ->log('Perubahan profil Ketua KCD disetujui untuk ' . ($record->user?->name ?? ''));
+                ->log('Perubahan profil Kepala Cabang Dinas disetujui untuk ' . ($record->user?->name ?? ''));
 
               \Filament\Notifications\Notification::make()
                 ->success()
                 ->title('Perubahan disetujui!')
-                ->body('Data Ketua KCD telah diperbarui sesuai pengajuan.')
+                ->body('Data Kepala Cabang Dinas telah diperbarui sesuai pengajuan.')
                 ->send();
             }),
 
@@ -185,7 +185,7 @@ class VerifikasiProfilResource extends Resource
                   'alasan' => $data['alasan_reject'],
                   'pengaju' => $record->user?->name,
                 ])
-                ->log('Perubahan profil Ketua KCD ditolak untuk ' . ($record->user?->name ?? ''));
+                ->log('Perubahan profil Kepala Cabang Dinas ditolak untuk ' . ($record->user?->name ?? ''));
 
               \Filament\Notifications\Notification::make()
                 ->success()
@@ -211,7 +211,7 @@ class VerifikasiProfilResource extends Resource
       ])
       ->bulkActions([])
       ->emptyStateHeading('Belum Ada Pengajuan')
-      ->emptyStateDescription('Pengajuan perubahan profil dari Ketua KCD akan muncul di sini.')
+      ->emptyStateDescription('Pengajuan perubahan profil dari Kepala Cabang Dinas akan muncul di sini.')
       ->emptyStateIcon('heroicon-o-clipboard-document-check');
   }
 

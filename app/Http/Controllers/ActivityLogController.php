@@ -40,7 +40,7 @@ class ActivityLogController extends Controller
     $limit = $request->query('limit', 50);
     $activityLogs = $query->limit($limit)->get();
 
-    $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+    $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
     // Log this print action
     if (Auth::check()) {
@@ -61,6 +61,6 @@ class ActivityLogController extends Controller
         ->log('Mencetak log aktivitas (' . $activityLogs->count() . ' data)');
     }
 
-    return view('print.activity-logs', compact('activityLogs', 'ketuaKcd', 'limit'));
+    return view('print.activity-logs', compact('activityLogs', 'kepalaCabdin', 'limit'));
   }
 }

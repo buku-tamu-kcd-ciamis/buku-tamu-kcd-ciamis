@@ -32,7 +32,7 @@ class ListFaqs extends ListRecords
         ->badge(Faq::where('target', 'semua')->count())
         ->badgeColor('primary')
         ->modifyQueryUsing(fn(Builder $query) => $query->where('target', 'semua')),
-      'admin' => Tab::make('Panel Admin (Ketua KCD)')
+      'admin' => Tab::make('Panel Admin (Kepala Cabang Dinas)')
         ->icon('heroicon-o-shield-check')
         ->badge(Faq::where('target', 'admin')->count())
         ->badgeColor('warning')

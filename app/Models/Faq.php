@@ -44,7 +44,7 @@ class Faq extends Model
 
   public const TARGET_LABELS = [
     self::TARGET_SEMUA => 'Semua Panel',
-    self::TARGET_ADMIN => 'Panel Admin (Ketua KCD)',
+    self::TARGET_ADMIN => 'Panel Admin (Kepala Cabang Dinas)',
     self::TARGET_PIKET => 'Panel Piket',
   ];
 

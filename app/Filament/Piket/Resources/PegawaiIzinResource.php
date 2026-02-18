@@ -4,6 +4,7 @@ namespace App\Filament\Piket\Resources;
 
 use App\Filament\Piket\Resources\PegawaiIzinResource\Pages;
 use App\Models\Pegawai;
+use App\Models\DropdownOption;
 use App\Models\PegawaiIzin;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -204,11 +205,12 @@ class PegawaiIzinResource extends Resource
         Forms\Components\Textarea::make('keterangan')
           ->rows(3)
           ->columnSpanFull(),
-        Forms\Components\TextInput::make('nama_piket')
+        Forms\Components\Select::make('nama_piket')
           ->label('Nama Piket')
-          ->placeholder('Masukkan nama petugas piket')
+          ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_PEGAWAI_PIKET))
+          ->searchable()
+          ->placeholder('Pilih nama petugas piket')
           ->required()
-          ->maxLength(255)
           ->columnSpanFull(),
         Forms\Components\ViewField::make('tanda_tangan_piket')
           ->label('Tanda Tangan Piket (Konfirmasi)')
@@ -255,11 +257,13 @@ class PegawaiIzinResource extends Resource
         Tables\Columns\TextColumn::make('tanggal_mulai')
           ->label('Mulai')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => \Carbon\Carbon::parse($record->tanggal_mulai)->format('d/m/Y'))
           ->sortable(),
         Tables\Columns\TextColumn::make('tanggal_selesai')
           ->label('Selesai')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => \Carbon\Carbon::parse($record->tanggal_selesai)->format('d/m/Y'))
           ->sortable(),
         Tables\Columns\TextColumn::make('status')
@@ -292,7 +296,6 @@ class PegawaiIzinResource extends Resource
         ])
           ->label(false)
           ->icon('heroicon-m-ellipsis-vertical')
-          ->button()
           ->color('gray'),
       ])
       ->bulkActions([

@@ -23,7 +23,7 @@ class PengaturanAkses extends Page implements HasForms
   protected static ?string $title = 'Pengaturan Akses & Visibilitas';
   protected static string $view = 'filament.pages.pengaturan-akses';
 
-  public ?array $ketuaKcd = [];
+  public ?array $kepalaCabdin = [];
   public ?array $piket = [];
 
   public static function shouldRegisterNavigation(): bool
@@ -41,14 +41,14 @@ class PengaturanAkses extends Page implements HasForms
       abort(403);
     }
 
-    $ketuaRole = RoleUser::where('name', 'Ketua KCD')->first();
+    $kepalaCabdinRole = RoleUser::where('name', 'Kepala Cabang Dinas')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
 
-    $ketuaPermissions = array_merge(RoleUser::getDefaultPermissions(), $ketuaRole?->permissions ?? []);
+    $kepalaCabdinPermissions = array_merge(RoleUser::getDefaultPermissions(), $kepalaCabdinRole?->permissions ?? []);
     $piketPermissions = array_merge(RoleUser::getDefaultPermissions(), $piketRole?->permissions ?? []);
 
     $this->form->fill([
-      'ketuaKcd' => $ketuaPermissions,
+      'kepalaCabdin' => $kepalaCabdinPermissions,
       'piket' => $piketPermissions,
     ]);
   }
@@ -56,51 +56,51 @@ class PengaturanAkses extends Page implements HasForms
   public function form(Form $form): Form
   {
     return $form->schema([
-      Forms\Components\Section::make('Role: Ketua KCD')
-        ->description('Atur menu yang bisa diakses dan aksi yang diizinkan untuk role Ketua KCD di Panel Admin.')
+      Forms\Components\Section::make('Role: Kepala Cabang Dinas')
+        ->description('Atur menu yang bisa diakses dan aksi yang diizinkan untuk role Kepala Cabang Dinas di Panel Admin.')
         ->icon('heroicon-o-user')
         ->collapsible()
         ->schema([
           Forms\Components\Fieldset::make('Visibilitas Menu')
             ->schema([
-              Forms\Components\Toggle::make('ketuaKcd.buku_tamu')
+              Forms\Components\Toggle::make('kepalaCabdin.buku_tamu')
                 ->label('Buku Tamu')
                 ->helperText('Halaman data buku tamu'),
-              Forms\Components\Toggle::make('ketuaKcd.activity_log')
+              Forms\Components\Toggle::make('kepalaCabdin.activity_log')
                 ->label('Log Aktivitas')
                 ->helperText('Halaman log aktivitas sistem'),
-              Forms\Components\Toggle::make('ketuaKcd.pegawai_izin')
+              Forms\Components\Toggle::make('kepalaCabdin.pegawai_izin')
                 ->label('Izin Pegawai')
                 ->helperText('Halaman data izin pegawai'),
-              Forms\Components\Toggle::make('ketuaKcd.rekap_izin')
+              Forms\Components\Toggle::make('kepalaCabdin.rekap_izin')
                 ->label('Rekap Izin Pegawai')
                 ->helperText('Halaman rekap dan statistik izin pegawai'),
-              Forms\Components\Toggle::make('ketuaKcd.data_pegawai')
+              Forms\Components\Toggle::make('kepalaCabdin.data_pegawai')
                 ->label('Data Pegawai')
                 ->helperText('Halaman data pegawai'),
-              Forms\Components\Toggle::make('ketuaKcd.dropdown_options')
+              Forms\Components\Toggle::make('kepalaCabdin.dropdown_options')
                 ->label('Manajemen Buku Tamu')
                 ->helperText('Halaman pengaturan dropdown buku tamu'),
-              Forms\Components\Toggle::make('ketuaKcd.pegawai_piket')
+              Forms\Components\Toggle::make('kepalaCabdin.pegawai_piket')
                 ->label('Data Pegawai Piket')
                 ->helperText('Halaman data pegawai piket'),
-              Forms\Components\Toggle::make('ketuaKcd.user_management')
+              Forms\Components\Toggle::make('kepalaCabdin.user_management')
                 ->label('Manajemen User')
                 ->helperText('Halaman kelola user dan role'),
-              Forms\Components\Toggle::make('ketuaKcd.profil_ketua_kcd')
-                ->label('Profil Ketua KCD')
-                ->helperText('Halaman profil data diri Ketua KCD (perubahan perlu verifikasi Super Admin)'),
-              Forms\Components\Toggle::make('ketuaKcd.riwayat_tamu')
+              Forms\Components\Toggle::make('kepalaCabdin.profil_kepala_cabdin')
+                ->label('Profil Kepala Cabang Dinas')
+                ->helperText('Halaman profil data diri Kepala Cabang Dinas (perubahan perlu verifikasi Super Admin)'),
+              Forms\Components\Toggle::make('kepalaCabdin.riwayat_tamu')
                 ->label('Riwayat Pengunjung')
                 ->helperText('Halaman riwayat pengunjung di panel admin'),
             ])
             ->columns(2),
           Forms\Components\Fieldset::make('Aksi')
             ->schema([
-              Forms\Components\Toggle::make('ketuaKcd.can_print')
+              Forms\Components\Toggle::make('kepalaCabdin.can_print')
                 ->label('Cetak / Print')
                 ->helperText('Izinkan mencetak data buku tamu dan laporan'),
-              Forms\Components\Toggle::make('ketuaKcd.can_change_status')
+              Forms\Components\Toggle::make('kepalaCabdin.can_change_status')
                 ->label('Ubah Status Tamu')
                 ->helperText('Izinkan mengubah status kunjungan tamu'),
             ])
@@ -146,11 +146,11 @@ class PengaturanAkses extends Page implements HasForms
   {
     $data = $this->form->getState();
 
-    $ketuaRole = RoleUser::where('name', 'Ketua KCD')->first();
+    $kepalaCabdinRole = RoleUser::where('name', 'Kepala Cabang Dinas')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
 
-    if ($ketuaRole) {
-      $ketuaRole->update(['permissions' => $data['ketuaKcd']]);
+    if ($kepalaCabdinRole) {
+      $kepalaCabdinRole->update(['permissions' => $data['kepalaCabdin']]);
     }
 
     if ($piketRole) {

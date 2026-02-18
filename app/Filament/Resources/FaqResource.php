@@ -117,6 +117,7 @@ class FaqResource extends Resource
         Tables\Columns\TextColumn::make('updated_at')
           ->label('Terakhir diubah')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => $record->updated_at?->format('d/m/Y H:i'))
           ->sortable(),
       ])

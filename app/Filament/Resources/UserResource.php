@@ -99,7 +99,7 @@ class UserResource extends Resource
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Super Admin' => 'danger',
-                        'Ketua KCD' => 'warning',
+                        'Kepala Cabang Dinas' => 'warning',
                         'Piket' => 'success',
                         default => 'gray',
                     }),
@@ -110,6 +110,7 @@ class UserResource extends Resource
                 TextColumn::make('email_verified_at')
                     ->label('Terverifikasi')
                     ->since()
+                    ->color('gray')
                     ->tooltip(fn($record) => $record->email_verified_at ? \Carbon\Carbon::parse($record->email_verified_at)->format('d/m/Y H:i') : '-')
                     ->sortable(),
             ])
@@ -185,7 +186,6 @@ class UserResource extends Resource
                 ])
                     ->label(false)
                     ->icon('heroicon-m-ellipsis-vertical')
-                    ->button()
                     ->color('gray'),
             ])
             ->bulkActions([

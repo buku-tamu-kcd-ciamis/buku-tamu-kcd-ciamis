@@ -25,10 +25,10 @@ class RoleUserSeeder extends Seeder
             ]);
         }
 
-        if (! DB::table('role_users')->where('name', '=', 'Ketua KCD')->exists()) {
+        if (! DB::table('role_users')->where('name', '=', 'Kepala Cabang Dinas')->exists()) {
             DB::table('role_users')->insert([
                 'id'    => uniqid(),
-                'name' => 'Ketua KCD',
+                'name' => 'Kepala Cabang Dinas',
                 'need_approval' => false,
                 'author_id' => null,
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),

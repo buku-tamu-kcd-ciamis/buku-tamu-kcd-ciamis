@@ -93,6 +93,7 @@ class RiwayatTamu extends Page implements HasTable
         Tables\Columns\TextColumn::make('kunjungan_terakhir')
           ->label('Terakhir Berkunjung')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => \Carbon\Carbon::parse($record->kunjungan_terakhir)->format('d/m/Y H:i'))
           ->sortable(),
       ])

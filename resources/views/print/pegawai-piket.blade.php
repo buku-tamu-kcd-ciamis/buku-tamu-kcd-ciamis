@@ -293,8 +293,8 @@
                 <p>Ciamis, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
                 <p style="margin-top: 10px;">Kepala Cabang Dinas Pendidikan</p>
                 <p>Wilayah XIII,</p>
-                <p class="name">{{ $ketuaKcd->formatted_nama }}</p>
-                <p style="font-size: 9pt; margin-top: 3px;">{{ $ketuaKcd->formatted_nip }}</p>
+                <p class="name">{{ $kepalaCabdin->formatted_nama }}</p>
+                <p style="font-size: 9pt; margin-top: 3px;">{{ $kepalaCabdin->formatted_nip }}</p>
             </div>
         </div>
     </div>

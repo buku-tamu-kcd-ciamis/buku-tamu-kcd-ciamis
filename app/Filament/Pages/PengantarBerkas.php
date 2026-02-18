@@ -73,6 +73,7 @@ class PengantarBerkas extends Page implements HasTable
         Tables\Columns\TextColumn::make('created_at')
           ->label('Waktu')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => $record->created_at->format('d/m/Y H:i'))
           ->sortable(),
       ])
@@ -176,7 +177,6 @@ class PengantarBerkas extends Page implements HasTable
         ])
           ->label(false)
           ->icon('heroicon-m-ellipsis-vertical')
-          ->button()
           ->color('gray'),
       ])
       ->headerActions([

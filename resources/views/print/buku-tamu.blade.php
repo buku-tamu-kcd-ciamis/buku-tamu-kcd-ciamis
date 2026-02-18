@@ -278,14 +278,14 @@
         <div class="content">
         <!-- HEADER -->
         <div class="header">
-            <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo" class="header-logo">
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
             <div class="header-text">
                 <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
                 <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
-            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
+            <div class="header-spacer"></div>
         </div>
 
         <!-- TITLE -->
@@ -367,14 +367,6 @@
                     <img src="{{ $tamu->foto_selfie }}" alt="Foto Selfie">
                 @else
                     <div class="foto-placeholder">Tidak ada foto</div>
-                @endif
-            </div>
-            <div class="foto-item">
-                <p>Tanda Tangan</p>
-                @if($tamu->tanda_tangan)
-                    <img src="{{ $tamu->tanda_tangan }}" alt="Tanda Tangan">
-                @else
-                    <div class="foto-placeholder">Tidak ada</div>
                 @endif
             </div>
             @if($tamu->foto_penerimaan)

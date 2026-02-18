@@ -69,7 +69,7 @@ Sistem Informasi Cadisdik XIII adalah aplikasi berbasis web yang dirancang untuk
     - Status izin pegawai
     - Quick access menu
 
-### Panel Ketua KCD
+### Panel Kepala Cabang Dinas
 
 - Semua fitur Pegawai Piket
 - **Approval Izin Pegawai**
@@ -82,13 +82,13 @@ Sistem Informasi Cadisdik XIII adalah aplikasi berbasis web yang dirancang untuk
 
 ### Panel Super Admin
 
-- Semua fitur Ketua KCD
+- Semua fitur Kepala Cabang Dinas
 - **Manajemen User**
-    - CRUD users (Piket, Ketua KCD, Admin)
+    - CRUD users (Piket, Kepala Cabang Dinas, Admin)
     - Assign roles
     - Aktivasi/deaktivasi akun
 - **Pengaturan Sistem**
-    - Data Ketua KCD (nama, NIP, jabatan)
+    - Data Kepala Cabang Dinas (nama, NIP, jabatan)
     - Upload barcode SKM
     - Konfigurasi dropdown options
 - **Log Aktivitas**
@@ -203,11 +203,11 @@ Akses aplikasi di `http://localhost:8000`
 
 ### 8. Default Credentials
 
-| Role        | Email                      | Password        |
-| ----------- | -------------------------- | --------------- |
-| Super Admin | `superadmin@cadisdik13.id` | `superadmin123` |
-| Ketua KCD   | `ketua@cadisdik13.id`      | `ketua123`      |
-| Piket       | `piket@cadisdik13.id`      | `piket123`      |
+| Role                | Email                      | Password        |
+| ------------------- | -------------------------- | --------------- |
+| Super Admin         | `superadmin@cadisdik13.id` | `superadmin123` |
+| Kepala Cabang Dinas | `ketua@cadisdik13.id`      | `ketua123`      |
+| Piket               | `piket@cadisdik13.id`      | `piket123`      |
 
 ---
 
@@ -224,7 +224,7 @@ Akses aplikasi di `http://localhost:8000`
 ### Admin Panel
 
 1. **Piket**: `http://localhost:8000/piket`
-2. **Ketua KCD**: `http://localhost:8000/kcd`
+2. **Kepala Cabang Dinas**: `http://localhost:8000/kcd`
 3. **Super Admin**: `http://localhost:8000/admin`
 
 Login menggunakan credentials default atau yang sudah dibuat.

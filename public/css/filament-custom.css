@@ -77,6 +77,13 @@
     justify-content: center !important;
 }
 
+/* Brand name tidak wrap dan muat di sidebar */
+.fi-logo {
+    white-space: nowrap !important;
+    font-size: 0.875rem !important;
+    overflow: visible !important;
+}
+
 /* Hide actions column header label completely */
 .fi-ta-header-cell-label:has(+ .fi-ta-actions),
 th.fi-ta-header-cell.fi-table-header-cell-actions,

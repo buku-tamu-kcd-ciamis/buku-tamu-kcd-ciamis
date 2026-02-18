@@ -79,7 +79,6 @@ class RoleUserResource extends Resource
                 ])
                     ->label(false)
                     ->icon('heroicon-m-ellipsis-vertical')
-                    ->button()
                     ->color('gray'),
             ])
             ->bulkActions([

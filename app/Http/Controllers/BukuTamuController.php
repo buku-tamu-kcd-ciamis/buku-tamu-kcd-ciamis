@@ -154,7 +154,7 @@ class BukuTamuController extends Controller
 
         $tamuList = $query->orderBy('created_at', 'desc')->get();
 
-        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+        $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
         if (Auth::check()) {
             activity('cetak')
@@ -171,7 +171,7 @@ class BukuTamuController extends Controller
                 ->log('Mencetak laporan buku tamu (' . $tamuList->count() . ' data)');
         }
 
-        return view('print.buku-tamu-bulk', compact('tamuList', 'ketuaKcd'));
+        return view('print.buku-tamu-bulk', compact('tamuList', 'kepalaCabdin'));
     }
 
     /**
@@ -216,7 +216,7 @@ class BukuTamuController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+        $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
         if (Auth::check()) {
             activity('cetak')
@@ -225,14 +225,14 @@ class BukuTamuController extends Controller
                 ->log('Mencetak data pegawai piket (' . $pegawaiList->count() . ' data)');
         }
 
-        return view('print.pegawai-piket', compact('pegawaiList', 'ketuaKcd'));
+        return view('print.pegawai-piket', compact('pegawaiList', 'kepalaCabdin'));
     }
 
     public function printDataPegawai()
     {
         $pegawaiList = \App\Models\Pegawai::orderBy('nama')->get();
 
-        $ketuaKcd = \App\Models\PengaturanKcd::getSettings();
+        $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
         if (Auth::check()) {
             activity('cetak')
@@ -241,6 +241,6 @@ class BukuTamuController extends Controller
                 ->log('Mencetak data pegawai (' . $pegawaiList->count() . ' data)');
         }
 
-        return view('print.data-pegawai', compact('pegawaiList', 'ketuaKcd'));
+        return view('print.data-pegawai', compact('pegawaiList', 'kepalaCabdin'));
     }
 }

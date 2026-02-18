@@ -16,7 +16,7 @@ class PengaturanKcd extends Model
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()
-      ->logOnly(['nama_ketua', 'nip_ketua', 'jabatan', 'barcode_skm'])
+      ->logOnly(['nama_kepala', 'nip_kepala', 'jabatan', 'barcode_skm'])
       ->logOnlyDirty()
       ->dontSubmitEmptyLogs()
       ->useLogName('pengaturan')
@@ -28,8 +28,8 @@ class PengaturanKcd extends Model
   }
 
   protected $fillable = [
-    'nama_ketua',
-    'nip_ketua',
+    'nama_kepala',
+    'nip_kepala',
     'jabatan',
     'barcode_skm',
   ];
@@ -49,7 +49,7 @@ class PengaturanKcd extends Model
    */
   public function getFormattedNamaAttribute(): string
   {
-    return $this->nama_ketua ?: '(...............................................)';
+    return $this->nama_kepala ?: '(...............................................)';
   }
 
   /**
@@ -57,7 +57,7 @@ class PengaturanKcd extends Model
    */
   public function getFormattedNipAttribute(): string
   {
-    return $this->nip_ketua ? 'NIP. ' . $this->nip_ketua : 'NIP. ..............................';
+    return $this->nip_kepala ? 'NIP. ' . $this->nip_kepala : 'NIP. ..............................';
   }
 
   /**

@@ -74,6 +74,15 @@ class DropdownOptionResource extends Resource
             ->maxLength(255)
             ->placeholder('Otomatis terisi dari label...')
             ->helperText('Nilai yang disimpan ke database. Otomatis terisi dari label, bisa diubah jika perlu berbeda.')
+            ->unique(
+              table: DropdownOption::class,
+              column: 'value',
+              ignoreRecord: true,
+              modifyRuleUsing: fn($rule, Forms\Get $get) => $rule->where('category', $get('category')),
+            )
+            ->validationMessages([
+              'unique' => 'Nilai ini sudah ada di kategori yang sama. Gunakan nilai yang berbeda.',
+            ])
             ->columnSpanFull(),
           Forms\Components\TextInput::make('sort_order')
             ->label('Urutan')
@@ -154,6 +163,7 @@ class DropdownOptionResource extends Resource
         Tables\Columns\TextColumn::make('updated_at')
           ->label('Terakhir Diubah')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => $record->updated_at?->format('d/m/Y H:i'))
           ->sortable(),
       ])

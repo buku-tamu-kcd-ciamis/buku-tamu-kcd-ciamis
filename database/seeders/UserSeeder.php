@@ -29,13 +29,13 @@ class UserSeeder extends Seeder
             ]);
         }
 
-        // Ketua KCD
+        // Kepala Cabang Dinas
         if (! DB::table('users')->where('email', 'ketua@cadisdik13.id')->exists()) {
             DB::table('users')->insert([
                 'id'    => uniqid(),
-                'name' => 'Ketua KCD XIII',
+                'name' => 'Kepala Cabang Dinas XIII',
                 'email' => 'ketua@cadisdik13.id',
-                'role_user_id'  => RoleUser::where('name', 'Ketua KCD')->first()->id,
+                'role_user_id'  => RoleUser::where('name', 'Kepala Cabang Dinas')->first()->id,
                 'email_verified_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'password' => Hash::make('ketua123'),
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),

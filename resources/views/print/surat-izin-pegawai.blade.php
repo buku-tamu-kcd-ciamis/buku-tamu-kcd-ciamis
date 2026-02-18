@@ -337,8 +337,8 @@
                     <p>Wilayah XIII,</p>
                 </div>
                 <div class="signature-space"></div>
-                <p class="name">{{ $ketuaKcd->formatted_nama }}</p>
-                <p class="nip">{{ $ketuaKcd->formatted_nip }}</p>
+                <p class="name">{{ $kepalaCabdin->formatted_nama }}</p>
+                <p class="nip">{{ $kepalaCabdin->formatted_nip }}</p>
             </div>
             <div class="signature-box">
                 <div class="signature-label">

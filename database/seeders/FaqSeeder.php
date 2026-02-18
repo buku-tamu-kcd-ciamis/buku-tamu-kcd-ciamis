@@ -49,16 +49,16 @@ class FaqSeeder extends Seeder
         'sort_order' => 5,
       ],
 
-      // === FAQ Admin (Super Admin & Ketua KCD) ===
+      // === FAQ Admin (Super Admin & Kepala Cabang Dinas) ===
       [
         'question' => 'Bagaimana cara mengelola pengguna (user)?',
-        'answer' => 'Buka menu <strong>Pengguna → User</strong>. Anda bisa menambahkan user baru, mengedit data user, mereset password, dan menetapkan role (Super Admin, Ketua KCD, Piket). Untuk menambah user, klik tombol "New User" di pojok kanan atas.',
+        'answer' => 'Buka menu <strong>Pengguna → User</strong>. Anda bisa menambahkan user baru, mengedit data user, mereset password, dan menetapkan role (Super Admin, Kepala Cabang Dinas, Piket). Untuk menambah user, klik tombol "New User" di pojok kanan atas.',
         'target' => 'admin',
         'sort_order' => 6,
       ],
       [
         'question' => 'Apa perbedaan hak akses setiap role?',
-        'answer' => '<strong>Super Admin</strong> memiliki akses penuh ke panel Admin dan Piket. <strong>Ketua KCD</strong> hanya bisa mengakses panel Admin untuk melihat data dan laporan. <strong>Piket</strong> hanya bisa mengakses panel Piket untuk mengelola kunjungan tamu sehari-hari.',
+        'answer' => '<strong>Super Admin</strong> memiliki akses penuh ke panel Admin dan Piket. <strong>Kepala Cabang Dinas</strong> hanya bisa mengakses panel Admin untuk melihat data dan laporan. <strong>Piket</strong> hanya bisa mengakses panel Piket untuk mengelola kunjungan tamu sehari-hari.',
         'target' => 'admin',
         'sort_order' => 7,
       ],
@@ -81,7 +81,7 @@ class FaqSeeder extends Seeder
         'sort_order' => 10,
       ],
       [
-        'question' => 'Data apa saja yang bisa saya lihat sebagai Ketua KCD?',
+        'question' => 'Data apa saja yang bisa saya lihat sebagai Kepala Cabang Dinas?',
         'answer' => 'Anda bisa melihat semua data buku tamu yang masuk, termasuk data diri tamu, keperluan, bagian yang dituju, status kunjungan, foto selfie, dan tanda tangan. Anda juga bisa melihat statistik kunjungan di dashboard.',
         'target' => 'admin',
         'sort_order' => 11,

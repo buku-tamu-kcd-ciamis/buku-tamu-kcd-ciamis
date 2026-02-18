@@ -136,8 +136,8 @@ class ProfileChangeRequest extends Model
   public static function getFieldLabels(): array
   {
     return [
-      'nama_ketua' => 'Nama Ketua KCD',
-      'nip_ketua' => 'NIP',
+      'nama_kepala' => 'Nama Kepala Cabang Dinas',
+      'nip_kepala' => 'NIP',
       'jabatan' => 'Jabatan',
     ];
   }

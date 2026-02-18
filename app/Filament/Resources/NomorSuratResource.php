@@ -263,6 +263,7 @@ class NomorSuratResource extends Resource
         Tables\Columns\TextColumn::make('updated_at')
           ->label('Terakhir diubah')
           ->since()
+          ->color('gray')
           ->sortable(),
       ])
       ->defaultSort('nama_jenis')

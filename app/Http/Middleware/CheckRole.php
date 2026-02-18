@@ -10,7 +10,7 @@ class CheckRole
 {
   /**
    * Handle an incoming request.
-   * Usage: middleware('role:Super Admin,Ketua KCD')
+   * Usage: middleware('role:Super Admin,Kepala Cabang Dinas')
    */
   public function handle(Request $request, Closure $next, string ...$roles): Response
   {

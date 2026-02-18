@@ -11,16 +11,16 @@ use Illuminate\Support\Facades\Auth;
 class Dashboard extends BaseDashboard
 {
   protected static ?string $navigationIcon = 'heroicon-o-home';
-  protected static ?string $navigationLabel = 'Dashboard Admin';
-  protected static ?string $title = 'Dashboard Admin';
+  protected static ?string $navigationLabel = 'Dashboard';
+  protected static ?string $title = 'Dashboard';
 
   public function getWidgets(): array
   {
     /** @var User $user */
     $user = Auth::user();
 
-    // Ketua KCD melihat dashboard seperti Piket (hanya monitoring)
-    if ($user && $user->hasRole('Ketua KCD')) {
+    // Kepala Cabang Dinas melihat dashboard seperti Piket (hanya monitoring)
+    if ($user && $user->hasRole('Kepala Cabang Dinas')) {
       return [
         \App\Filament\Piket\Widgets\StatsOverview::class,
         \App\Filament\Piket\Widgets\VisitChart::class,

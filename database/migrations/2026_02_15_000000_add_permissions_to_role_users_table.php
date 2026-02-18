@@ -31,7 +31,7 @@ return new class extends Migration
       ]),
     ]);
 
-    DB::table('role_users')->where('name', 'Ketua KCD')->update([
+    DB::table('role_users')->where('name', 'Kepala Cabang Dinas')->update([
       'permissions' => json_encode([
         'buku_tamu' => true,
         'activity_log' => false,

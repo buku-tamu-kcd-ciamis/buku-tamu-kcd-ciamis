@@ -100,6 +100,7 @@ class KunjunganResource extends Resource
         Tables\Columns\TextColumn::make('created_at')
           ->label('Waktu')
           ->since()
+          ->color('gray')
           ->tooltip(fn($record) => $record->created_at->format('d/m/Y H:i'))
           ->sortable()
           ->verticallyAlignCenter(),

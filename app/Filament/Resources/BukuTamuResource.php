@@ -93,6 +93,7 @@ class BukuTamuResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Waktu')
                     ->since()
+                    ->color('gray')
                     ->tooltip(fn($record) => $record->created_at->format('d/m/Y H:i'))
                     ->sortable()
                     ->verticallyAlignCenter(),
@@ -204,7 +205,6 @@ class BukuTamuResource extends Resource
                 ])
                     ->label(false)
                     ->icon('heroicon-m-ellipsis-vertical')
-                    ->button()
                     ->color('gray'),
             ])
             ->headerActions([

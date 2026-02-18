@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Log Aktivitas Sistem — Cadisdik XIII</title>
+    @php
+        $settings = \App\Models\PengaturanKcd::getSettings();
+        $paperSize = $settings->paper_size ?? 'a4';
+        $isF4 = $paperSize === 'f4';
+        $pageSize = $isF4 ? '330mm 215mm' : 'A4 landscape';
+        $baseFontSize = $isF4 ? '11.5pt' : '11pt';
+    @endphp
     <style>
         @page {
-            size: A4 landscape;
-            margin: 15mm 20mm;
+            size:
+                {{ $pageSize }}
+            ;
+            margin: 10mm 15mm;
         }
 
         * {
@@ -19,16 +29,20 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
             color: #000;
             line-height: 1.4;
             background: #fff;
         }
 
         .page {
-            max-width: 297mm;
+            max-width:
+                {{ $isF4 ? '330mm' : '297mm' }}
+            ;
             margin: 0 auto;
-            padding: 10mm;
+            padding: 8mm;
         }
 
         /* === HEADER === */
@@ -45,6 +59,11 @@
         .header-logo {
             width: 90px;
             height: auto;
+            flex-shrink: 0;
+        }
+
+        .header-spacer {
+            width: 90px;
             flex-shrink: 0;
         }
 
@@ -172,12 +191,35 @@
             text-transform: uppercase;
         }
 
-        .badge-success { background: #D1FAE5; color: #065F46; }
-        .badge-info { background: #DBEAFE; color: #1E40AF; }
-        .badge-warning { background: #FEF3C7; color: #92400E; }
-        .badge-danger { background: #FEE2E2; color: #991B1B; }
-        .badge-gray { background: #F3F4F6; color: #374151; }
-        .badge-primary { background: #E0E7FF; color: #3730A3; }
+        .badge-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .badge-warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-danger {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .badge-gray {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .badge-primary {
+            background: #E0E7FF;
+            color: #3730A3;
+        }
 
         /* === SUMMARY === */
         .summary {
@@ -226,7 +268,7 @@
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -238,29 +280,34 @@
         }
 
         @media print {
-            .print-btn, .no-print {
+
+            .print-btn,
+            .no-print {
                 display: none !important;
             }
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn no-print" onclick="window.print()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
+        </svg>
         Cetak
     </button>
 
     <div class="page">
         <!-- HEADER -->
         <div class="header">
-            <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo" class="header-logo">
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
             <div class="header-text">
                 <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
                 <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
-            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
+            <div class="header-spacer"></div>
         </div>
 
         <!-- TITLE -->
@@ -275,28 +322,28 @@
         @endphp
 
         @if($filterActive)
-        <div class="filter-info no-print">
-            <p><strong>Filter yang Diterapkan:</strong></p>
-            @if(request()->has('user_id') && request()->user_id)
-                @php
-                    $user = \App\Models\User::find(request()->user_id);
-                @endphp
-                <p>• User: {{ $user ? $user->name : '-' }}</p>
-            @endif
-            @if(request()->has('log_name') && request()->log_name)
-                <p>• Modul: {{ \App\Filament\Resources\ActivityLogResource::getLogNameLabel(request()->log_name) }}</p>
-            @endif
-            @if(request()->has('event') && request()->event)
-                <p>• Event: {{ ucfirst(request()->event) }}</p>
-            @endif
-            @if(request()->has('start_date') && request()->start_date)
-                <p>• Tanggal Mulai: {{ \Carbon\Carbon::parse(request()->start_date)->translatedFormat('d F Y') }}</p>
-            @endif
-            @if(request()->has('end_date') && request()->end_date)
-                <p>• Tanggal Akhir: {{ \Carbon\Carbon::parse(request()->end_date)->translatedFormat('d F Y') }}</p>
-            @endif
-            <p>• Batas Data: {{ $limit }} log terakhir</p>
-        </div>
+            <div class="filter-info no-print">
+                <p><strong>Filter yang Diterapkan:</strong></p>
+                @if(request()->has('user_id') && request()->user_id)
+                    @php
+                        $user = \App\Models\User::find(request()->user_id);
+                    @endphp
+                    <p>• User: {{ $user ? $user->name : '-' }}</p>
+                @endif
+                @if(request()->has('log_name') && request()->log_name)
+                    <p>• Modul: {{ \App\Filament\Resources\ActivityLogResource::getLogNameLabel(request()->log_name) }}</p>
+                @endif
+                @if(request()->has('event') && request()->event)
+                    <p>• Event: {{ ucfirst(request()->event) }}</p>
+                @endif
+                @if(request()->has('start_date') && request()->start_date)
+                    <p>• Tanggal Mulai: {{ \Carbon\Carbon::parse(request()->start_date)->translatedFormat('d F Y') }}</p>
+                @endif
+                @if(request()->has('end_date') && request()->end_date)
+                    <p>• Tanggal Akhir: {{ \Carbon\Carbon::parse(request()->end_date)->translatedFormat('d F Y') }}</p>
+                @endif
+                <p>• Batas Data: {{ $limit }} log terakhir</p>
+            </div>
         @endif
 
         <!-- TABLE -->
@@ -313,49 +360,49 @@
             </thead>
             <tbody>
                 @forelse($activityLogs as $index => $log)
-                <tr>
-                    <td class="no">{{ $index + 1 }}</td>
-                    <td class="waktu">{{ $log->created_at->translatedFormat('d/m/Y H:i:s') }}</td>
-                    <td class="user">{{ $log->causer ? $log->causer->name : 'System' }}</td>
-                    <td class="modul">
-                        @php
-                            $labelClass = match($log->log_name) {
-                                'buku_tamu' => 'badge-success',
-                                'pegawai_izin' => 'badge-info',
-                                'auth' => 'badge-warning',
-                                'cetak' => 'badge-gray',
-                                'user' => 'badge-danger',
-                                'dropdown_option' => 'badge-primary',
-                                'pegawai' => 'badge-info',
-                                'pengaturan' => 'badge-warning',
-                                default => 'badge-gray',
-                            };
-                            $label = \App\Filament\Resources\ActivityLogResource::getLogNameLabel($log->log_name);
-                        @endphp
-                        <span class="badge {{ $labelClass }}">{{ $label }}</span>
-                    </td>
-                    <td class="aksi">
-                        @php
-                            $eventClass = match($log->event) {
-                                'created' => 'badge-success',
-                                'updated' => 'badge-warning',
-                                'deleted' => 'badge-danger',
-                                'login' => 'badge-info',
-                                'logout' => 'badge-gray',
-                                'print' => 'badge-primary',
-                                default => 'badge-gray',
-                            };
-                        @endphp
-                        <span class="badge {{ $eventClass }}">{{ ucfirst($log->event) }}</span>
-                    </td>
-                    <td>{{ $log->description }}</td>
-                </tr>
+                    <tr>
+                        <td class="no">{{ $index + 1 }}</td>
+                        <td class="waktu">{{ $log->created_at->translatedFormat('d/m/Y H:i:s') }}</td>
+                        <td class="user">{{ $log->causer ? $log->causer->name : 'System' }}</td>
+                        <td class="modul">
+                            @php
+                                $labelClass = match ($log->log_name) {
+                                    'buku_tamu' => 'badge-success',
+                                    'pegawai_izin' => 'badge-info',
+                                    'auth' => 'badge-warning',
+                                    'cetak' => 'badge-gray',
+                                    'user' => 'badge-danger',
+                                    'dropdown_option' => 'badge-primary',
+                                    'pegawai' => 'badge-info',
+                                    'pengaturan' => 'badge-warning',
+                                    default => 'badge-gray',
+                                };
+                                $label = \App\Filament\Resources\ActivityLogResource::getLogNameLabel($log->log_name);
+                            @endphp
+                            <span class="badge {{ $labelClass }}">{{ $label }}</span>
+                        </td>
+                        <td class="aksi">
+                            @php
+                                $eventClass = match ($log->event) {
+                                    'created' => 'badge-success',
+                                    'updated' => 'badge-warning',
+                                    'deleted' => 'badge-danger',
+                                    'login' => 'badge-info',
+                                    'logout' => 'badge-gray',
+                                    'print' => 'badge-primary',
+                                    default => 'badge-gray',
+                                };
+                            @endphp
+                            <span class="badge {{ $eventClass }}">{{ ucfirst($log->event) }}</span>
+                        </td>
+                        <td>{{ $log->description }}</td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
-                        Tidak ada data log aktivitas
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+                            Tidak ada data log aktivitas
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
@@ -380,4 +427,5 @@
         </div>
     </div>
 </body>
+
 </html>

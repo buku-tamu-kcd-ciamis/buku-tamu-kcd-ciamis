@@ -34,12 +34,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 label: item.metadata.id_label || item.label,
                 placeholder: item.metadata.placeholder || "Masukkan nomor ID",
                 digits: item.metadata.digits || null,
+                maxRepeated: item.metadata.max_repeated_digits || 3,
+                maxSequential: item.metadata.max_sequential_digits || 2,
             };
         } else {
             idConfig[item.value] = {
                 label: item.label,
                 placeholder: "Masukkan nomor ID",
                 digits: null,
+                maxRepeated: 3,
+                maxSequential: 2,
             };
         }
     });
@@ -256,26 +260,27 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== NIK REAL-TIME VALIDATION & AUTO-FILL =====
     let autoFillTimeout = null;
 
-    // Function to check if number has more than 3 consecutive repeated digits
-    function hasRepeatedDigits(value) {
-        const regex = /(\d)\1{3,}/; // Matches any digit repeated 4 or more times
+    // Function to check if number has more than limit consecutive repeated digits
+    function hasRepeatedDigits(value, limit) {
+        const regex = new RegExp(`(\\d)\\1{${limit},}`);
         return regex.test(value);
     }
 
-    // Function to check if number has more than 2 consecutive sequential digits
-    function hasSequentialDigits(value) {
-        for (let i = 0; i < value.length - 2; i++) {
-            const digit1 = parseInt(value[i]);
-            const digit2 = parseInt(value[i + 1]);
-            const digit3 = parseInt(value[i + 2]);
+    // Function to check if number has more than limit consecutive sequential digits
+    function hasSequentialDigits(value, limit) {
+        for (let i = 0; i < value.length - limit; i++) {
+            let isSequentialAsc = true;
+            let isSequentialDesc = true;
 
-            // Check ascending sequence (e.g., 123, 234, 345)
-            if (digit2 === digit1 + 1 && digit3 === digit2 + 1) {
-                return true;
+            for (let j = 0; j < limit; j++) {
+                const digit = parseInt(value[i + j]);
+                const nextDigit = parseInt(value[i + j + 1]);
+
+                if (nextDigit !== digit + 1) isSequentialAsc = false;
+                if (nextDigit !== digit - 1) isSequentialDesc = false;
             }
 
-            // Check descending sequence (e.g., 321, 432, 543)
-            if (digit2 === digit1 - 1 && digit3 === digit2 - 1) {
+            if (isSequentialAsc || isSequentialDesc) {
                 return true;
             }
         }
@@ -286,37 +291,51 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedId = jenisIdHidden.value;
         const config = idConfig[selectedId] || idConfig[""];
         const nikHint = document.getElementById("nik_hint");
+        const val = this.value;
 
+        // Reset hint
+        nikHint.textContent = "";
+        nikHint.className = "phone-hint";
+
+        if (val.length === 0) {
+            if (config.digits) {
+                nikHint.textContent = "Wajib " + config.digits + " digit";
+            }
+            return;
+        }
+
+        // Check for repeated digits
+        if (hasRepeatedDigits(val, config.maxRepeated)) {
+            nikHint.textContent =
+                "\u2717 Angka tidak boleh sama lebih dari " + config.maxRepeated + " digit berturut-turut";
+            nikHint.className = "phone-hint invalid";
+            return;
+        }
+
+        // Check for sequential digits
+        if (hasSequentialDigits(val, config.maxSequential)) {
+            nikHint.textContent =
+                "\u2717 Angka tidak boleh berurutan lebih dari " + config.maxSequential + " digit";
+            nikHint.className = "phone-hint invalid";
+            return;
+        }
+
+        // Check digits length if specified
         if (config.digits) {
             // Only allow digits for types with digit requirement
             this.value = this.value.replace(/[^0-9]/g, "");
+
             const count = this.value.length;
-
-            // Check for repeated digits
-            if (count > 0 && hasRepeatedDigits(this.value)) {
-                nikHint.textContent =
-                    "\u2717 Angka tidak boleh sama lebih dari 3 digit berturut-turut";
-                nikHint.className = "phone-hint invalid";
-                return;
-            }
-
-            // Check for sequential digits
-            if (count > 0 && hasSequentialDigits(this.value)) {
-                nikHint.textContent =
-                    "\u2717 Angka tidak boleh berurutan lebih dari 2 digit";
-                nikHint.className = "phone-hint invalid";
-                return;
-            }
-
-            if (count === 0) {
-                nikHint.textContent = "Wajib " + config.digits + " digit";
-                nikHint.className = "phone-hint";
-            } else if (count < config.digits) {
+            if (count < config.digits) {
                 nikHint.textContent =
                     count +
                     " digit \u2014 kurang " +
                     (config.digits - count) +
                     " digit lagi";
+                nikHint.className = "phone-hint invalid";
+            } else if (count > config.digits) {
+                nikHint.textContent =
+                    "\u2717 Terlalu banyak digit (maks " + config.digits + ")";
                 nikHint.className = "phone-hint invalid";
             } else {
                 nikHint.textContent =
@@ -330,8 +349,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }, 500);
             }
         } else {
-            nikHint.textContent = "";
-            nikHint.className = "phone-hint";
+            // General valid if no digits specified but passed other checks
+            nikHint.textContent = "\u2713 Valid";
+            nikHint.className = "phone-hint valid";
         }
     });
 
@@ -2679,11 +2699,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (
                 config.digits &&
                 nikInput.value &&
-                hasRepeatedDigits(nikInput.value)
+                hasRepeatedDigits(nikInput.value, config.maxRepeated)
             ) {
                 e.preventDefault();
                 showToast(
-                    '<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh sama lebih dari 3 digit berturut-turut.',
+                    `<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh sama lebih dari ${config.maxRepeated} digit berturut-turut.`,
                     "error",
                 );
                 nikInput.closest(".form-group").classList.add("shake");
@@ -2702,11 +2722,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (
                 config.digits &&
                 nikInput.value &&
-                hasSequentialDigits(nikInput.value)
+                hasSequentialDigits(nikInput.value, config.maxSequential)
             ) {
                 e.preventDefault();
                 showToast(
-                    '<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh berurutan lebih dari 2 digit.',
+                    `<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh berurutan lebih dari ${config.maxSequential} digit.`,
                     "error",
                 );
                 nikInput.closest(".form-group").classList.add("shake");

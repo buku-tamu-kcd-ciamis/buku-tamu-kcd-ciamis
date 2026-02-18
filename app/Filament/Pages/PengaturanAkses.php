@@ -25,6 +25,7 @@ class PengaturanAkses extends Page implements HasForms
 
   public ?array $kepalaCabdin = [];
   public ?array $piket = [];
+  public ?string $paperSize = 'a4';
 
   public static function shouldRegisterNavigation(): bool
   {
@@ -46,10 +47,12 @@ class PengaturanAkses extends Page implements HasForms
 
     $kepalaCabdinPermissions = array_merge(RoleUser::getDefaultPermissions(), $kepalaCabdinRole?->permissions ?? []);
     $piketPermissions = array_merge(RoleUser::getDefaultPermissions(), $piketRole?->permissions ?? []);
+    $settings = \App\Models\PengaturanKcd::getSettings();
 
     $this->form->fill([
       'kepalaCabdin' => $kepalaCabdinPermissions,
       'piket' => $piketPermissions,
+      'paperSize' => $settings->paper_size ?? 'a4',
     ]);
   }
 
@@ -139,6 +142,21 @@ class PengaturanAkses extends Page implements HasForms
             ])
             ->columns(2),
         ]),
+
+      Forms\Components\Section::make('Konfigurasi Cetak')
+        ->description('Atur konfigurasi default cetak dokumen sistem.')
+        ->icon('heroicon-o-printer')
+        ->collapsible()
+        ->schema([
+          Forms\Components\Select::make('paperSize')
+            ->label('Ukuran Kertas Default')
+            ->options([
+              'a4' => 'A4 (210 x 297 mm)',
+              'f4' => 'F4 (215 x 330 mm)',
+            ])
+            ->required()
+            ->helperText('Pilih ukuran kertas yang akan digunakan sebagai standar cetak sistem.'),
+        ]),
     ]);
   }
 
@@ -156,6 +174,10 @@ class PengaturanAkses extends Page implements HasForms
     if ($piketRole) {
       $piketRole->update(['permissions' => $data['piket']]);
     }
+
+    \App\Models\PengaturanKcd::getSettings()->update([
+      'paper_size' => $data['paperSize']
+    ]);
 
     activity()
       ->causedBy(Auth::user())

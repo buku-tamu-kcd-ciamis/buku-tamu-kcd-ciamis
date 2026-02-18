@@ -80,7 +80,7 @@ class ProductResource extends Resource
                         TextInput::make('manage_stock')
                             ->numeric()
                             ->minValue(0)
-                            ->hidden(fn(Get $get): bool => ! $get('stock_status')),
+                            ->hidden(fn(Get $get): bool => !$get('stock_status')),
                     ])
                     ->aside()
             ]);

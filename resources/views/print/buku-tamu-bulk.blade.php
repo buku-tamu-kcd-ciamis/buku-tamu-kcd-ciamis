@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Laporan Kunjungan Tamu — Cadisdik XIII</title>
+    @php
+        $settings = \App\Models\PengaturanKcd::getSettings();
+        $paperSize = $settings->paper_size ?? 'a4';
+        $isF4 = $paperSize === 'f4';
+        $pageSize = $isF4 ? '330mm 215mm' : 'A4 landscape';
+        $baseFontSize = $isF4 ? '11.5pt' : '11pt';
+    @endphp
     <style>
         @page {
-            size: A4 landscape;
-            margin: 15mm 20mm;
+            size:
+                {{ $pageSize }}
+            ;
+            margin: 10mm 15mm;
         }
 
         * {
@@ -19,16 +29,20 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
             color: #000;
             line-height: 1.4;
             background: #fff;
         }
 
         .page {
-            max-width: 297mm;
+            max-width:
+                {{ $isF4 ? '330mm' : '297mm' }}
+            ;
             margin: 0 auto;
-            padding: 10mm;
+            padding: 8mm;
         }
 
         /* === HEADER === */
@@ -154,7 +168,10 @@
             text-transform: uppercase;
         }
 
-        .status-selesai { background: #D1FAE5; color: #065F46; }
+        .status-selesai {
+            background: #D1FAE5;
+            color: #065F46;
+        }
 
         /* === SUMMARY === */
         .summary {
@@ -203,9 +220,18 @@
 
         /* === PRINT === */
         @media print {
-            body { background: none; }
-            .page { padding: 0; max-width: 100%; }
-            .no-print { display: none !important; }
+            body {
+                background: none;
+            }
+
+            .page {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
         }
 
         /* === PRINT BUTTON === */
@@ -220,7 +246,7 @@
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -232,23 +258,26 @@
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn no-print" onclick="window.print()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
+        </svg>
         Cetak
     </button>
 
     <div class="page">
         <!-- HEADER -->
         <div class="header">
-            <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo" class="header-logo">
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
             <div class="header-text">
                 <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
                 <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
-            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
+            <div class="header-spacer"></div>
         </div>
 
         <!-- TITLE -->
@@ -273,28 +302,28 @@
             </thead>
             <tbody>
                 @forelse($tamuList as $index => $tamu)
-                <tr>
-                    <td class="no">{{ $index + 1 }}</td>
-                    <td class="foto">
-                        @if($tamu->foto_selfie)
-                            <img src="{{ $tamu->foto_selfie }}" alt="Foto">
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>{{ $tamu->nama_lengkap }}</td>
-                    <td>{{ $tamu->nik }}</td>
-                    <td>{{ $tamu->instansi ?? '-' }}</td>
-                    <td>{{ \Illuminate\Support\Str::limit($tamu->keperluan, 50) }}</td>
-                    <td>{{ $tamu->bagian_dituju }}</td>
-                    <td>{{ $tamu->created_at->diffForHumans() }}</td>
-                </tr>
+                    <tr>
+                        <td class="no">{{ $index + 1 }}</td>
+                        <td class="foto">
+                            @if($tamu->foto_selfie)
+                                <img src="{{ $tamu->foto_selfie }}" alt="Foto">
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>{{ $tamu->nama_lengkap }}</td>
+                        <td>{{ $tamu->nik }}</td>
+                        <td>{{ $tamu->instansi ?? '-' }}</td>
+                        <td>{{ \Illuminate\Support\Str::limit($tamu->keperluan, 50) }}</td>
+                        <td>{{ $tamu->bagian_dituju }}</td>
+                        <td>{{ $tamu->created_at->diffForHumans() }}</td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="9" style="text-align: center; padding: 20px; color: #999;">
-                        Tidak ada data kunjungan yang selesai
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 20px; color: #999;">
+                            Tidak ada data kunjungan yang selesai
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
@@ -316,4 +345,5 @@
         </div>
     </div>
 </body>
+
 </html>

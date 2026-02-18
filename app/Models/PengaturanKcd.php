@@ -16,7 +16,7 @@ class PengaturanKcd extends Model
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()
-      ->logOnly(['nama_kepala', 'nip_kepala', 'jabatan', 'barcode_skm'])
+      ->logOnly(['nama_kepala', 'nip_kepala', 'jabatan', 'barcode_skm', 'paper_size'])
       ->logOnlyDirty()
       ->dontSubmitEmptyLogs()
       ->useLogName('pengaturan')
@@ -32,6 +32,7 @@ class PengaturanKcd extends Model
     'nip_kepala',
     'jabatan',
     'barcode_skm',
+    'paper_size',
   ];
 
   /**

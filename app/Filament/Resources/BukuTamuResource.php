@@ -129,24 +129,24 @@ class BukuTamuResource extends Resource
                                 ->label('Detail Tamu')
                                 ->content(fn(BukuTamu $record) => new HtmlString(
                                     '<div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 text-sm leading-relaxed">' .
-                                        '<div class="flex gap-4 mb-3">' .
-                                        '<div class="flex gap-3">' .
-                                        ($record->foto_selfie ? '<img src="' . e($record->foto_selfie) . '" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600" />' : '') .
-                                        ($record->tanda_tangan ? '<div><strong class="text-xs text-gray-600 dark:text-gray-300">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan) . '" class="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700" /></div>' : '') .
-                                        '</div>' .
-                                        '<div class="flex-1">' .
-                                        '<strong class="text-base dark:text-white">' . e($record->nama_lengkap) . '</strong><br>' .
-                                        '<span class="text-gray-600 dark:text-gray-300">NIK: ' . e($record->nik) . '</span><br>' .
-                                        '<span class="text-gray-600 dark:text-gray-300">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
-                                        '</div>' .
-                                        '</div>' .
-                                        ($record->foto_penerimaan ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-300">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
-                                        '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
-                                        '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
-                                        '<strong>Bagian Dituju:</strong> ' . e($record->bagian_dituju) . '<br>' .
-                                        '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
-                                        '</div>' .
-                                        '</div>'
+                                    '<div class="flex gap-4 mb-3">' .
+                                    '<div class="flex gap-3">' .
+                                    ($record->foto_selfie ? '<img src="' . e($record->foto_selfie) . '" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600" />' : '') .
+                                    ($record->tanda_tangan ? '<div><strong class="text-xs text-gray-600 dark:text-gray-300">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan) . '" class="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700" /></div>' : '') .
+                                    '</div>' .
+                                    '<div class="flex-1">' .
+                                    '<strong class="text-base dark:text-white">' . e($record->nama_lengkap) . '</strong><br>' .
+                                    '<span class="text-gray-600 dark:text-gray-300">NIK: ' . e($record->nik) . '</span><br>' .
+                                    '<span class="text-gray-600 dark:text-gray-300">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
+                                    '</div>' .
+                                    '</div>' .
+                                    ($record->foto_penerimaan ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-300">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
+                                    '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
+                                    '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
+                                    '<strong>Bagian Dituju:</strong> ' . e($record->bagian_dituju) . '<br>' .
+                                    '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
+                                    '</div>' .
+                                    '</div>'
                                 )),
                             Forms\Components\Select::make('nama_penerima')
                                 ->label('Nama Penerima')
@@ -154,6 +154,56 @@ class BukuTamuResource extends Resource
                                 ->searchable()
                                 ->allowHtml(false)
                                 ->placeholder('Pilih nama penerima'),
+                            Forms\Components\TextInput::make('nik')
+                                ->label('Nomor Identitas (NIK)')
+                                ->required()
+                                ->maxLength(20)
+                                ->live()
+                                ->rules([
+                                    fn(Forms\Get $get, BukuTamu $record): \Closure => function (string $attribute, $value, \Closure $fail) use ($get, $record) {
+                                        $jenisId = $record->jenis_id; // Use record's jenis_id as it's not editable here
+                                        $option = \App\Models\DropdownOption::where('category', \App\Models\DropdownOption::CATEGORY_JENIS_ID)
+                                            ->where('value', $jenisId)
+                                            ->first();
+
+                                        $metadata = $option ? $option->metadata : [];
+                                        $maxRepeated = (int) ($metadata['max_repeated_digits'] ?? 3);
+                                        $maxSequential = (int) ($metadata['max_sequential_digits'] ?? 2);
+                                        $requiredDigits = $metadata['digits'] ?? null;
+
+                                        // Check digits length if specified
+                                        if ($requiredDigits && strlen($value) != $requiredDigits) {
+                                            $fail('Nomor ID harus berjumlah ' . $requiredDigits . ' digit.');
+                                        }
+
+                                        // Check for repeated digits
+                                        if (preg_match('/(\d)\1{' . $maxRepeated . ',}/', $value)) {
+                                            $fail('Nomor ID tidak valid. Angka tidak boleh sama lebih dari ' . $maxRepeated . ' digit berturut-turut.');
+                                        }
+
+                                        // Check for sequential digits
+                                        for ($i = 0; $i < strlen($value) - $maxSequential; $i++) {
+                                            $isSequentialAsc = true;
+                                            $isSequentialDesc = true;
+
+                                            for ($j = 0; $j < $maxSequential; $j++) {
+                                                $digit = (int) $value[$i + $j];
+                                                $nextDigit = (int) $value[$i + $j + 1];
+
+                                                if ($nextDigit !== $digit + 1)
+                                                    $isSequentialAsc = false;
+                                                if ($nextDigit !== $digit - 1)
+                                                    $isSequentialDesc = false;
+                                            }
+
+                                            if ($isSequentialAsc || $isSequentialDesc) {
+                                                $fail('Nomor ID tidak valid. Angka tidak boleh berurutan lebih dari ' . $maxSequential . ' digit.');
+                                                break;
+                                            }
+                                        }
+                                    },
+                                ])
+                                ->validationAttribute('NIK'),
                             Forms\Components\Select::make('status')
                                 ->options([
                                     'menunggu' => 'Menunggu',
@@ -169,6 +219,7 @@ class BukuTamuResource extends Resource
                         ->fillForm(fn(BukuTamu $record) => [
                             'status' => $record->status,
                             'catatan' => $record->catatan,
+                            'nik' => $record->nik,
                         ])
                         ->action(function (BukuTamu $record, array $data) {
                             $record->update($data);

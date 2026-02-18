@@ -90,8 +90,8 @@ class DropdownOptionResource extends Resource
             ->default(
               fn(Forms\Get $get, string $operation) =>
               $operation === 'create' && $get('category')
-                ? (DropdownOption::where('category', $get('category'))->max('sort_order') ?? 0) + 1
-                : 0
+              ? (DropdownOption::where('category', $get('category'))->max('sort_order') ?? 0) + 1
+              : 0
             )
             ->placeholder('Otomatis diurutkan...')
             ->helperText('Urutan tampil dalam dropdown (kecil = lebih atas). Otomatis terisi dengan urutan berikutnya.'),
@@ -121,6 +121,18 @@ class DropdownOptionResource extends Resource
             ->nullable()
             ->placeholder('Contoh: 16 (untuk KTP/NIK)')
             ->helperText('Jumlah digit wajib (kosongkan jika bebas).'),
+          Forms\Components\TextInput::make('metadata.max_repeated_digits')
+            ->label('Batas Angka Kembar')
+            ->numeric()
+            ->default(3)
+            ->minValue(1)
+            ->helperText('Jumlah maksimal angka sama berturut-turut yang diizinkan (misal: 3 berarti 000 boleh, 0000 tidak).'),
+          Forms\Components\TextInput::make('metadata.max_sequential_digits')
+            ->label('Batas Angka Berurutan')
+            ->numeric()
+            ->default(2)
+            ->minValue(1)
+            ->helperText('Jumlah maksimal angka berurutan yang diizinkan (misal: 2 berarti 12 boleh, 123 tidak).'),
         ])
         ->columns(2)
         ->visible(fn(Forms\Get $get): bool => $get('category') === DropdownOption::CATEGORY_JENIS_ID),
@@ -249,6 +261,12 @@ class DropdownOptionResource extends Resource
           Infolists\Components\TextEntry::make('metadata.digits')
             ->label('Jumlah Digit')
             ->default('-'),
+          Infolists\Components\TextEntry::make('metadata.max_repeated_digits')
+            ->label('Batas Angka Kembar')
+            ->default(3),
+          Infolists\Components\TextEntry::make('metadata.max_sequential_digits')
+            ->label('Batas Angka Berurutan')
+            ->default(2),
         ])
         ->columns(2)
         ->visible(fn($record): bool => $record->category === DropdownOption::CATEGORY_JENIS_ID),

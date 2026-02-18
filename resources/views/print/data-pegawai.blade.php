@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Data Pegawai — Cadisdik XIII</title>
+    @php
+        $settings = \App\Models\PengaturanKcd::getSettings();
+        $paperSize = $settings->paper_size ?? 'a4';
+        $isF4 = $paperSize === 'f4';
+        $pageSize = $isF4 ? '215mm 330mm' : 'A4 portrait';
+        $baseFontSize = $isF4 ? '11.5pt' : '11pt';
+    @endphp
     <style>
         @page {
-            size: A4 portrait;
-            margin: 15mm 20mm;
+            size:
+                {{ $pageSize }}
+            ;
+            margin: 10mm 15mm;
         }
 
         * {
@@ -19,16 +29,20 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
             color: #000;
-            line-height: 1.4;
+            line-height: 1.5;
             background: #fff;
         }
 
         .page {
-            max-width: 210mm;
+            max-width:
+                {{ $isF4 ? '215mm' : '210mm' }}
+            ;
             margin: 0 auto;
-            padding: 10mm;
+            padding: 8mm;
         }
 
         /* === HEADER === */
@@ -45,6 +59,11 @@
         .header-logo {
             width: 90px;
             height: auto;
+            flex-shrink: 0;
+        }
+
+        .header-spacer {
+            width: 90px;
             flex-shrink: 0;
         }
 
@@ -147,8 +166,15 @@
             text-transform: uppercase;
         }
 
-        .status-aktif { background: #D1FAE5; color: #065F46; }
-        .status-nonaktif { background: #FEE2E2; color: #991B1B; }
+        .status-aktif {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-nonaktif {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
 
         /* === SUMMARY === */
         .summary {
@@ -187,9 +213,18 @@
 
         /* === PRINT === */
         @media print {
-            body { background: none; }
-            .page { padding: 0; max-width: 100%; }
-            .no-print { display: none !important; }
+            body {
+                background: none;
+            }
+
+            .page {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
         }
 
         /* === PRINT BUTTON === */
@@ -204,7 +239,7 @@
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -216,23 +251,26 @@
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn no-print" onclick="window.print()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
+        </svg>
         Cetak
     </button>
 
     <div class="page">
         <!-- HEADER -->
         <div class="header">
-            <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo" class="header-logo">
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
             <div class="header-text">
                 <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
                 <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
-            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
+            <div class="header-spacer"></div>
         </div>
 
         <!-- TITLE -->
@@ -256,27 +294,27 @@
             </thead>
             <tbody>
                 @forelse($pegawaiList as $index => $pegawai)
-                <tr>
-                    <td class="no">{{ $index + 1 }}</td>
-                    <td>{{ $pegawai->nama }}</td>
-                    <td class="nip">{{ $pegawai->nip }}</td>
-                    <td>{{ $pegawai->jabatan }}</td>
-                    <td>{{ $pegawai->unit_kerja }}</td>
-                    <td>{{ $pegawai->nomor_hp ? '+62' . ltrim($pegawai->nomor_hp, '0') : '-' }}</td>
-                    <td class="status">
-                        @if($pegawai->is_active)
-                            <span class="status-badge status-aktif">Aktif</span>
-                        @else
-                            <span class="status-badge status-nonaktif">Nonaktif</span>
-                        @endif
-                    </td>
-                </tr>
+                    <tr>
+                        <td class="no">{{ $index + 1 }}</td>
+                        <td>{{ $pegawai->nama }}</td>
+                        <td class="nip">{{ $pegawai->nip }}</td>
+                        <td>{{ $pegawai->jabatan }}</td>
+                        <td>{{ $pegawai->unit_kerja }}</td>
+                        <td>{{ $pegawai->nomor_hp ? '+62' . ltrim($pegawai->nomor_hp, '0') : '-' }}</td>
+                        <td class="status">
+                            @if($pegawai->is_active)
+                                <span class="status-badge status-aktif">Aktif</span>
+                            @else
+                                <span class="status-badge status-nonaktif">Nonaktif</span>
+                            @endif
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
-                        Tidak ada data pegawai
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
+                            Tidak ada data pegawai
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
@@ -300,4 +338,5 @@
         </div>
     </div>
 </body>
+
 </html>

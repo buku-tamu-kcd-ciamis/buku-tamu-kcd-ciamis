@@ -52,27 +52,44 @@ class BukuTamuController extends Controller
                 'nik' => [
                     'required',
                     'string',
-                    function ($attribute, $value, $fail) {
-                        // Check for repeated digits (more than 3 consecutive same digits)
-                        if (preg_match('/(\d)\1{3,}/', $value)) {
-                            $fail('NIK tidak valid. Angka tidak boleh sama lebih dari 3 digit berturut-turut.');
+                    function ($attribute, $value, $fail) use ($request) {
+                        $jenisId = $request->input('jenis_id');
+                        $option = \App\Models\DropdownOption::where('category', \App\Models\DropdownOption::CATEGORY_JENIS_ID)
+                            ->where('value', $jenisId)
+                            ->first();
+
+                        $metadata = $option ? $option->metadata : [];
+                        $maxRepeated = (int) ($metadata['max_repeated_digits'] ?? 3);
+                        $maxSequential = (int) ($metadata['max_sequential_digits'] ?? 2);
+                        $requiredDigits = $metadata['digits'] ?? null;
+
+                        // Check digits length if specified
+                        if ($requiredDigits && strlen($value) != $requiredDigits) {
+                            $fail('Nomor ID harus berjumlah ' . $requiredDigits . ' digit.');
                         }
 
-                        // Check for sequential digits (more than 2 consecutive sequential digits)
-                        for ($i = 0; $i < strlen($value) - 2; $i++) {
-                            $digit1 = (int)$value[$i];
-                            $digit2 = (int)$value[$i + 1];
-                            $digit3 = (int)$value[$i + 2];
+                        // Check for repeated digits
+                        if (preg_match('/(\d)\1{' . $maxRepeated . ',}/', $value)) {
+                            $fail('Nomor ID tidak valid. Angka tidak boleh sama lebih dari ' . $maxRepeated . ' digit berturut-turut.');
+                        }
 
-                            // Check ascending (123, 234, etc)
-                            if ($digit2 === $digit1 + 1 && $digit3 === $digit2 + 1) {
-                                $fail('NIK tidak valid. Angka tidak boleh berurutan lebih dari 2 digit.');
-                                break;
+                        // Check for sequential digits
+                        for ($i = 0; $i < strlen($value) - $maxSequential; $i++) {
+                            $isSequentialAsc = true;
+                            $isSequentialDesc = true;
+
+                            for ($j = 0; $j < $maxSequential; $j++) {
+                                $digit = (int) $value[$i + $j];
+                                $nextDigit = (int) $value[$i + $j + 1];
+
+                                if ($nextDigit !== $digit + 1)
+                                    $isSequentialAsc = false;
+                                if ($nextDigit !== $digit - 1)
+                                    $isSequentialDesc = false;
                             }
 
-                            // Check descending (321, 432, etc)
-                            if ($digit2 === $digit1 - 1 && $digit3 === $digit2 - 1) {
-                                $fail('NIK tidak valid. Angka tidak boleh berurutan lebih dari 2 digit.');
+                            if ($isSequentialAsc || $isSequentialDesc) {
+                                $fail('Nomor ID tidak valid. Angka tidak boleh berurutan lebih dari ' . $maxSequential . ' digit.');
                                 break;
                             }
                         }

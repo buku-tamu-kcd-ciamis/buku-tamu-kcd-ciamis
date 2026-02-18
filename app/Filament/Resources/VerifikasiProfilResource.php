@@ -113,7 +113,7 @@ class VerifikasiProfilResource extends Resource
               }
               return new \Illuminate\Support\HtmlString(
                 'Apakah Anda yakin ingin menyetujui perubahan berikut?<br><br>' .
-                  implode('<br>', $lines)
+                implode('<br>', $lines)
               );
             })
             ->modalSubmitActionLabel('Ya, Setujui')

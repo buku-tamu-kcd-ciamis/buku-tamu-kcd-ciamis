@@ -100,24 +100,24 @@ class PengantarBerkas extends Page implements HasTable
                 ->label('Detail Tamu')
                 ->content(fn(BukuTamu $record) => new \Illuminate\Support\HtmlString(
                   '<div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 text-sm leading-relaxed">' .
-                    '<div class="flex gap-4 mb-3">' .
-                    '<div class="flex gap-3">' .
-                    ($record->foto_selfie ? '<img src="' . e($record->foto_selfie) . '" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600" />' : '') .
-                    ($record->tanda_tangan ? '<div><strong class="text-xs text-gray-600 dark:text-gray-300">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan) . '" class="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700" /></div>' : '') .
-                    '</div>' .
-                    '<div class="flex-1">' .
-                    '<strong class="text-base dark:text-white">' . e($record->nama_lengkap) . '</strong><br>' .
-                    '<span class="text-gray-600 dark:text-gray-300">NIK: ' . e($record->nik) . '</span><br>' .
-                    '<span class="text-gray-600 dark:text-gray-300">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
-                    '</div>' .
-                    '</div>' .
-                    ($record->foto_penerimaan ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-300">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
-                    '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
-                    '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
-                    '<strong>Bagian Dituju:</strong> ' . e($record->bagian_dituju) . '<br>' .
-                    '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
-                    '</div>' .
-                    '</div>'
+                  '<div class="flex gap-4 mb-3">' .
+                  '<div class="flex gap-3">' .
+                  ($record->foto_selfie ? '<img src="' . e($record->foto_selfie) . '" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600" />' : '') .
+                  ($record->tanda_tangan ? '<div><strong class="text-xs text-gray-600 dark:text-gray-300">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan) . '" class="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700" /></div>' : '') .
+                  '</div>' .
+                  '<div class="flex-1">' .
+                  '<strong class="text-base dark:text-white">' . e($record->nama_lengkap) . '</strong><br>' .
+                  '<span class="text-gray-600 dark:text-gray-300">NIK: ' . e($record->nik) . '</span><br>' .
+                  '<span class="text-gray-600 dark:text-gray-300">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
+                  '</div>' .
+                  '</div>' .
+                  ($record->foto_penerimaan ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-300">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
+                  '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
+                  '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
+                  '<strong>Bagian Dituju:</strong> ' . e($record->bagian_dituju) . '<br>' .
+                  '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
+                  '</div>' .
+                  '</div>'
                 )),
               Forms\Components\Select::make('nama_penerima')
                 ->label('Nama Penerima')

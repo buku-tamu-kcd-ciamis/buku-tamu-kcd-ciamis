@@ -1,10 +1,25 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Dropdown Options</title>
+    @php
+        $settings = \App\Models\PengaturanKcd::getSettings();
+        $paperSize = $settings->paper_size ?? 'a4';
+        $isF4 = $paperSize === 'f4';
+        $pageSize = $isF4 ? '215mm 330mm' : 'A4 portrait';
+        $baseFontSize = $isF4 ? '12.5pt' : '12pt';
+    @endphp
     <style>
+        @page {
+            size:
+                {{ $pageSize }}
+            ;
+            margin: 10mm 15mm;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,10 +28,14 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 12pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
             color: #333;
             background: #fff;
-            padding: 30px;
+            padding:
+                {{ $isF4 ? '15mm' : '10mm' }}
+            ;
             line-height: 1.5;
         }
 
@@ -128,7 +147,7 @@
             border-radius: 5px;
             font-size: 13px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             z-index: 999;
             font-family: inherit;
         }
@@ -141,12 +160,14 @@
             .print-btn {
                 display: none !important;
             }
+
             body {
                 padding: 15px;
             }
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn" onclick="window.print()">Cetak Halaman</button>
 
@@ -178,19 +199,19 @@
                 </thead>
                 <tbody>
                     @foreach($items as $index => $item)
-                    <tr>
-                        <td class="no">{{ $index + 1 }}</td>
-                        <td>{{ $item->value }}</td>
-                        <td>{{ $item->label }}</td>
-                        <td class="order">{{ $item->sort_order }}</td>
-                        <td class="status">
-                            @if($item->is_active)
-                                <span class="status-badge status-aktif">Aktif</span>
-                            @else
-                                <span class="status-badge status-nonaktif">Nonaktif</span>
-                            @endif
-                        </td>
-                    </tr>
+                        <tr>
+                            <td class="no">{{ $index + 1 }}</td>
+                            <td>{{ $item->value }}</td>
+                            <td>{{ $item->label }}</td>
+                            <td class="order">{{ $item->sort_order }}</td>
+                            <td class="status">
+                                @if($item->is_active)
+                                    <span class="status-badge status-aktif">Aktif</span>
+                                @else
+                                    <span class="status-badge status-nonaktif">Nonaktif</span>
+                                @endif
+                            </td>
+                        </tr>
                     @endforeach
                 </tbody>
             </table>
@@ -201,4 +222,5 @@
         Total Keseluruhan: {{ $options->flatten()->count() }} opsi dropdown
     </div>
 </body>
+
 </html>

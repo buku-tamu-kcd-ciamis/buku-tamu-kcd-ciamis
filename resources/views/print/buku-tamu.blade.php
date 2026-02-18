@@ -1,13 +1,23 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Surat Kunjungan — {{ $tamu->nama_lengkap }}</title>
+    @php
+        $settings = \App\Models\PengaturanKcd::getSettings();
+        $paperSize = $settings->paper_size ?? 'a4';
+        $isF4 = $paperSize === 'f4';
+        $pageSize = $isF4 ? '215mm 330mm' : 'A4';
+        $baseFontSize = $isF4 ? '12pt' : '11pt';
+    @endphp
     <style>
         @page {
-            size: A4 portrait;
+            size:
+                {{ $pageSize }}
+                portrait;
             margin: 10mm 15mm;
         }
 
@@ -19,9 +29,11 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
             color: #000;
-            line-height: 1.4;
+            line-height: 1.5;
             background: #fff;
             min-height: 100vh;
             display: flex;
@@ -29,9 +41,13 @@
         }
 
         .page {
-            max-width: 210mm;   
+            max-width:
+                {{ $isF4 ? '215mm' : '210mm' }}
+            ;
             margin: 0 auto;
-            padding: 5mm;
+            padding:
+                {{ $isF4 ? '10mm' : '5mm' }}
+            ;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -145,11 +161,35 @@
             text-transform: uppercase;
         }
 
-        .status-menunggu { background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; }
-        .status-diproses { background: #DBEAFE; color: #1E40AF; border: 1px solid #3B82F6; }
-        .status-selesai { background: #D1FAE5; color: #065F46; border: 1px solid #10B981; }
-        .status-ditolak { background: #FEE2E2; color: #991B1B; border: 1px solid #EF4444; }
-        .status-dibatalkan { background: #F3F4F6; color: #374151; border: 1px solid #9CA3AF; }
+        .status-menunggu {
+            background: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #F59E0B;
+        }
+
+        .status-diproses {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #3B82F6;
+        }
+
+        .status-selesai {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+
+        .status-ditolak {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+        }
+
+        .status-dibatalkan {
+            background: #F3F4F6;
+            color: #374151;
+            border: 1px solid #9CA3AF;
+        }
 
         /* === FOTO SECTION === */
         .foto-section {
@@ -239,9 +279,18 @@
 
         /* === PRINT === */
         @media print {
-            body { background: none; }
-            .page { padding: 0; max-width: 100%; }
-            .no-print { display: none !important; }
+            body {
+                background: none;
+            }
+
+            .page {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
         }
 
         /* === PRINT BUTTON === */
@@ -256,7 +305,7 @@
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -268,114 +317,119 @@
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn no-print" onclick="window.print()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
+        </svg>
         Cetak
     </button>
 
     <div class="page">
         <div class="content">
-        <!-- HEADER -->
-        <div class="header">
-            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
-            <div class="header-text">
-                <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
-                <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
-                <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
-                <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
+            <!-- HEADER -->
+            <div class="header">
+                <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
+                <div class="header-text">
+                    <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
+                    <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
+                    <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
+                    <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
+                </div>
+                <div class="header-spacer"></div>
             </div>
-            <div class="header-spacer"></div>
-        </div>
 
-        <!-- TITLE -->
-        <div class="title">
-            <h3>Bukti Kunjungan Tamu</h3>
-            @if($nomorSuratSetting)
-                <p>No. {{ $nomorSuratSetting->generateNomor($tamu->id, $tamu->created_at) }}</p>
-            @else
-                <p>No. {{ str_pad($tamu->id, 6, '0', STR_PAD_LEFT) }} / BT / {{ \Carbon\Carbon::parse($tamu->created_at)->format('m/Y') }}</p>
-            @endif
-        </div>
-
-        <!-- DATA TABLE -->
-        <table class="data-table">
-            <tr>
-                <td class="label">Nama Lengkap</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->nama_lengkap }}</td>
-            </tr>
-            <tr>
-                <td class="label">{{ $tamu->jenis_id ?? 'Nomor ID' }}</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->nik }}</td>
-            </tr>
-            <tr>
-                <td class="label">Instansi</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->instansi ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Jabatan</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->jabatan ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Nomor HP</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->nomor_hp }}</td>
-            </tr>
-            <tr>
-                <td class="label">Email</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->email ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="label">Kabupaten / Kota</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->kabupaten_kota }}</td>
-            </tr>
-            <tr>
-                <td class="label">Bagian Yang Dituju</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->bagian_dituju }}</td>
-            </tr>
-            <tr>
-                <td class="label">Keperluan</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->keperluan }}</td>
-            </tr>
-            <tr>
-                <td class="label">Waktu Kunjungan</td>
-                <td class="colon">:</td>
-                <td>{{ \Carbon\Carbon::parse($tamu->created_at)->translatedFormat('d F Y, H:i') }} WIB</td>
-            </tr>
-            @if($tamu->catatan)
-            <tr>
-                <td class="label">Catatan</td>
-                <td class="colon">:</td>
-                <td>{{ $tamu->catatan }}</td>
-            </tr>
-            @endif
-        </table>
-
-        <!-- FOTO -->
-        <div class="foto-section">
-            <div class="foto-item">
-                <p>Foto Selfie</p>
-                @if($tamu->foto_selfie)
-                    <img src="{{ $tamu->foto_selfie }}" alt="Foto Selfie">
+            <!-- TITLE -->
+            <div class="title">
+                <h3>Bukti Kunjungan Tamu</h3>
+                @if($nomorSuratSetting)
+                    <p>No. {{ $nomorSuratSetting->generateNomor($tamu->id, $tamu->created_at) }}</p>
                 @else
-                    <div class="foto-placeholder">Tidak ada foto</div>
+                    <p>No. {{ str_pad($tamu->id, 6, '0', STR_PAD_LEFT) }} / BT /
+                        {{ \Carbon\Carbon::parse($tamu->created_at)->format('m/Y') }}
+                    </p>
                 @endif
             </div>
-            @if($tamu->foto_penerimaan)
-            <div class="foto-item">
-                <p>Foto Penerimaan</p>
-                <img src="{{ $tamu->foto_penerimaan }}" alt="Foto Penerimaan">
+
+            <!-- DATA TABLE -->
+            <table class="data-table">
+                <tr>
+                    <td class="label">Nama Lengkap</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->nama_lengkap }}</td>
+                </tr>
+                <tr>
+                    <td class="label">{{ $tamu->jenis_id ?? 'Nomor ID' }}</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->nik }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Instansi</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->instansi ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Jabatan</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->jabatan ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Nomor HP</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->nomor_hp }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Email</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->email ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Kabupaten / Kota</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->kabupaten_kota }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Bagian Yang Dituju</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->bagian_dituju }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Keperluan</td>
+                    <td class="colon">:</td>
+                    <td>{{ $tamu->keperluan }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Waktu Kunjungan</td>
+                    <td class="colon">:</td>
+                    <td>{{ \Carbon\Carbon::parse($tamu->created_at)->translatedFormat('d F Y, H:i') }} WIB</td>
+                </tr>
+                @if($tamu->catatan)
+                    <tr>
+                        <td class="label">Catatan</td>
+                        <td class="colon">:</td>
+                        <td>{{ $tamu->catatan }}</td>
+                    </tr>
+                @endif
+            </table>
+
+            <!-- FOTO -->
+            <div class="foto-section">
+                <div class="foto-item">
+                    <p>Foto Selfie</p>
+                    @if($tamu->foto_selfie)
+                        <img src="{{ $tamu->foto_selfie }}" alt="Foto Selfie">
+                    @else
+                        <div class="foto-placeholder">Tidak ada foto</div>
+                    @endif
+                </div>
+                @if($tamu->foto_penerimaan)
+                    <div class="foto-item">
+                        <p>Foto Penerimaan</p>
+                        <img src="{{ $tamu->foto_penerimaan }}" alt="Foto Penerimaan">
+                    </div>
+                @endif
             </div>
-            @endif
-        </div>
         </div>
 
         <!-- SIGNATURE -->
@@ -396,4 +450,5 @@
         </div>
     </div>
 </body>
+
 </html>

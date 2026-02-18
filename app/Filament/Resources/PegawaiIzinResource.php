@@ -50,10 +50,12 @@ class PegawaiIzinResource extends Resource
           ->placeholder('Cari nama atau NIP pegawai...')
           ->live()
           ->afterStateUpdated(function ($state, Forms\Set $set) {
-            if (!$state) return;
+            if (!$state)
+              return;
 
             $pegawai = Pegawai::find($state);
-            if (!$pegawai) return;
+            if (!$pegawai)
+              return;
 
             $set('nama_pegawai', $pegawai->nama);
             $set('nip', $pegawai->nip);
@@ -100,15 +102,18 @@ class PegawaiIzinResource extends Resource
           ->readOnly()
           ->live()
           ->suffixIcon(function ($state) {
-            if (!$state) return null;
+            if (!$state)
+              return null;
             return strlen($state) === 18 ? 'heroicon-m-check-circle' : 'heroicon-m-x-circle';
           })
           ->suffixIconColor(function ($state) {
-            if (!$state) return null;
+            if (!$state)
+              return null;
             return strlen($state) === 18 ? 'success' : 'danger';
           })
           ->helperText(function ($state) {
-            if (!$state) return 'Otomatis terisi dari pilihan pegawai';
+            if (!$state)
+              return 'Otomatis terisi dari pilihan pegawai';
             $length = strlen($state);
             $status = $length === 18 ? 'valid' : 'invalid';
             return "{$length} digit — {$status}";
@@ -172,7 +177,8 @@ class PegawaiIzinResource extends Resource
           ->rules([
             function () {
               return function (string $attribute, $value, \Closure $fail) {
-                if (!$value) return;
+                if (!$value)
+                  return;
 
                 try {
                   $date = \Carbon\Carbon::parse($value);
@@ -241,7 +247,8 @@ class PegawaiIzinResource extends Resource
         Tables\Columns\TextColumn::make('nomor_hp')
           ->label('No. HP')
           ->formatStateUsing(function ($state) {
-            if (!$state) return '-';
+            if (!$state)
+              return '-';
             $cleaned = preg_replace('/[^0-9]/', '', $state);
             if (str_starts_with($cleaned, '0')) {
               $cleaned = substr($cleaned, 1);

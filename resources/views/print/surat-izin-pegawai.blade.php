@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-cadisdik.png') }}">
     <title>Surat Izin — {{ $pegawai->nama_pegawai }}</title>
+    @php
+        $settings = \App\Models\PengaturanKcd::getSettings();
+        $paperSize = $settings->paper_size ?? 'a4';
+        $isF4 = $paperSize === 'f4';
+        $pageSize = $isF4 ? '215mm 330mm' : 'A4 portrait';
+        $baseFontSize = $isF4 ? '12.5pt' : '12pt';
+    @endphp
     <style>
         @page {
-            size: A4 portrait;
-            margin: 15mm 20mm;
+            size:
+                {{ $pageSize }}
+            ;
+            margin: 10mm 15mm;
         }
 
         * {
@@ -19,16 +29,22 @@
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
             color: #000;
-            line-height: 1.5;
+            line-height: 1.6;
             background: #fff;
         }
 
         .page {
-            max-width: 210mm;
+            max-width:
+                {{ $isF4 ? '215mm' : '210mm' }}
+            ;
             margin: 0 auto;
-            padding: 10mm;
+            padding:
+                {{ $isF4 ? '15mm' : '10mm' }}
+            ;
         }
 
         /* === HEADER === */
@@ -121,7 +137,9 @@
         .data-table td {
             padding: 6px 8px;
             vertical-align: top;
-            font-size: 12pt;
+            font-size:
+                {{ $baseFontSize }}
+            ;
         }
 
         .data-table td.label {
@@ -144,8 +162,17 @@
             text-transform: uppercase;
         }
 
-        .status-aktif { background: #D1FAE5; color: #065F46; border: 1px solid #10B981; }
-        .status-selesai { background: #F3F4F6; color: #374151; border: 1px solid #9CA3AF; }
+        .status-aktif {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+
+        .status-selesai {
+            background: #F3F4F6;
+            color: #374151;
+            border: 1px solid #9CA3AF;
+        }
 
         /* === SIGNATURE === */
         .signature-section {
@@ -208,9 +235,18 @@
 
         /* === PRINT === */
         @media print {
-            body { background: none; }
-            .page { padding: 0; max-width: 100%; }
-            .no-print { display: none !important; }
+            body {
+                background: none;
+            }
+
+            .page {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
         }
 
         /* === PRINT BUTTON === */
@@ -225,7 +261,7 @@
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -237,28 +273,32 @@
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn no-print" onclick="printClean()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
+        </svg>
         Cetak
     </button>
 
     <div class="page">
         <!-- HEADER -->
         <div class="header">
-            <img src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo" class="header-logo">
+            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
             <div class="header-text">
                 <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
                 <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
                 <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
                 <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
             </div>
-            <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo-right">
+            <div class="header-spacer"></div>
         </div>
 
         <!-- TITLE -->
         <div class="title">
-            <h3>Surat Izin {{ \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin }}</h3>
+            <h3>Surat Izin
+                {{ \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin }}</h3>
         </div>
 
         <!-- CONTENT -->
@@ -289,17 +329,21 @@
                 <tr>
                     <td class="label">Nomor HP</td>
                     <td class="colon">:</td>
-                    <td>{{ $pegawai->nomor_hp ? (str_starts_with($pegawai->nomor_hp, '0') ? '+62' . substr($pegawai->nomor_hp, 1) : $pegawai->nomor_hp) : '-' }}</td>
+                    <td>{{ $pegawai->nomor_hp ? (str_starts_with($pegawai->nomor_hp, '0') ? '+62' . substr($pegawai->nomor_hp, 1) : $pegawai->nomor_hp) : '-' }}
+                    </td>
                 </tr>
             </table>
 
-            <p>Mengajukan permohonan izin <strong>{{ \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin }}</strong> dengan rincian sebagai berikut:</p>
+            <p>Mengajukan permohonan izin
+                <strong>{{ \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin }}</strong>
+                dengan rincian sebagai berikut:</p>
 
             <table class="data-table">
                 <tr>
                     <td class="label">Jenis Izin</td>
                     <td class="colon">:</td>
-                    <td>{{ \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin }}</td>
+                    <td>{{ \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin }}
+                    </td>
                 </tr>
                 <tr>
                     <td class="label">Tanggal Mulai</td>
@@ -314,14 +358,15 @@
                 <tr>
                     <td class="label">Lama Izin</td>
                     <td class="colon">:</td>
-                    <td><strong>{{ $pegawai->tanggal_mulai->diffInDays($pegawai->tanggal_selesai) + 1 }} Hari</strong></td>
+                    <td><strong>{{ $pegawai->tanggal_mulai->diffInDays($pegawai->tanggal_selesai) + 1 }} Hari</strong>
+                    </td>
                 </tr>
                 @if($pegawai->keterangan)
-                <tr>
-                    <td class="label">Keterangan</td>
-                    <td class="colon">:</td>
-                    <td>{{ $pegawai->keterangan }}</td>
-                </tr>
+                    <tr>
+                        <td class="label">Keterangan</td>
+                        <td class="colon">:</td>
+                        <td>{{ $pegawai->keterangan }}</td>
+                    </tr>
                 @endif
             </table>
 
@@ -373,11 +418,12 @@
             doc.write('<style>');
             // Ambil semua style dari halaman utama
             var styles = document.querySelectorAll('style');
-            styles.forEach(function(style) {
+            styles.forEach(function (style) {
                 doc.write(style.innerHTML);
             });
             // Override @page margin jadi 0 di iframe
-            doc.write('@page { size: A4 portrait; margin: 0; }');
+            var pageSize = '{{ $pageSize }}';
+            doc.write('@page { size: ' + pageSize + '; margin: 0; }');
             doc.write('.page { padding: 15mm 20mm !important; max-width: 100% !important; }');
             doc.write('.no-print { display: none !important; }');
             doc.write('</style>');
@@ -387,11 +433,11 @@
             doc.close();
 
             // Tunggu images load lalu print
-            iframe.contentWindow.onload = function() {
-                setTimeout(function() {
+            iframe.contentWindow.onload = function () {
+                setTimeout(function () {
                     iframe.contentWindow.print();
                     // Hapus iframe setelah print
-                    setTimeout(function() {
+                    setTimeout(function () {
                         document.body.removeChild(iframe);
                     }, 1000);
                 }, 500);
@@ -399,4 +445,5 @@
         }
     </script>
 </body>
+
 </html>

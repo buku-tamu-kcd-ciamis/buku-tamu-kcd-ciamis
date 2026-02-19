@@ -72,9 +72,9 @@ class PegawaiIzinResource extends Resource
 
             if ($suratAktif) {
               $jenisIzin = ucfirst($suratAktif->jenis_izin);
-              $tanggalMulai = $suratAktif->tanggal_mulai->translatedFormat('d F Y');
-              $tanggalSelesai = $suratAktif->tanggal_selesai->translatedFormat('d F Y');
-              $besok = $suratAktif->tanggal_selesai->addDay()->translatedFormat('d F Y');
+              $tanggalMulai = \Carbon\Carbon::parse($suratAktif->tanggal_mulai)->translatedFormat('d F Y');
+              $tanggalSelesai = \Carbon\Carbon::parse($suratAktif->tanggal_selesai)->translatedFormat('d F Y');
+              $besok = \Carbon\Carbon::parse($suratAktif->tanggal_selesai)->addDay()->translatedFormat('d F Y');
 
               \Filament\Notifications\Notification::make()
                 ->warning()

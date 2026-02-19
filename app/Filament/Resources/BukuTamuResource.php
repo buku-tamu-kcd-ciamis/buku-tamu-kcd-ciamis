@@ -162,7 +162,7 @@ class BukuTamuResource extends Resource
                                 ->rules([
                                     fn(Forms\Get $get, BukuTamu $record): \Closure => function (string $attribute, $value, \Closure $fail) use ($get, $record) {
                                         $jenisId = $record->jenis_id; // Use record's jenis_id as it's not editable here
-                                        $option = \App\Models\DropdownOption::where('category', \App\Models\DropdownOption::CATEGORY_JENIS_ID)
+                                        $option = DropdownOption::where('category', DropdownOption::CATEGORY_JENIS_ID)
                                             ->where('value', $jenisId)
                                             ->first();
 

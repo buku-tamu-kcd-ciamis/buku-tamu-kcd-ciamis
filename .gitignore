@@ -1,8 +1,10 @@
-/.phpunit.cache
+# /node_modules
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
+# /vendor
+# .env
 .env.backup
 .env.production
 .phpunit.result.cache
@@ -11,6 +13,19 @@ Homestead.yaml
 auth.json
 npm-debug.log
 yarn-error.log
+
+# Laravel Storage
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+
+# IDEs
 /.fleet
 /.idea
 /.vscode
+/.phpunit.cache

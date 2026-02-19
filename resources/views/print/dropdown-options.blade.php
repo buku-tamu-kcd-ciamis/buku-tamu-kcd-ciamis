@@ -175,7 +175,7 @@
         <h2>Data Opsi Dropdown</h2>
         <p>Dicetak tanggal: {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }}</p>
         @if($category !== 'all')
-            <p>Kategori: {{ $categoryLabels[$category] ?? $category }}</p>
+            <p>Kategori: {{ $categoryLabels[(string) $category] ?? $category }}</p>
         @else
             <p>Kategori: Semua Kategori</p>
         @endif

@@ -32,8 +32,6 @@ class BukuTamu extends Model
         'nama_penerima',
     ];
 
-    protected $appends = ['foto_selfie_url', 'foto_penerimaan_url', 'tanda_tangan_url'];
-
     public const STATUS_MENUNGGU = 'menunggu';
     public const STATUS_DIPROSES = 'diproses';
     public const STATUS_SELESAI = 'selesai';

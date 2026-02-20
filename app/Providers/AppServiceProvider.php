@@ -28,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Detect ngrok or other proxies
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) || isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         // Notifikasi mengambang di atas tengah (seperti halaman publik)
         Notifications::alignment(Alignment::Center);
         Notifications::verticalAlignment(VerticalAlignment::Start);

@@ -417,16 +417,16 @@
             <div class="foto-section">
                 <div class="foto-item">
                     <p>Foto Selfie</p>
-                    @if($tamu->foto_selfie)
-                        <img src="{{ $tamu->foto_selfie }}" alt="Foto Selfie">
+                    @if($tamu->foto_selfie_url)
+                        <img src="{{ $tamu->foto_selfie_url }}" alt="Foto Selfie">
                     @else
                         <div class="foto-placeholder">Tidak ada foto</div>
                     @endif
                 </div>
-                @if($tamu->foto_penerimaan)
+                @if($tamu->foto_penerimaan_url)
                     <div class="foto-item">
                         <p>Foto Penerimaan</p>
-                        <img src="{{ $tamu->foto_penerimaan }}" alt="Foto Penerimaan">
+                        <img src="{{ $tamu->foto_penerimaan_url }}" alt="Foto Penerimaan">
                     </div>
                 @endif
             </div>
@@ -436,8 +436,8 @@
         <div class="signature-section">
             <div class="signature-box">
                 <p>Tamu,</p>
-                @if($tamu->tanda_tangan)
-                    <img src="{{ $tamu->tanda_tangan }}" alt="TTD">
+                @if($tamu->tanda_tangan_url)
+                    <img src="{{ $tamu->tanda_tangan_url }}" alt="TTD">
                     <p class="name-signed">{{ $tamu->nama_lengkap }}</p>
                 @else
                     <p class="name">{{ $tamu->nama_lengkap }}</p>

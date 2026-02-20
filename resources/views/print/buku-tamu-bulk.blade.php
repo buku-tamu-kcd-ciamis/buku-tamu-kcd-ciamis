@@ -305,8 +305,8 @@
                     <tr>
                         <td class="no">{{ $index + 1 }}</td>
                         <td class="foto">
-                            @if($tamu->foto_selfie)
-                                <img src="{{ $tamu->foto_selfie }}" alt="Foto">
+                            @if($tamu->foto_selfie_url)
+                                <img src="{{ $tamu->foto_selfie_url }}" alt="Foto">
                             @else
                                 -
                             @endif

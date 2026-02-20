@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BukuTamu;
 use App\Models\NomorSuratSetting;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -107,6 +108,28 @@ class BukuTamuController extends Controller
                 'foto_penerimaan' => 'nullable|string',
                 'tanda_tangan' => 'required|string',
             ]);
+
+            // Proses & kompres gambar ke filesystem (bukan disimpan mentah di database)
+            $validatedData['foto_selfie'] = ImageHelper::processAndStore(
+                $validatedData['foto_selfie'],
+                'buku-tamu/selfie',
+                1000,
+                65
+            );
+
+            $validatedData['foto_penerimaan'] = ImageHelper::processAndStore(
+                $validatedData['foto_penerimaan'] ?? null,
+                'buku-tamu/penerimaan',
+                1000,
+                65
+            );
+
+            $validatedData['tanda_tangan'] = ImageHelper::processAndStore(
+                $validatedData['tanda_tangan'],
+                'buku-tamu/ttd',
+                600,
+                80
+            );
 
             // Simpan data ke database
             BukuTamu::create($validatedData);

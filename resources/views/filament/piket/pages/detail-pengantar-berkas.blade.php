@@ -1,10 +1,10 @@
 <div class="space-y-6">
     {{-- Header: Foto + Info Utama --}}
     <div class="flex gap-6">
-        @if($record->foto_selfie)
+        @if($record->foto_selfie_url)
             <div class="shrink-0">
-                <img src="{{ $record->foto_selfie }}" alt="Foto Selfie"
-                     class="w-32 h-32 rounded-lg object-cover border-2 border-gray-200" />
+                <img src="{{ $record->foto_selfie_url }}" alt="Foto Selfie"
+                    class="w-32 h-32 rounded-lg object-cover border-2 border-gray-200" />
             </div>
         @endif
         <div class="flex-1 space-y-2">
@@ -118,7 +118,8 @@
                         $colorClass = $statusColors[$record->status] ?? 'bg-gray-100 text-gray-800';
                         $labels = \App\Models\BukuTamu::STATUS_LABELS;
                     @endphp
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colorClass }}">
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colorClass }}">
                         {{ $labels[$record->status] ?? ucfirst($record->status) }}
                     </span>
                 </p>
@@ -146,18 +147,18 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <span class="text-xs text-gray-500 font-medium">Foto Penerimaan Berkas</span>
-                @if($record->foto_penerimaan)
-                    <img src="{{ $record->foto_penerimaan }}" alt="Foto Penerimaan"
-                         class="mt-1 w-full max-w-[200px] rounded-lg border border-gray-200 object-cover" />
+                @if($record->foto_penerimaan_url)
+                    <img src="{{ $record->foto_penerimaan_url }}" alt="Foto Penerimaan"
+                        class="mt-1 w-full max-w-[200px] rounded-lg border border-gray-200 object-cover" />
                 @else
                     <p class="text-sm text-gray-400 mt-1">Tidak ada foto</p>
                 @endif
             </div>
             <div>
                 <span class="text-xs text-gray-500 font-medium">Tanda Tangan</span>
-                @if($record->tanda_tangan)
-                    <img src="{{ $record->tanda_tangan }}" alt="Tanda Tangan"
-                         class="mt-1 w-full max-w-[200px] rounded-lg border border-gray-200 bg-white" />
+                @if($record->tanda_tangan_url)
+                    <img src="{{ $record->tanda_tangan_url }}" alt="Tanda Tangan"
+                        class="mt-1 w-full max-w-[200px] rounded-lg border border-gray-200 bg-white" />
                 @else
                     <p class="text-sm text-gray-400 mt-1">Tidak ada tanda tangan</p>
                 @endif

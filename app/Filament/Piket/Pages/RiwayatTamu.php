@@ -55,11 +55,9 @@ class RiwayatTamu extends Page implements HasTable
           })
       )
       ->columns([
-        Tables\Columns\ImageColumn::make('foto_selfie')
+        Tables\Columns\ViewColumn::make('foto_selfie')
           ->label('Foto')
-          ->circular()
-          ->size(40)
-          ->defaultImageUrl(fn() => 'https://ui-avatars.com/api/?name=G&background=0F9455&color=fff'),
+          ->view('filament.tables.columns.avatar-column'),
         Tables\Columns\TextColumn::make('nama_lengkap')
           ->label('Nama')
           ->searchable()
@@ -74,7 +72,8 @@ class RiwayatTamu extends Page implements HasTable
         Tables\Columns\TextColumn::make('nomor_hp')
           ->label('No. HP')
           ->formatStateUsing(function ($state) {
-            if (!$state) return '-';
+            if (!$state)
+              return '-';
             $cleaned = preg_replace('/[^0-9]/', '', $state);
             if (str_starts_with($cleaned, '0')) {
               $cleaned = substr($cleaned, 1);

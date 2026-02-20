@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Helpers\ImageHelper;
 
 class BukuTamu extends Model
 {
@@ -31,6 +32,8 @@ class BukuTamu extends Model
         'nama_penerima',
     ];
 
+    protected $appends = ['foto_selfie_url', 'foto_penerimaan_url', 'tanda_tangan_url'];
+
     public const STATUS_MENUNGGU = 'menunggu';
     public const STATUS_DIPROSES = 'diproses';
     public const STATUS_SELESAI = 'selesai';
@@ -44,6 +47,30 @@ class BukuTamu extends Model
         'ditolak' => 'Ditolak',
         'dibatalkan' => 'Dibatalkan',
     ];
+
+    /**
+     * Accessor: Resolve foto_selfie ke URL (kompatibel Base64 & file path)
+     */
+    public function getFotoSelfieUrlAttribute(): ?string
+    {
+        return ImageHelper::resolveUrl($this->attributes['foto_selfie'] ?? null);
+    }
+
+    /**
+     * Accessor: Resolve foto_penerimaan ke URL (kompatibel Base64 & file path)
+     */
+    public function getFotoPenerimaanUrlAttribute(): ?string
+    {
+        return ImageHelper::resolveUrl($this->attributes['foto_penerimaan'] ?? null);
+    }
+
+    /**
+     * Accessor: Resolve tanda_tangan ke URL (kompatibel Base64 & file path)
+     */
+    public function getTandaTanganUrlAttribute(): ?string
+    {
+        return ImageHelper::resolveUrl($this->attributes['tanda_tangan'] ?? null);
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

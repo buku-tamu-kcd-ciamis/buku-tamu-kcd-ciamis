@@ -52,7 +52,8 @@ class ViewBukuTamu extends ViewRecord
                                             ->label('No. HP')
                                             ->icon('heroicon-o-phone')
                                             ->formatStateUsing(function ($state) {
-                                                if (!$state) return '-';
+                                                if (!$state)
+                                                    return '-';
                                                 $cleaned = preg_replace('/[^0-9]/', '', $state);
                                                 if (str_starts_with($cleaned, '0')) {
                                                     $cleaned = substr($cleaned, 1);

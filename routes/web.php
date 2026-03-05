@@ -7,11 +7,25 @@ use App\Models\DropdownOption;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    // Get list of staff (pegawai linked to users with Staff role)
+    $staffList = \App\Models\User::whereHas('role_user', function ($q) {
+        $q->where('name', 'Staff');
+    })->whereNotNull('pegawai_id')
+        ->with('pegawai')
+        ->get()
+        ->filter(fn($u) => $u->pegawai && $u->pegawai->is_active)
+        ->map(fn($u) => [
+            'value' => $u->pegawai->nama,
+            'label' => $u->pegawai->nama . ($u->pegawai->jabatan ? ' — ' . $u->pegawai->jabatan : ''),
+        ])
+        ->values()
+        ->toArray();
+
     return view('public.index', [
         'jenisIdOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_JENIS_ID),
         'keperluanOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_KEPERLUAN),
         'kabupatenKotaOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_KABUPATEN_KOTA),
-        'bagianDitujuOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_BAGIAN_DITUJU),
+        'staffList' => $staffList,
     ]);
 })->name('index');
 

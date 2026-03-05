@@ -78,8 +78,8 @@ class ViewBukuTamu extends ViewRecord
                     Infolists\Components\TextEntry::make('kabupaten_kota')
                         ->label('Kabupaten / Kota')
                         ->icon('heroicon-o-map-pin'),
-                    Infolists\Components\TextEntry::make('bagian_dituju')
-                        ->label('Bagian Yang Dituju')
+                    Infolists\Components\TextEntry::make('staff_dituju')
+                        ->label('Staff Yang Dituju')
                         ->icon('heroicon-o-building-office'),
                     Infolists\Components\TextEntry::make('keperluan')
                         ->label('Keperluan')

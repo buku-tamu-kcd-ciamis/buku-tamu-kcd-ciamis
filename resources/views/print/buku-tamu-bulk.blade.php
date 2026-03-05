@@ -28,7 +28,7 @@
         }
 
         body {
-            font-family: 'Times New Roman', Times, serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size:
                 {{ $baseFontSize }}
             ;
@@ -79,21 +79,21 @@
         }
 
         .header-text h2 {
-            font-size: 13pt;
+            font-size: 14pt;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: bold;
             margin-bottom: 2px;
         }
 
         .header-text h3 {
-            font-size: 12pt;
+            font-size: 18pt;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: bold;
             margin-bottom: 2px;
         }
 
         .header-text p {
-            font-size: 9pt;
+            font-size: 12pt;
             margin: 0;
         }
 
@@ -273,9 +273,11 @@
             <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
             <div class="header-text">
                 <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
+                <h2>Dinas Pendidikan</h2>
                 <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
-                <p>Jl. Mr. Iwa Kusumasomantri No. 12, Ciamis, Jawa Barat 46211</p>
-                <p>Telp: (0265) 771045 | Email: cadisdik13@disdik.jabarprov.go.id</p>
+                <p>Jalan Jenderal Ahmad Yani, Nomor 101 Kecamatan Ciamis</p>
+                <p>E-mail: cadisdik13@jabarprov.go.id / kcdwilxiii@gmail.com</p>
+                <p>CIAMIS – 46213</p>
             </div>
             <div class="header-spacer"></div>
         </div>
@@ -296,7 +298,7 @@
                     <th>NIK</th>
                     <th>Instansi</th>
                     <th>Keperluan</th>
-                    <th>Bagian Dituju</th>
+                    <th>Staff Yang Dituju</th>
                     <th>Waktu</th>
                 </tr>
             </thead>
@@ -315,7 +317,7 @@
                         <td>{{ $tamu->nik }}</td>
                         <td>{{ $tamu->instansi ?? '-' }}</td>
                         <td>{{ \Illuminate\Support\Str::limit($tamu->keperluan, 50) }}</td>
-                        <td>{{ $tamu->bagian_dituju }}</td>
+                        <td>{{ $tamu->staff_dituju }}</td>
                         <td>{{ $tamu->created_at->diffForHumans() }}</td>
                     </tr>
                 @empty

@@ -21,7 +21,7 @@ class BukuTamu extends Model
         'nomor_hp',
         'jabatan',
         'kabupaten_kota',
-        'bagian_dituju',
+        'staff_dituju',
         'email',
         'keperluan',
         'foto_selfie',

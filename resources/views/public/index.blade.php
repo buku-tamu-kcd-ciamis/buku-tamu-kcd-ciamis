@@ -116,17 +116,19 @@
                                 </div>
                             </div>
 
-                            <!-- Bagian Yang Dituju -->
+                            <!-- Staff Yang Dituju -->
                             <div class="form-group">
-                                <label>Bagian Yang Dituju <span class="required">*</span></label>
+                                <label>Staff Yang Dituju <span class="required">*</span></label>
                                 <div class="input-wrapper">
                                     <div class="autocomplete-wrapper">
-                                        <input type="text" name="bagian_dituju" id="bagian_dituju"
-                                            placeholder="Ketik atau pilih bagian..." autocomplete="off" required>
-                                        <div class="autocomplete-list" id="bagian_dituju_list"></div>
+                                        <input type="text" id="staff_dituju_input" placeholder="Ketik nama staff..."
+                                            autocomplete="off" required>
+                                        <input type="hidden" name="staff_dituju" id="staff_dituju" required>
+                                        <div class="autocomplete-list" id="staff_dituju_list"></div>
                                     </div>
-                                    <i class="fa-solid fa-door-open input-icon"></i>
+                                    <i class="fa-solid fa-user-tie input-icon"></i>
                                 </div>
+                                <div class="phone-hint">Wajib dipilih — tentukan staff yang ingin ditemui</div>
                             </div>
 
                             <!-- Email -->
@@ -263,6 +265,7 @@
             keperluan: @json($keperluanOptions ?? []),
             kabupatenKota: @json($kabupatenKotaOptions ?? []),
             bagianDituju: @json($bagianDitujuOptions ?? []),
+            staffList: @json($staffList ?? []),
         };
     </script>
     <script src="{{ asset('js/public/buku-tamu.js') }}"></script>

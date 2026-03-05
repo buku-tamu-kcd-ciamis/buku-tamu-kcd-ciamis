@@ -71,8 +71,8 @@ class BukuTamuResource extends Resource
                     ->limit(40)
                     ->toggleable()
                     ->verticallyAlignCenter(),
-                Tables\Columns\TextColumn::make('bagian_dituju')
-                    ->label('Bagian Dituju')
+                Tables\Columns\TextColumn::make('staff_dituju')
+                    ->label('Staff Yang Dituju')
                     ->toggleable()
                     ->verticallyAlignCenter(),
                 Tables\Columns\TextColumn::make('status')
@@ -140,7 +140,7 @@ class BukuTamuResource extends Resource
                                     ($record->foto_penerimaan_url ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-300">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan_url) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
                                     '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
                                     '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
-                                    '<strong>Bagian Dituju:</strong> ' . e($record->bagian_dituju) . '<br>' .
+                                    '<strong>Staff Yang Dituju:</strong> ' . e($record->staff_dituju) . '<br>' .
                                     '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
                                     '</div>' .
                                     '</div>'

@@ -141,10 +141,7 @@ class PegawaiIzinResource extends Resource
           ->required(),
         Forms\Components\Select::make('status')
           ->label('Status')
-          ->options([
-            'aktif' => 'Aktif',
-            'selesai' => 'Selesai',
-          ])
+          ->options(PegawaiIzin::STATUS_LABELS)
           ->required()
           ->visible(fn($context) => $context === 'edit'),
         Forms\Components\DatePicker::make('tanggal_mulai')
@@ -276,11 +273,14 @@ class PegawaiIzinResource extends Resource
         Tables\Columns\TextColumn::make('status')
           ->badge()
           ->color(fn(string $state): string => match ($state) {
+            'disetujui' => 'success',
             'aktif' => 'success',
             'selesai' => 'gray',
+            'menunggu' => 'warning',
+            'ditolak' => 'danger',
             default => 'gray',
           })
-          ->formatStateUsing(fn(string $state) => ucfirst($state)),
+          ->formatStateUsing(fn(string $state) => PegawaiIzin::STATUS_LABELS[$state] ?? ucfirst($state)),
       ])
       ->defaultSort('tanggal_mulai', 'desc')
       ->defaultPaginationPageOption(10)

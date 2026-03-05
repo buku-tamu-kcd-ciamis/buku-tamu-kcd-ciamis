@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Traits\UuidTrait;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,11 +43,13 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        if (!$this->role_user) return false;
+        if (!$this->role_user)
+            return false;
 
         return match ($panel->getId()) {
             'admin' => $this->hasAnyRole(['Super Admin', 'Kepala Cabang Dinas']),
             'piket' => $this->hasAnyRole(['Piket', 'Super Admin']),
+            'staff' => $this->hasAnyRole(['Staff', 'Super Admin']),
             default => false,
         };
     }
@@ -109,13 +112,15 @@ class User extends Authenticatable implements FilamentUser
      */
     public function getDashboardRoute(): string
     {
-        if (!$this->role_user) return '/';
+        if (!$this->role_user)
+            return '/';
 
         return match ($this->role_user->name) {
             'Super Admin' => '/admin',
             'Kepala Cabang Dinas' => '/admin',
-            'Piket'       => '/piket',
-            default       => '/',
+            'Piket' => '/piket',
+            'Staff' => '/staff',
+            default => '/',
         };
     }
     /**
@@ -128,6 +133,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'role_user_id',
+        'pegawai_id',
     ];
 
     /**
@@ -157,5 +163,15 @@ class User extends Authenticatable implements FilamentUser
     public function role_user(): BelongsTo
     {
         return $this->belongsTo(RoleUser::class);
+    }
+
+    public function pegawai(): BelongsTo
+    {
+        return $this->belongsTo(Pegawai::class);
+    }
+
+    public function staffNotifications(): HasMany
+    {
+        return $this->hasMany(StaffNotification::class);
     }
 }

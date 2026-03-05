@@ -40,6 +40,20 @@ class PegawaiIzin extends Model
     'lainnya' => 'Lainnya',
   ];
 
+  public const STATUS_MENUNGGU = 'menunggu';
+  public const STATUS_DISETUJUI = 'disetujui';
+  public const STATUS_DITOLAK = 'ditolak';
+  public const STATUS_AKTIF = 'aktif';
+  public const STATUS_SELESAI = 'selesai';
+
+  public const STATUS_LABELS = [
+    self::STATUS_MENUNGGU => 'Menunggu',
+    self::STATUS_DISETUJUI => 'Disetujui',
+    self::STATUS_DITOLAK => 'Ditolak',
+    self::STATUS_AKTIF => 'Aktif',
+    self::STATUS_SELESAI => 'Selesai',
+  ];
+
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()

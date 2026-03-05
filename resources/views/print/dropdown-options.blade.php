@@ -27,7 +27,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size:
                 {{ $baseFontSize }}
             ;
@@ -39,21 +39,53 @@
             line-height: 1.5;
         }
 
+        /* === HEADER === */
         .header {
-            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            border-bottom: 3px double #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            gap: 15px;
+            justify-content: space-between;
         }
 
-        .header h2 {
+        .header-logo {
+            width: 90px;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .header-spacer {
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .header-text {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-text h2 {
+            font-size: 14pt;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 2px;
+            color: #000;
+        }
+
+        .header-text h3 {
             font-size: 18pt;
-            margin-bottom: 8px;
-            color: #222;
-            font-weight: 600;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 2px;
+            color: #000;
         }
 
-        .header p {
-            font-size: 11pt;
-            color: #666;
-            margin: 3px 0;
+        .header-text p {
+            font-size: 12pt;
+            margin: 0;
+            color: #000;
         }
 
         .category-section {
@@ -172,12 +204,26 @@
     <button class="print-btn" onclick="window.print()">Cetak Halaman</button>
 
     <div class="header">
-        <h2>Data Opsi Dropdown</h2>
-        <p>Dicetak tanggal: {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }}</p>
+        <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
+        <div class="header-text">
+            <h2>Pemerintah Daerah Provinsi Jawa Barat</h2>
+            <h2>Dinas Pendidikan</h2>
+            <h3>Cabang Dinas Pendidikan Wilayah XIII</h3>
+            <p>Jalan Jenderal Ahmad Yani, Nomor 101 Kecamatan Ciamis</p>
+            <p>E-mail: cadisdik13@jabarprov.go.id / kcdwilxiii@gmail.com</p>
+            <p>CIAMIS – 46213</p>
+        </div>
+        <div class="header-spacer"></div>
+    </div>
+
+    <div class="report-title" style="text-align: center; margin-bottom: 20px;">
+        <h2 style="font-size: 16pt; text-decoration: underline;">DATA OPSI DROPDOWN</h2>
+        <p style="font-size: 11pt; color: #666;">Dicetak tanggal:
+            {{ \Carbon\Carbon::now()->translatedFormat('d F Y, H:i') }}</p>
         @if($category !== 'all')
-            <p>Kategori: {{ $categoryLabels[(string) $category] ?? $category }}</p>
+            <p style="font-size: 11pt; color: #666;">Kategori: {{ $categoryLabels[(string) $category] ?? $category }}</p>
         @else
-            <p>Kategori: Semua Kategori</p>
+            <p style="font-size: 11pt; color: #666;">Kategori: Semua Kategori</p>
         @endif
     </div>
 

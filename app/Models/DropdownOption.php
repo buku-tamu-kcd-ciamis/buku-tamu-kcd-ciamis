@@ -55,7 +55,7 @@ class DropdownOption extends Model
     self::CATEGORY_JENIS_ID => 'Jenis ID',
     self::CATEGORY_KEPERLUAN => 'Keperluan',
     self::CATEGORY_KABUPATEN_KOTA => 'Kabupaten/Kota',
-    self::CATEGORY_BAGIAN_DITUJU => 'Bagian Yang Dituju',
+    self::CATEGORY_BAGIAN_DITUJU => 'Bagian Dituju',
     self::CATEGORY_PEGAWAI_PIKET => 'Pegawai Piket',
   ];
 

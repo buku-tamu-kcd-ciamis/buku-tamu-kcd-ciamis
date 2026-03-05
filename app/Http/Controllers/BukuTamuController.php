@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BukuTamu;
 use App\Models\NomorSuratSetting;
+use App\Models\StaffNotification;
 use App\Helpers\ImageHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -101,12 +102,12 @@ class BukuTamuController extends Controller
                 'nomor_hp' => 'required|string|max:15',
                 'jabatan' => 'nullable|string|max:255',
                 'kabupaten_kota' => 'required|string|max:255',
-                'bagian_dituju' => 'required|string|max:255',
                 'email' => 'nullable|email|max:255',
                 'keperluan' => 'required|string',
                 'foto_selfie' => 'required|string',
                 'foto_penerimaan' => 'nullable|string',
                 'tanda_tangan' => 'required|string',
+                'staff_dituju' => 'required|string|max:255',
             ]);
 
             // Proses & kompres gambar ke filesystem (bukan disimpan mentah di database)
@@ -132,7 +133,25 @@ class BukuTamuController extends Controller
             );
 
             // Simpan data ke database
-            BukuTamu::create($validatedData);
+            $bukuTamu = BukuTamu::create($validatedData);
+
+            // Create staff notification
+            if (!empty($validatedData['staff_dituju'])) {
+                $staffUsers = \App\Models\User::whereHas('role_user', function ($q) {
+                    $q->where('name', 'Staff');
+                })->whereHas('pegawai', function ($q) use ($validatedData) {
+                    $q->where('nama', $validatedData['staff_dituju']);
+                })->get();
+
+                foreach ($staffUsers as $staffUser) {
+                    StaffNotification::create([
+                        'user_id' => $staffUser->id,
+                        'buku_tamu_id' => $bukuTamu->id,
+                        'type' => 'tamu_baru',
+                        'message' => "Tamu baru '{$bukuTamu->nama_lengkap}' dari {$bukuTamu->instansi} ingin menemui Anda. Keperluan: {$bukuTamu->keperluan}",
+                    ]);
+                }
+            }
 
             return redirect()->route('index')->with('success', 'Data buku tamu berhasil disimpan!');
         } catch (\Exception $e) {

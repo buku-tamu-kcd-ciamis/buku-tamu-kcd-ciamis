@@ -598,6 +598,114 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // ===== STAFF YANG DITUJU AUTOCOMPLETE =====
+    const staffData = (__dd.staffList || []);
+    const staffInput = document.getElementById("staff_dituju_input");
+    const staffHidden = document.getElementById("staff_dituju");
+    const staffList = document.getElementById("staff_dituju_list");
+
+    if (staffInput && staffList) {
+        let staffActiveIdx = -1;
+
+        function renderStaffList(filter) {
+            const query = (filter || "").toLowerCase();
+            const filtered = query
+                ? staffData.filter((s) => s.label.toLowerCase().includes(query) || s.value.toLowerCase().includes(query))
+                : staffData;
+
+            staffList.innerHTML = "";
+            staffActiveIdx = -1;
+
+            if (filtered.length === 0) {
+                staffList.classList.remove("show");
+                return;
+            }
+
+            filtered.forEach((item) => {
+                const div = document.createElement("div");
+                div.className = "autocomplete-item";
+                if (query) {
+                    const idx = item.label.toLowerCase().indexOf(query);
+                    if (idx >= 0) {
+                        div.innerHTML =
+                            item.label.substring(0, idx) +
+                            "<strong>" +
+                            item.label.substring(idx, idx + query.length) +
+                            "</strong>" +
+                            item.label.substring(idx + query.length);
+                    } else {
+                        div.textContent = item.label;
+                    }
+                } else {
+                    div.textContent = item.label;
+                }
+                div.dataset.value = item.value;
+                div.addEventListener("mousedown", function (e) {
+                    e.preventDefault();
+                    staffInput.value = item.label;
+                    staffHidden.value = item.value;
+                    staffList.classList.remove("show");
+                });
+                staffList.appendChild(div);
+            });
+            staffList.classList.add("show");
+        }
+
+        staffInput.addEventListener("focus", function () {
+            renderStaffList(this.value);
+        });
+
+        staffInput.addEventListener("input", function () {
+            staffHidden.value = "";
+            renderStaffList(this.value);
+        });
+
+        staffInput.addEventListener("blur", function () {
+            setTimeout(function() {
+                staffList.classList.remove("show");
+                // If typed value doesn't match any staff, clear hidden
+                if (staffInput.value && !staffHidden.value) {
+                    // Try to find exact match
+                    const match = staffData.find((s) => s.label.toLowerCase() === staffInput.value.toLowerCase() || s.value.toLowerCase() === staffInput.value.toLowerCase());
+                    if (match) {
+                        staffHidden.value = match.value;
+                    }
+                }
+            }, 150);
+        });
+
+        staffInput.addEventListener("keydown", function (e) {
+            const items = staffList.querySelectorAll(".autocomplete-item");
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                staffActiveIdx = Math.min(staffActiveIdx + 1, items.length - 1);
+                items.forEach((el, i) => el.classList.toggle("active", i === staffActiveIdx));
+                if (items[staffActiveIdx]) items[staffActiveIdx].scrollIntoView({ block: "nearest" });
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                staffActiveIdx = Math.max(staffActiveIdx - 1, 0);
+                items.forEach((el, i) => el.classList.toggle("active", i === staffActiveIdx));
+                if (items[staffActiveIdx]) items[staffActiveIdx].scrollIntoView({ block: "nearest" });
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (staffActiveIdx >= 0 && items[staffActiveIdx]) {
+                    staffInput.value = items[staffActiveIdx].textContent;
+                    staffHidden.value = items[staffActiveIdx].dataset.value;
+                    staffList.classList.remove("show");
+                }
+            } else if (e.key === "Escape") {
+                staffList.classList.remove("show");
+            }
+        });
+
+        // Close staff dropdown when clicking outside
+        document.addEventListener("click", function (e) {
+            if (!staffInput.contains(e.target) && !staffList.contains(e.target)) {
+                staffList.classList.remove("show");
+            }
+        });
+    }
+
     // ===== KAMERA / FOTO SELFIE =====
     const btnCameraSelfie = document.getElementById("btnCameraSelfie");
     const fotoSelfieBox = document.getElementById("fotoSelfieBox");
@@ -1806,7 +1914,12 @@ document.addEventListener("DOMContentLoaded", function () {
             { id: "nama_lengkap", label: "Nama Lengkap" },
             { id: "nomor_hp", label: "Nomor Handphone", minDigits: 9 },
             { id: "kabupaten_kota", label: "Kabupaten/Kota Instansi" },
-            { id: "bagian_dituju", label: "Bagian Yang Dituju" },
+            {
+                id: "staff_dituju",
+                label: "Staff Yang Dituju",
+                checkHidden: true,
+                inputId: "staff_dituju_input",
+            },
             { id: "keperluan", label: "Keperluan" },
         ];
 
@@ -2577,117 +2690,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ===== BAGIAN YANG DITUJU AUTOCOMPLETE =====
-    const bagianDitujuInput = document.getElementById("bagian_dituju");
-    const bagianDitujuList = document.getElementById("bagian_dituju_list");
-    let bagianDitujuActiveIdx = -1;
 
-    // Data loaded dynamically from database
-    const bagianDitujuData = (__dd.bagianDituju || []).map(function (item) {
-        return item.value;
-    });
-
-    function renderBagianDituju(filter) {
-        const query = (filter || "").toLowerCase();
-        const filtered = query
-            ? bagianDitujuData.filter(function (k) {
-                  return k.toLowerCase().includes(query);
-              })
-            : bagianDitujuData;
-
-        bagianDitujuList.innerHTML = "";
-        bagianDitujuActiveIdx = -1;
-
-        if (filtered.length === 0) {
-            bagianDitujuList.classList.remove("show");
-            return;
-        }
-
-        filtered.forEach(function (name) {
-            const div = document.createElement("div");
-            div.className = "autocomplete-item";
-            if (query) {
-                const idx = name.toLowerCase().indexOf(query);
-                div.innerHTML =
-                    name.substring(0, idx) +
-                    "<strong>" +
-                    name.substring(idx, idx + query.length) +
-                    "</strong>" +
-                    name.substring(idx + query.length);
-            } else {
-                div.textContent = name;
-            }
-            div.dataset.value = name;
-            div.addEventListener("mousedown", function (e) {
-                e.preventDefault();
-                bagianDitujuInput.value = name;
-                bagianDitujuList.classList.remove("show");
-            });
-            bagianDitujuList.appendChild(div);
-        });
-        bagianDitujuList.classList.add("show");
-    }
-
-    bagianDitujuInput.addEventListener("focus", function () {
-        renderBagianDituju(this.value);
-    });
-
-    bagianDitujuInput.addEventListener("input", function () {
-        renderBagianDituju(this.value);
-    });
-
-    bagianDitujuInput.addEventListener("blur", function () {
-        setTimeout(function () {
-            bagianDitujuList.classList.remove("show");
-        }, 150);
-    });
-
-    bagianDitujuInput.addEventListener("keydown", function (e) {
-        const items = bagianDitujuList.querySelectorAll(".autocomplete-item");
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            bagianDitujuActiveIdx = Math.min(
-                bagianDitujuActiveIdx + 1,
-                items.length - 1,
-            );
-            items.forEach(function (el, i) {
-                el.classList.toggle("active", i === bagianDitujuActiveIdx);
-            });
-            if (items[bagianDitujuActiveIdx])
-                items[bagianDitujuActiveIdx].scrollIntoView({
-                    block: "nearest",
-                });
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            bagianDitujuActiveIdx = Math.max(bagianDitujuActiveIdx - 1, 0);
-            items.forEach(function (el, i) {
-                el.classList.toggle("active", i === bagianDitujuActiveIdx);
-            });
-            if (items[bagianDitujuActiveIdx])
-                items[bagianDitujuActiveIdx].scrollIntoView({
-                    block: "nearest",
-                });
-        } else if (e.key === "Enter") {
-            e.preventDefault();
-            if (bagianDitujuActiveIdx >= 0 && items[bagianDitujuActiveIdx]) {
-                bagianDitujuInput.value =
-                    items[bagianDitujuActiveIdx].dataset.value;
-                bagianDitujuList.classList.remove("show");
-            }
-        } else if (e.key === "Escape") {
-            bagianDitujuList.classList.remove("show");
-        }
-    });
-
-    // Close bagian dituju dropdown when clicking outside
-    document.addEventListener("click", function (e) {
-        if (
-            !bagianDitujuInput.contains(e.target) &&
-            !bagianDitujuList.contains(e.target)
-        ) {
-            bagianDitujuList.classList.remove("show");
-        }
-    });
 
     // ===== FORM SUBMIT VALIDATION =====
     const bukuTamuForm = document.getElementById("bukuTamuForm");

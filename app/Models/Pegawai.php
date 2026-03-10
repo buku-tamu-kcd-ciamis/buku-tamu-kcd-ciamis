@@ -12,6 +12,28 @@ class Pegawai extends Model
 
   protected $table = 'pegawai';
 
+  public const AVAILABILITY_AVAILABLE = 'available';
+  public const AVAILABILITY_BUSY = 'busy';
+  public const AVAILABILITY_OUT_OF_OFFICE = 'out_of_office';
+
+  public const AVAILABILITY_LABELS = [
+    self::AVAILABILITY_AVAILABLE => 'Tersedia',
+    self::AVAILABILITY_BUSY => 'Sibuk',
+    self::AVAILABILITY_OUT_OF_OFFICE => 'Tidak di Kantor',
+  ];
+
+  public const AVAILABILITY_COLORS = [
+    self::AVAILABILITY_AVAILABLE => 'success',
+    self::AVAILABILITY_BUSY => 'warning',
+    self::AVAILABILITY_OUT_OF_OFFICE => 'danger',
+  ];
+
+  public const AVAILABILITY_ICONS = [
+    self::AVAILABILITY_AVAILABLE => 'heroicon-o-check-circle',
+    self::AVAILABILITY_BUSY => 'heroicon-o-clock',
+    self::AVAILABILITY_OUT_OF_OFFICE => 'heroicon-o-x-circle',
+  ];
+
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()
@@ -34,10 +56,12 @@ class Pegawai extends Model
     'nomor_hp',
     'unit_kerja',
     'is_active',
+    'availability_status',
   ];
 
   protected $casts = [
     'is_active' => 'boolean',
+    'availability_status' => 'string',
   ];
 
   public function scopeActive($query)

@@ -13,6 +13,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             \App\Filament\Staff\Widgets\StaffNotificationWidget::class,
+            \App\Filament\Staff\Widgets\StaffOverviewWidget::class,
         ];
     }
 }

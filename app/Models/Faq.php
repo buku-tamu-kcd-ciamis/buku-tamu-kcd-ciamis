@@ -41,11 +41,13 @@ class Faq extends Model
   public const TARGET_SEMUA = 'semua';
   public const TARGET_ADMIN = 'admin';
   public const TARGET_PIKET = 'piket';
+  public const TARGET_STAFF = 'staff';
 
   public const TARGET_LABELS = [
     self::TARGET_SEMUA => 'Semua Panel',
     self::TARGET_ADMIN => 'Panel Admin (Kepala Cabang Dinas)',
     self::TARGET_PIKET => 'Panel Piket',
+    self::TARGET_STAFF => 'Panel Staff',
   ];
 
   /**
@@ -71,6 +73,22 @@ class Faq extends Model
   {
     return static::where('is_active', true)
       ->whereIn('target', [self::TARGET_SEMUA, self::TARGET_PIKET])
+      ->orderBy('sort_order')
+      ->get()
+      ->map(fn($faq) => [
+        'question' => $faq->question,
+        'answer' => $faq->answer,
+      ])
+      ->toArray();
+  }
+
+  /**
+   * Get FAQs for Staff panel (semua + staff).
+   */
+  public static function getForStaff(): array
+  {
+    return static::where('is_active', true)
+      ->whereIn('target', [self::TARGET_SEMUA, self::TARGET_STAFF])
       ->orderBy('sort_order')
       ->get()
       ->map(fn($faq) => [

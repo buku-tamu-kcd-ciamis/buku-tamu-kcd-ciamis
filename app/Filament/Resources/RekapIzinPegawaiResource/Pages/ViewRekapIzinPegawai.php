@@ -5,10 +5,9 @@ namespace App\Filament\Resources\RekapIzinPegawaiResource\Pages;
 use App\Filament\Resources\RekapIzinPegawaiResource;
 use App\Models\PegawaiIzin;
 use Filament\Resources\Pages\Page;
-use Filament\Actions;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 use Filament\Infolists;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
@@ -19,7 +18,7 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
 
   protected static string $resource = RekapIzinPegawaiResource::class;
 
-  protected static string $view = 'filament.resources.rekap-izin-pegawai.view';
+  protected string $view = 'filament.resources.rekap-izin-pegawai.view';
 
   public string $nip = '';
   public $rekap = null;
@@ -68,9 +67,9 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
       ->paginate(5);
   }
 
-  public function rekapInfolist(Infolist $infolist): Infolist
+  public function rekapInfolist(Schema $schema): Schema
   {
-    return $infolist
+    return $schema
       ->state([
         'nama_pegawai' => $this->rekap->nama_pegawai,
         'nip' => $this->rekap->nip,
@@ -87,118 +86,14 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
         'terakhir_izin' => $this->rekap->terakhir_izin,
         'sedang_izin' => (int) $this->rekap->sedang_izin,
       ])
-      ->schema([
-        // === Informasi Pegawai ===
-        Infolists\Components\Section::make('Informasi Pegawai')
-          ->icon('heroicon-o-user')
-          ->columns(2)
-          ->schema([
-            Infolists\Components\TextEntry::make('nama_pegawai')
-              ->label('Nama Pegawai')
-              ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
-              ->weight('bold')
-              ->icon('heroicon-o-user')
-              ->columnSpanFull(),
-            Infolists\Components\TextEntry::make('nip')
-              ->label('NIP')
-              ->icon('heroicon-o-identification')
-              ->copyable(),
-            Infolists\Components\TextEntry::make('nomor_hp')
-              ->label('No. HP')
-              ->icon('heroicon-o-phone')
-              ->formatStateUsing(function ($state) {
-                if (!$state) return '-';
-                $cleaned = preg_replace('/[^0-9]/', '', $state);
-                if (str_starts_with($cleaned, '0')) {
-                  $cleaned = substr($cleaned, 1);
-                }
-                return '+62' . $cleaned;
-              })
-              ->copyable()
-              ->placeholder('-'),
-            Infolists\Components\TextEntry::make('jabatan')
-              ->label('Jabatan')
-              ->icon('heroicon-o-briefcase')
-              ->placeholder('-'),
-            Infolists\Components\TextEntry::make('unit_kerja')
-              ->label('Unit Kerja')
-              ->icon('heroicon-o-building-office')
-              ->placeholder('-'),
-          ]),
-
-        // === Rekap Statistik ===
-        Infolists\Components\Section::make('Rekap Statistik')
-          ->icon('heroicon-o-chart-bar')
-          ->columns(4)
-          ->schema([
-            Infolists\Components\TextEntry::make('total_izin')
-              ->label('Total Izin')
-              ->icon('heroicon-o-document-duplicate')
-              ->badge()
-              ->suffix(' kali')
-              ->color(fn($state): string => match (true) {
-                $state >= 5 => 'danger',
-                $state >= 3 => 'warning',
-                default => 'success',
-              }),
-            Infolists\Components\TextEntry::make('total_hari')
-              ->label('Total Hari')
-              ->icon('heroicon-o-calendar-days')
-              ->suffix(' hari')
-              ->color(fn($state): string => match (true) {
-                $state >= 10 => 'danger',
-                $state >= 5 => 'warning',
-                default => 'gray',
-              }),
-            Infolists\Components\TextEntry::make('terakhir_izin')
-              ->label('Terakhir Izin')
-              ->icon('heroicon-o-clock')
-              ->date('d F Y')
-              ->placeholder('-'),
-            Infolists\Components\TextEntry::make('sedang_izin')
-              ->label('Status Saat Ini')
-              ->icon(fn($state) => $state > 0 ? 'heroicon-o-clock' : 'heroicon-o-check-circle')
-              ->badge()
-              ->formatStateUsing(fn($state) => $state > 0 ? 'Sedang Izin' : 'Aktif')
-              ->color(fn($state) => $state > 0 ? 'warning' : 'success'),
-          ]),
-
-        // === Breakdown Per Jenis Izin ===
-        Infolists\Components\Section::make('Breakdown Per Jenis Izin')
-          ->icon('heroicon-o-chart-bar-square')
-          ->columns(5)
-          ->schema([
-            Infolists\Components\TextEntry::make('total_sakit')
-              ->label('Sakit')
-              ->icon('heroicon-o-heart')
-              ->badge()
-              ->suffix(' kali')
-              ->color(fn($state) => $state > 0 ? 'danger' : 'gray'),
-            Infolists\Components\TextEntry::make('total_cuti')
-              ->label('Cuti')
-              ->icon('heroicon-o-sun')
-              ->badge()
-              ->suffix(' kali')
-              ->color(fn($state) => $state > 0 ? 'info' : 'gray'),
-            Infolists\Components\TextEntry::make('total_dinas_luar')
-              ->label('Dinas Luar')
-              ->icon('heroicon-o-map-pin')
-              ->badge()
-              ->suffix(' kali')
-              ->color(fn($state) => $state > 0 ? 'warning' : 'gray'),
-            Infolists\Components\TextEntry::make('total_izin_pribadi')
-              ->label('Izin Pribadi')
-              ->icon('heroicon-o-user')
-              ->badge()
-              ->suffix(' kali')
-              ->color(fn($state) => $state > 0 ? 'primary' : 'gray'),
-            Infolists\Components\TextEntry::make('total_lainnya')
-              ->label('Lainnya')
-              ->icon('heroicon-o-document')
-              ->badge()
-              ->suffix(' kali')
-              ->color('gray'),
-          ]),
+      ->components([
+        Infolists\Components\TextEntry::make('nama_pegawai'),
+        Infolists\Components\TextEntry::make('nip'),
+        Infolists\Components\TextEntry::make('jabatan'),
+        Infolists\Components\TextEntry::make('unit_kerja'),
+        Infolists\Components\TextEntry::make('total_izin'),
+        Infolists\Components\TextEntry::make('total_hari'),
+        Infolists\Components\TextEntry::make('terakhir_izin'),
       ]);
   }
 
@@ -217,12 +112,6 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
 
   protected function getHeaderActions(): array
   {
-    return [
-      Actions\Action::make('back')
-        ->label('Kembali')
-        ->icon('heroicon-o-arrow-left')
-        ->color('gray')
-        ->url(RekapIzinPegawaiResource::getUrl()),
-    ];
+    return [];
   }
 }

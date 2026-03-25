@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -12,6 +13,7 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Assets\Css;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -29,9 +31,12 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->multiFactorAuthentication([
+                EmailAuthentication::make(),
+            ])
             ->profile(\App\Filament\Pages\EditProfile::class)
             ->darkMode(true)
-            ->brandName(fn() => 'Cadisdik XIII — ' . (auth()->user()?->role_user?->name ?? 'Admin'))
+            ->brandName(fn() => 'Cadisdik XIII — ' . (Auth::user()?->role_user?->name ?? 'Admin'))
             ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
                 'primary' => Color::Green,

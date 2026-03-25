@@ -3,7 +3,6 @@
 namespace App\Filament\Piket\Resources\PegawaiIzinResource\Pages;
 
 use App\Filament\Piket\Resources\PegawaiIzinResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class EditPegawaiIzin extends EditRecord
@@ -12,9 +11,7 @@ class EditPegawaiIzin extends EditRecord
 
   protected function getHeaderActions(): array
   {
-    return [
-      Actions\DeleteAction::make(),
-    ];
+    return [];
   }
 
   protected function getRedirectUrl(): string

@@ -2,31 +2,20 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Providers\RouteServiceProvider;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Public registration is disabled in this application.
+ * Users are created by Admin through the Filament admin panel.
+ */
 class RegistrationTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function test_registration_screen_can_be_rendered(): void
+    public function test_registration_is_disabled_for_public(): void
     {
+        // No public registration - users are created by admins via /admin/user
         $response = $this->get('/register');
 
-        $response->assertStatus(200);
-    }
-
-    public function test_new_users_can_register(): void
-    {
-        $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
-
-        $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        // Should return 404 since registration route doesn't exist
+        $response->assertStatus(404);
     }
 }

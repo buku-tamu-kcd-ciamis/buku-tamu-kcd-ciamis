@@ -5,20 +5,20 @@ namespace App\Filament\Resources\ActivityLogResource\Pages;
 use App\Filament\Resources\ActivityLogResource;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 
 class ViewActivityLog extends ViewRecord
 {
     protected static string $resource = ActivityLogResource::class;
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist->schema([
+        return $schema->components([
             Infolists\Components\Section::make('Informasi Aktivitas')
                 ->icon('heroicon-o-information-circle')
-                ->schema([
+                ->components([
                     Infolists\Components\Grid::make(3)
-                        ->schema([
+                        ->components([
                             Infolists\Components\TextEntry::make('created_at')
                                 ->label('Waktu')
                                 ->dateTime('d F Y, H:i:s')
@@ -33,7 +33,7 @@ class ViewActivityLog extends ViewRecord
                                 ->icon('heroicon-o-envelope'),
                         ]),
                     Infolists\Components\Grid::make(3)
-                        ->schema([
+                        ->components([
                             Infolists\Components\TextEntry::make('log_name')
                                 ->label('Modul')
                                 ->badge()
@@ -69,7 +69,7 @@ class ViewActivityLog extends ViewRecord
             Infolists\Components\Section::make('Perubahan Data')
                 ->icon('heroicon-o-arrows-right-left')
                 ->visible(fn($record) => $record->properties->has('attributes') || $record->properties->has('old'))
-                ->schema([
+                ->components([
                     Infolists\Components\ViewEntry::make('properties')
                         ->label('')
                         ->view('filament.infolists.components.activity-properties'),
@@ -82,7 +82,7 @@ class ViewActivityLog extends ViewRecord
                 ->visible(fn($record) => $record->properties->isNotEmpty()
                     && !$record->properties->has('attributes')
                     && !$record->properties->has('old'))
-                ->schema([
+                ->components([
                     Infolists\Components\ViewEntry::make('properties')
                         ->label('')
                         ->view('filament.infolists.components.activity-detail'),

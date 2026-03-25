@@ -6,7 +6,8 @@ use App\Filament\Resources\FaqResource\Pages;
 use App\Models\Faq;
 use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,9 +18,9 @@ class FaqResource extends Resource
   protected static ?string $model = Faq::class;
 
   protected static ?string $slug = 'manajemen-faq';
-  protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-question-mark-circle';
   protected static ?string $navigationLabel = 'Manajemen FAQ';
-  protected static ?string $navigationGroup = 'Pengaturan';
+  protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
   protected static ?string $modelLabel = 'FAQ';
   protected static ?string $pluralModelLabel = 'Manajemen FAQ';
   protected static ?int $navigationSort = 14;
@@ -31,21 +32,18 @@ class FaqResource extends Resource
     return $user && $user->hasRole('Super Admin');
   }
 
-  public static function form(Form $form): Form
+  public static function form(Schema $schema): Schema
   {
-    return $form->schema([
-      Forms\Components\Section::make('Konten FAQ')
+    return $schema->components([
+      Section::make('Konten FAQ')
         ->description('Isi pertanyaan dan jawaban yang akan ditampilkan di halaman FAQ.')
         ->icon('heroicon-o-chat-bubble-left-right')
         ->schema([
           Forms\Components\TextInput::make('question')
-            ->label('Pertanyaan')
             ->required()
             ->maxLength(500)
-            ->placeholder('Contoh: Bagaimana cara login?')
-            ->columnSpanFull(),
+            ->placeholder('Contoh: Bagaimana cara login?'),
           Forms\Components\RichEditor::make('answer')
-            ->label('Jawaban')
             ->required()
             ->toolbarButtons([
               'bold',
@@ -55,30 +53,22 @@ class FaqResource extends Resource
               'bulletList',
               'link',
             ])
-            ->placeholder('Tulis jawaban lengkap di sini...')
-            ->columnSpanFull(),
+            ->placeholder('Tulis jawaban lengkap di sini...'),
         ]),
-      Forms\Components\Section::make('Pengaturan')
+      Section::make('Pengaturan')
         ->description('Atur target panel dan urutan tampil FAQ.')
         ->icon('heroicon-o-cog-6-tooth')
         ->columns(3)
         ->schema([
           Forms\Components\Select::make('target')
-            ->label('Tampilkan di')
             ->options(Faq::TARGET_LABELS)
-            ->default('semua')
             ->required()
             ->native(false)
             ->helperText('Panel mana yang menampilkan FAQ ini.'),
           Forms\Components\TextInput::make('sort_order')
-            ->label('Urutan')
             ->numeric()
-            ->default(0)
-            ->helperText('Urutan tampil FAQ (otomatis untuk FAQ baru).')
-            ->hiddenOn('create'),
+            ->helperText('Urutan tampil FAQ (otomatis untuk FAQ baru).'),
           Forms\Components\Toggle::make('is_active')
-            ->label('Aktif')
-            ->default(true)
             ->helperText('FAQ nonaktif tidak akan tampil.')
             ->inline(false),
         ]),
@@ -132,15 +122,8 @@ class FaqResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\EditAction::make(),
-          Tables\Actions\DeleteAction::make(),
-        ]),
-      ])
-      ->bulkActions([
-        Tables\Actions\DeleteBulkAction::make(),
-      ]);
+      ->actions([])
+      ->bulkActions([]);
   }
 
   public static function getRelations(): array

@@ -8,9 +8,10 @@ use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Livewire\WithPagination;
 
@@ -19,12 +20,12 @@ class ProfilKepalaCabdin extends Page implements HasForms
     use InteractsWithForms;
     use WithPagination;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
     protected static ?string $navigationLabel = 'Profil Kepala Cabang Dinas';
-    protected static ?string $navigationGroup = 'Akun';
+    protected static string|\UnitEnum|null $navigationGroup = 'Akun';
     protected static ?string $title = 'Profil Data Diri Kepala Cabang Dinas';
     protected static ?int $navigationSort = 1;
-    protected static string $view = 'filament.pages.profil-kepala-cabdin';
+    protected string $view = 'filament.pages.profil-kepala-cabdin';
 
     public ?array $data = [];
 
@@ -54,30 +55,26 @@ class ProfilKepalaCabdin extends Page implements HasForms
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Data Diri Kepala Cabang Dinas')
+                Section::make('Data Diri Kepala Cabang Dinas')
                     ->description('Data ini digunakan pada tanda tangan di halaman cetak/print.')
                     ->icon('heroicon-o-identification')
                     ->schema([
                         Forms\Components\TextInput::make('nama_kepala')
-                            ->label('Nama Lengkap')
                             ->placeholder('Contoh: Drs. H. Ahmad Suryadi, M.Pd.')
                             ->maxLength(255)
                             ->helperText('Nama lengkap beserta gelar depan dan belakang.')
                             ->required(),
                         Forms\Components\TextInput::make('nip_kepala')
-                            ->label('NIP')
                             ->placeholder('Contoh: 196712051992031005')
                             ->mask('999999999999999999')
                             ->length(18)
                             ->helperText('NIP harus terdiri dari 18 digit.')
                             ->required(),
                         Forms\Components\TextInput::make('jabatan')
-                            ->label('Jabatan')
-                            ->default('Kepala Cabang Dinas Pendidikan Wilayah XIII')
                             ->maxLength(255)
                             ->helperText('Jabatan yang ditampilkan di halaman cetak.')
                             ->required(),

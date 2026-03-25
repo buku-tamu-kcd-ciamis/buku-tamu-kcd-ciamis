@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Auth;
 
 class KetersediaanStatus extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-signal';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-signal';
     protected static ?string $navigationLabel = 'Status Ketersediaan';
-    protected static ?string $navigationGroup = 'Kepegawaian';
+    protected static string|\UnitEnum|null $navigationGroup = 'Kepegawaian';
     protected static ?string $title = 'Status Ketersediaan';
     protected static ?int $navigationSort = 3;
-    protected static string $view = 'filament.staff.pages.ketersediaan-status';
+    protected string $view = 'filament.staff.pages.ketersediaan-status';
 
     public ?string $availability_status = 'available';
 

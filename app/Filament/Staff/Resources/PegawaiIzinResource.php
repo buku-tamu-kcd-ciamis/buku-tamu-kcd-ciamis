@@ -5,7 +5,7 @@ namespace App\Filament\Staff\Resources;
 use App\Filament\Staff\Resources\PegawaiIzinResource\Pages;
 use App\Models\PegawaiIzin;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,21 +15,21 @@ class PegawaiIzinResource extends Resource
 {
     protected static ?string $model = PegawaiIzin::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Izin Saya';
-    protected static ?string $navigationGroup = 'Kepegawaian';
+    protected static string|\UnitEnum|null $navigationGroup = 'Kepegawaian';
     protected static ?string $modelLabel = 'Izin';
     protected static ?string $pluralModelLabel = 'Izin Saya';
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $pegawai = $user->pegawai;
 
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Forms\Components\Section::make('Informasi Pegawai')
                     ->description('Data diambil dari profil pegawai Anda')
                     ->icon('heroicon-o-user')

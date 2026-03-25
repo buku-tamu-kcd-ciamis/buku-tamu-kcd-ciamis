@@ -17,9 +17,9 @@ class RekapIzinPegawaiResource extends Resource
   protected static ?string $model = PegawaiIzin::class;
 
   protected static ?string $slug = 'rekap-izin-pegawai';
-  protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar';
   protected static ?string $navigationLabel = 'Rekap Izin Pegawai';
-  protected static ?string $navigationGroup = 'Kepegawaian';
+  protected static string|\UnitEnum|null $navigationGroup = 'Kepegawaian';
   protected static ?string $modelLabel = 'Rekap Izin';
   protected static ?string $pluralModelLabel = 'Rekap Izin Pegawai';
   protected static ?int $navigationSort = 3;
@@ -151,17 +151,7 @@ class RekapIzinPegawaiResource extends Resource
           ->query(fn(Builder $query) => $query->having('sedang_izin', '>', 0))
           ->toggle(),
       ])
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\Action::make('detail')
-            ->label('Lihat Detail')
-            ->icon('heroicon-o-eye')
-            ->color('info')
-            ->url(fn($record) => static::getUrl('view', ['record' => $record->nip])),
-        ])
-          ->icon('heroicon-m-ellipsis-vertical')
-          ->tooltip('Aksi'),
-      ])
+      ->actions([])
       ->bulkActions([])
       ->emptyStateHeading('Belum Ada Data Izin')
       ->emptyStateDescription('Data rekap izin pegawai akan muncul setelah ada data izin yang diinput dari panel Piket.')

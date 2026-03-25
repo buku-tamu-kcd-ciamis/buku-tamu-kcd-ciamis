@@ -5,8 +5,11 @@ namespace App\Filament\Piket\Resources;
 use App\Filament\Piket\Resources\KunjunganResource\Pages;
 use App\Models\BukuTamu;
 use App\Models\DropdownOption;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,9 +21,9 @@ class KunjunganResource extends Resource
   protected static ?string $model = BukuTamu::class;
 
   protected static ?string $slug = 'kunjungan';
-  protected static ?string $navigationIcon = 'heroicon-o-users';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
   protected static ?string $navigationLabel = 'Kunjungan Tamu';
-  protected static ?string $navigationGroup = 'Layanan Tamu';
+  protected static string|\UnitEnum|null $navigationGroup = 'Layanan Tamu';
   protected static ?string $modelLabel = 'Kunjungan';
   protected static ?string $pluralModelLabel = 'Kunjungan Tamu';
   protected static ?int $navigationSort = 1;
@@ -32,14 +35,13 @@ class KunjunganResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('buku_tamu');
   }
 
-  public static function form(Form $form): Form
+  public static function form(Schema $schema): Schema
   {
-    return $form->schema([
+    return $schema->components([
       Forms\Components\Select::make('status')
         ->options(BukuTamu::STATUS_LABELS)
         ->required(),
       Forms\Components\Textarea::make('catatan')
-        ->label('Catatan')
         ->rows(3),
     ]);
   }
@@ -110,8 +112,7 @@ class KunjunganResource extends Resource
           ->options(BukuTamu::STATUS_LABELS),
         Tables\Filters\Filter::make('tanggal')
           ->form([
-            Forms\Components\DatePicker::make('tanggal')
-              ->label('Tanggal'),
+            Forms\Components\DatePicker::make('tanggal'),
           ])
           ->query(function ($query, array $data) {
             return $query->when($data['tanggal'], fn($q, $date) => $q->whereDate('created_at', $date));
@@ -119,134 +120,8 @@ class KunjunganResource extends Resource
       ])
       ->actionsAlignment('center')
       ->actionsColumnLabel('Aksi')
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\Action::make('ubah_status')
-            ->label('Ubah Status')
-            ->icon('heroicon-s-pencil-square')
-            ->color('warning')
-            ->visible(function (BukuTamu $record) {
-              /** @var User $user */
-              $user = Auth::user();
-              return $record->status !== 'selesai' && $user && $user->role_user && $user->role_user->canChangeStatus();
-            })
-            ->form([
-              Forms\Components\Placeholder::make('info_tamu')
-                ->label('Detail Tamu')
-                ->content(fn(BukuTamu $record) => new \Illuminate\Support\HtmlString(
-                  '<div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 text-sm leading-relaxed">' .
-                  '<div class="flex gap-4 mb-3">' .
-                  '<div class="flex gap-3">' .
-                  ($record->foto_selfie_url ? '<img src="' . e($record->foto_selfie_url) . '" class="w-20 h-20 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600" />' : '') .
-                  ($record->tanda_tangan_url ? '<div><strong class="text-xs text-gray-600 dark:text-gray-400">Tanda Tangan:</strong><br><img src="' . e($record->tanda_tangan_url) . '" class="w-20 h-12 border border-gray-300 dark:border-gray-600 rounded bg-white" /></div>' : '') .
-                  '</div>' .
-                  '<div class="flex-1">' .
-                  '<strong class="text-base dark:text-white">' . e($record->nama_lengkap) . '</strong><br>' .
-                  '<span class="text-gray-600 dark:text-gray-300">NIK: ' . e($record->nik) . '</span><br>' .
-                  '<span class="text-gray-600 dark:text-gray-300">Instansi: ' . e($record->instansi ?? '-') . '</span>' .
-                  '</div>' .
-                  '</div>' .
-                  ($record->foto_penerimaan_url ? '<div class="mb-3"><strong class="text-xs text-gray-600 dark:text-gray-400">Foto Penerimaan Berkas:</strong><br><img src="' . e($record->foto_penerimaan_url) . '" class="w-30 h-20 border border-gray-300 dark:border-gray-600 rounded object-cover" /></div>' : '') .
-                  '<div class="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 dark:text-gray-200">' .
-                  '<strong>Keperluan:</strong> ' . e($record->keperluan) . '<br>' .
-                  '<strong>Staff Yang Dituju:</strong> ' . e($record->staff_dituju) . '<br>' .
-                  '<strong>Waktu:</strong> ' . $record->created_at->format('d/m/Y H:i') .
-                  '</div>' .
-                  '</div>'
-                )),
-              Forms\Components\Select::make('nama_penerima')
-                ->label('Nama Penerima')
-                ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_PEGAWAI_PIKET))
-                ->searchable()
-                ->allowHtml(false)
-                ->placeholder('Pilih nama penerima'),
-              Forms\Components\Select::make('status')
-                ->options([
-                  'menunggu' => 'Menunggu',
-                  'diproses' => 'Diproses',
-                  'selesai' => 'Selesai',
-                  'dibatalkan' => 'Dibatalkan',
-                ])
-                ->required(),
-              Forms\Components\Textarea::make('catatan')
-                ->label('Catatan')
-                ->rows(3),
-            ])
-            ->fillForm(fn(BukuTamu $record) => [
-              'status' => $record->status,
-              'catatan' => $record->catatan,
-            ])
-            ->action(function (BukuTamu $record, array $data) {
-              $record->update($data);
-            })
-            ->modalHeading('Ubah Status Kunjungan')
-            ->modalSubmitActionLabel('Simpan'),
-          Tables\Actions\ViewAction::make()
-            ->label('Lihat Detail')
-            ->icon('heroicon-s-eye'),
-          Tables\Actions\Action::make('print')
-            ->label('Cetak')
-            ->icon('heroicon-s-printer')
-            ->color('success')
-            ->url(fn(BukuTamu $record) => route('buku-tamu.print', $record->id))
-            ->openUrlInNewTab()
-            ->visible(function (BukuTamu $record) {
-              /** @var User $user */
-              $user = Auth::user();
-              return $record->status === 'selesai' && $user && $user->role_user && $user->role_user->canPrint();
-            }),
-        ])
-          ->label(false)
-          ->icon('heroicon-m-ellipsis-vertical')
-          ->iconButton()
-          ->color('gray'),
-      ])
-      ->headerActions([
-        Tables\Actions\Action::make('print_bulk')
-          ->label('Cetak Laporan')
-          ->icon('heroicon-o-printer')
-          ->color('success')
-          ->visible(function () {
-            /** @var User $user */
-            $user = Auth::user();
-            return $user && $user->role_user && $user->role_user->canPrint();
-          })
-          ->form([
-            Forms\Components\DatePicker::make('start_date')
-              ->label('Tanggal Mulai'),
-            Forms\Components\DatePicker::make('end_date')
-              ->label('Tanggal Akhir'),
-            Forms\Components\TextInput::make('nama')
-              ->label('Nama')
-              ->placeholder('Cari berdasarkan nama'),
-            Forms\Components\Select::make('kabupaten_kota')
-              ->label('Kabupaten/Kota')
-              ->searchable()
-              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KABUPATEN_KOTA))
-              ->placeholder('Pilih kabupaten/kota'),
-            Forms\Components\Select::make('keperluan')
-              ->label('Keperluan')
-              ->searchable()
-              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KEPERLUAN))
-              ->placeholder('Pilih keperluan'),
-          ])
-          ->action(function (array $data, $livewire) {
-            $query = http_build_query(array_filter([
-              'start_date' => $data['start_date'] ?? null,
-              'end_date' => $data['end_date'] ?? null,
-              'nama' => $data['nama'] ?? null,
-              'kabupaten_kota' => $data['kabupaten_kota'] ?? null,
-              'keperluan' => $data['keperluan'] ?? null,
-            ]));
-
-            $url = route('buku-tamu.print-bulk') . ($query ? '?' . $query : '');
-
-            // Dispatch browser event to open in new tab
-            $livewire->dispatch('open-url-in-new-tab', url: $url);
-          })
-          ->modalHeading('Filter Laporan Kunjungan')
-          ->modalSubmitActionLabel('Cetak'),
-      ])
+      ->actions([])
+      ->headerActions([])
       ->bulkActions([]);
   }
 

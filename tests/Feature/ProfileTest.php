@@ -2,98 +2,72 @@
 
 namespace Tests\Feature;
 
+use App\Models\RoleUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Profile management is handled by Filament panels.
+ * Admin profile: /admin/profile (requires Super Admin or Kepala Cabang Dinas role)
+ * Piket profile: /piket/profile (requires Piket or Super Admin role)
+ */
 class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_is_displayed(): void
+    public function test_filament_admin_profile_page_requires_authentication(): void
     {
-        $user = User::factory()->create();
+        $response = $this->get('/admin/profile');
 
-        $response = $this
-            ->actingAs($user)
-            ->get('/profile');
+        // Should redirect to login when not authenticated
+        $response->assertRedirect('/admin/login');
+    }
+
+    public function test_filament_piket_profile_page_requires_authentication(): void
+    {
+        $response = $this->get('/piket/profile');
+
+        // Should redirect to login when not authenticated
+        $response->assertRedirect('/piket/login');
+    }
+
+    public function test_admin_user_can_access_admin_profile(): void
+    {
+        // Create Super Admin role
+        $adminRole = RoleUser::create([
+            'name' => 'Super Admin',
+            'need_approval' => false,
+            'permissions' => RoleUser::getDefaultPermissions(),
+        ]);
+
+        $user = User::factory()->create([
+            'role_user_id' => $adminRole->id,
+        ]);
+
+        $response = $this->actingAs($user)->get('/admin/profile');
 
         $response->assertOk();
     }
 
-    public function test_profile_information_can_be_updated(): void
+    public function test_piket_user_can_access_piket_profile(): void
     {
+        // UserFactory creates user with Piket role by default
         $user = User::factory()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
+        $response = $this->actingAs($user)->get('/piket/profile');
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $user->refresh();
-
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $response->assertOk();
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_piket_user_cannot_access_admin_profile(): void
     {
+        // UserFactory creates user with Piket role
         $user = User::factory()->create();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
+        $response = $this->actingAs($user)->get('/admin/profile');
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->refresh()->email_verified_at);
-    }
-
-    public function test_user_can_delete_their_account(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
-
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
-
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
-    }
-
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
-                'password' => 'wrong-password',
-            ]);
-
-        $response
-            ->assertSessionHasErrorsIn('userDeletion', 'password')
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->fresh());
+        // Piket users are forbidden from accessing admin panel
+        $response->assertForbidden();
     }
 }

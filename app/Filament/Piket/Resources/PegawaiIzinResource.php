@@ -6,8 +6,14 @@ use App\Filament\Piket\Resources\PegawaiIzinResource\Pages;
 use App\Models\Pegawai;
 use App\Models\DropdownOption;
 use App\Models\PegawaiIzin;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -19,9 +25,9 @@ class PegawaiIzinResource extends Resource
   protected static ?string $model = PegawaiIzin::class;
 
   protected static ?string $slug = 'pegawai-izin';
-  protected static ?string $navigationIcon = 'heroicon-o-user-minus';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-minus';
   protected static ?string $navigationLabel = 'Izin Pegawai';
-  protected static ?string $navigationGroup = 'Kepegawaian';
+  protected static string|\UnitEnum|null $navigationGroup = 'Kepegawaian';
   protected static ?string $modelLabel = 'Izin Pegawai';
   protected static ?string $pluralModelLabel = 'Izin Pegawai';
   protected static ?int $navigationSort = 4;
@@ -33,12 +39,11 @@ class PegawaiIzinResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }
 
-  public static function form(Form $form): Form
+  public static function form(Schema $schema): Schema
   {
-    return $form->schema([
-      Forms\Components\Section::make()->columns(2)->schema([
+    return $schema->components([
+      Section::make()->columns(2)->schema([
         Forms\Components\Select::make('pegawai_id')
-          ->label('Pilih Pegawai')
           ->options(function () {
             return Pegawai::active()
               ->orderBy('nama')
@@ -48,59 +53,18 @@ class PegawaiIzinResource extends Resource
           ->searchable()
           ->preload()
           ->placeholder('Cari nama atau NIP pegawai...')
-          ->live()
-          ->afterStateUpdated(function ($state, Forms\Set $set) {
-            if (!$state)
-              return;
-
-            $pegawai = Pegawai::find($state);
-            if (!$pegawai)
-              return;
-
-            $set('nama_pegawai', $pegawai->nama);
-            $set('nip', $pegawai->nip);
-            $set('jabatan', $pegawai->jabatan);
-            $set('unit_kerja', $pegawai->unit_kerja);
-            $set('nomor_hp', $pegawai->nomor_hp);
-
-            // Cek apakah ada surat izin aktif
-            $suratAktif = PegawaiIzin::where('nip', $pegawai->nip)
-              ->where('status', 'aktif')
-              ->where('tanggal_selesai', '>=', now()->toDateString())
-              ->orderBy('tanggal_selesai', 'desc')
-              ->first();
-
-            if ($suratAktif) {
-              $jenisIzin = ucfirst($suratAktif->jenis_izin);
-              $tanggalMulai = \Carbon\Carbon::parse($suratAktif->tanggal_mulai)->translatedFormat('d F Y');
-              $tanggalSelesai = \Carbon\Carbon::parse($suratAktif->tanggal_selesai)->translatedFormat('d F Y');
-              $besok = \Carbon\Carbon::parse($suratAktif->tanggal_selesai)->addDay()->translatedFormat('d F Y');
-
-              \Filament\Notifications\Notification::make()
-                ->warning()
-                ->title('⚠️ Pegawai Masih Memiliki Surat Izin Aktif')
-                ->body("Pegawai {$suratAktif->nama_pegawai} masih memiliki surat izin {$jenisIzin} yang berlaku dari {$tanggalMulai} sampai {$tanggalSelesai}. Surat izin baru dapat dibuat mulai tanggal {$besok}.")
-                ->persistent()
-                ->send();
-            }
-          })
-          ->helperText('Pilih pegawai dari daftar untuk mengisi data otomatis.')
-          ->columnSpanFull()
-          ->dehydrated(false),
+          ->helperText('Pilih pegawai dari daftar untuk mengisi data otomatis.'),
         Forms\Components\TextInput::make('nama_pegawai')
-          ->label('Nama Pegawai')
           ->required()
           ->maxLength(255)
           ->readOnly(),
         Forms\Components\TextInput::make('nip')
-          ->label('NIP')
           ->required()
           ->minLength(18)
           ->maxLength(18)
           ->placeholder('Masukkan 18 digit NIP')
           ->mask('999999999999999999')
           ->readOnly()
-          ->live()
           ->suffixIcon(function ($state) {
             if (!$state)
               return null;
@@ -122,11 +86,9 @@ class PegawaiIzinResource extends Resource
           ->maxLength(255)
           ->readOnly(),
         Forms\Components\TextInput::make('unit_kerja')
-          ->label('Unit Kerja')
           ->maxLength(255)
           ->readOnly(),
         Forms\Components\TextInput::make('nomor_hp')
-          ->label('Nomor Handphone')
           ->tel()
           ->prefix('+62')
           ->placeholder('8xx-xxxx-xxxx')
@@ -135,26 +97,18 @@ class PegawaiIzinResource extends Resource
           ->readOnly()
           ->helperText('Otomatis terisi dari data pegawai'),
         Forms\Components\Select::make('jenis_izin')
-          ->label('Jenis Izin')
           ->options(PegawaiIzin::JENIS_IZIN_LABELS)
           ->searchable()
           ->required(),
         Forms\Components\Select::make('status')
-          ->label('Status')
           ->options([
             'aktif' => 'Aktif',
             'selesai' => 'Selesai',
           ])
-          ->required()
-          ->visible(fn($context) => $context === 'edit'),
+          ->required(),
         Forms\Components\DatePicker::make('tanggal_mulai')
-          ->label('Tanggal Mulai')
-          ->required()
-          ->default(now())
-          ->disabled()
-          ->dehydrated(),
+          ->required(),
         Forms\Components\DatePicker::make('tanggal_selesai')
-          ->label('Tanggal Selesai')
           ->required()
           ->native(false)
           ->minDate(now())
@@ -209,20 +163,15 @@ class PegawaiIzinResource extends Resource
           ])
           ->helperText('Pilih tanggal selesai izin dengan durasi maksimal 5 hari kerja dari hari ini. Sabtu dan Minggu tidak dapat dipilih karena hari libur.'),
         Forms\Components\Textarea::make('keterangan')
-          ->rows(3)
-          ->columnSpanFull(),
+          ->rows(3),
         Forms\Components\Select::make('nama_piket')
-          ->label('Nama Piket')
           ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_PEGAWAI_PIKET))
           ->searchable()
           ->placeholder('Pilih nama petugas piket')
-          ->required()
-          ->columnSpanFull(),
-        Forms\Components\ViewField::make('tanda_tangan_piket')
-          ->label('Tanda Tangan Piket (Konfirmasi)')
-          ->view('filament.forms.components.signature-pad')
-          ->required()
-          ->columnSpanFull(),
+          ->required(),
+        Forms\Components\Textarea::make('tanda_tangan_piket')
+          ->rows(2)
+          ->required(),
       ]),
     ]);
   }
@@ -295,19 +244,8 @@ class PegawaiIzinResource extends Resource
           ->label('Jenis Izin')
           ->options(PegawaiIzin::JENIS_IZIN_LABELS),
       ])
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\ViewAction::make(),
-          Tables\Actions\EditAction::make(),
-          Tables\Actions\DeleteAction::make(),
-        ])
-          ->label(false)
-          ->icon('heroicon-m-ellipsis-vertical')
-          ->color('gray'),
-      ])
-      ->bulkActions([
-        Tables\Actions\DeleteBulkAction::make(),
-      ]);
+      ->actions([])
+      ->bulkActions([]);
   }
 
   public static function getRelations(): array

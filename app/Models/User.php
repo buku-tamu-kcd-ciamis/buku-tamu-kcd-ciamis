@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Traits\UuidTrait;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -12,10 +13,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasEmailAuthentication
 {
     use HasFactory, Notifiable, UuidTrait, LogsActivity;
 
@@ -24,7 +25,7 @@ class User extends Authenticatable implements FilamentUser
         return LogOptions::defaults()
             ->logOnly(['name', 'email', 'role_user_id'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
+            ->dontLogEmptyChanges()
             ->useLogName('user')
             ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
                 'created' => "User baru '{$this->name}' berhasil dibuat",
@@ -96,7 +97,7 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Boot method — add deleting protection at model level.
+     * Boot method â€” add deleting protection at model level.
      */
     protected static function booted(): void
     {
@@ -134,6 +135,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'role_user_id',
         'pegawai_id',
+        'email_authentication_enabled',
     ];
 
     /**
@@ -156,7 +158,20 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'email_authentication_enabled' => 'boolean',
         ];
+    }
+
+    public function hasEmailAuthentication(): bool
+    {
+        return (bool) $this->email_authentication_enabled;
+    }
+
+    public function toggleEmailAuthentication(bool $condition): void
+    {
+        $this->forceFill([
+            'email_authentication_enabled' => $condition,
+        ])->save();
     }
 
 

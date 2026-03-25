@@ -4,27 +4,28 @@ namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
 use App\Models\DropdownOption;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use App\Models\User;
 
-class RiwayatTamu extends Page implements HasTable
+class RiwayatTamu extends Page
 {
   use InteractsWithTable;
 
-  protected static ?string $navigationIcon = 'heroicon-o-clock';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
   protected static ?string $navigationLabel = 'Riwayat Pengunjung';
-  protected static ?string $navigationGroup = 'Layanan Tamu';
+  protected static string|\UnitEnum|null $navigationGroup = 'Layanan Tamu';
   protected static ?string $title = 'Riwayat Pengunjung';
   protected static ?int $navigationSort = 3;
-  protected static string $view = 'filament.piket.pages.riwayat-tamu';
+  protected string $view = 'filament.piket.pages.riwayat-tamu';
 
   public static function shouldRegisterNavigation(): bool
   {
@@ -97,61 +98,8 @@ class RiwayatTamu extends Page implements HasTable
       ->defaultSort('total_kunjungan', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\Action::make('lihat_detail')
-            ->label('Lihat Detail')
-            ->icon('heroicon-s-eye')
-            ->url(fn($record) => \App\Filament\Piket\Pages\ViewRiwayatTamu::getUrl(['nik' => $record->nik])),
-        ])
-          ->label(false)
-          ->icon('heroicon-m-ellipsis-vertical')
-          ->color('gray'),
-      ])
-      ->headerActions([
-        Tables\Actions\Action::make('print_bulk')
-          ->label('Cetak Laporan')
-          ->icon('heroicon-o-printer')
-          ->color('success')
-          ->form([
-            Forms\Components\DatePicker::make('start_date')
-              ->label('Tanggal Mulai'),
-            Forms\Components\DatePicker::make('end_date')
-              ->label('Tanggal Akhir'),
-            Forms\Components\Select::make('nama')
-              ->label('Nama Pengunjung')
-              ->searchable()
-              ->getSearchResultsUsing(function (string $search) {
-                return BukuTamu::query()
-                  ->where('nama_lengkap', 'like', "%{$search}%")
-                  ->distinct()
-                  ->pluck('nama_lengkap', 'nama_lengkap')
-                  ->toArray();
-              })
-              ->getOptionLabelUsing(fn($value): ?string => $value)
-              ->placeholder('Cari nama pengunjung...'),
-            Forms\Components\Select::make('keperluan')
-              ->label('Keperluan')
-              ->searchable()
-              ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_KEPERLUAN))
-              ->placeholder('Pilih keperluan'),
-          ])
-          ->action(function (array $data, $livewire) {
-            $query = http_build_query(array_filter([
-              'start_date' => $data['start_date'] ?? null,
-              'end_date' => $data['end_date'] ?? null,
-              'nama' => $data['nama'] ?? null,
-              'keperluan' => $data['keperluan'] ?? null,
-            ]));
-
-            $url = route('buku-tamu.print-bulk') . ($query ? '?' . $query : '');
-
-            // Dispatch browser event to open in new tab
-            $livewire->dispatch('open-url-in-new-tab', url: $url);
-          })
-          ->modalHeading('Filter Laporan Riwayat Pengunjung')
-          ->modalSubmitActionLabel('Cetak'),
-      ]);
+      ->actions([])
+      ->headerActions([]);
   }
 
   public function getFooter(): ?View

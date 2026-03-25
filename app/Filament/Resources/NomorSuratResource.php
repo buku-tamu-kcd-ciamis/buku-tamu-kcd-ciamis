@@ -6,7 +6,8 @@ use App\Filament\Resources\NomorSuratResource\Pages;
 use App\Models\NomorSuratSetting;
 use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,9 +18,9 @@ class NomorSuratResource extends Resource
   protected static ?string $model = NomorSuratSetting::class;
 
   protected static ?string $slug = 'nomor-surat';
-  protected static ?string $navigationIcon = 'heroicon-o-document-text';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
   protected static ?string $navigationLabel = 'Nomor Surat';
-  protected static ?string $navigationGroup = 'Pengaturan';
+  protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
   protected static ?string $modelLabel = 'Nomor Surat';
   protected static ?string $pluralModelLabel = 'Pengaturan Nomor Surat';
   protected static ?int $navigationSort = 15;
@@ -31,15 +32,12 @@ class NomorSuratResource extends Resource
     return $user && $user->hasRole('Super Admin');
   }
 
-  public static function form(Form $form): Form
+  public static function form(Schema $schema): Schema
   {
-    return $form->schema([
-      Forms\Components\Section::make('Informasi Jenis Surat')
-        ->description('Identifikasi jenis surat dan nama tampilan.')
-        ->icon('heroicon-o-information-circle')
+    return $schema->components([
+      Section::make('Informasi Jenis Surat')
         ->schema([
           Forms\Components\Select::make('jenis_surat')
-            ->label('Jenis Surat (Kode)')
             ->required()
             ->searchable()
             ->options([
@@ -58,7 +56,6 @@ class NomorSuratResource extends Resource
             ])
             ->createOptionForm([
               Forms\Components\TextInput::make('custom_jenis')
-                ->label('Kode Jenis Surat Baru')
                 ->required()
                 ->placeholder('contoh: surat_rekomendasi')
                 ->helperText('Gunakan underscore, lowercase, tanpa spasi')
@@ -70,20 +67,15 @@ class NomorSuratResource extends Resource
             ->helperText('Pilih dari daftar atau ketik untuk mencari. Klik "Create" untuk menambah kode baru.')
             ->unique(ignoreRecord: true),
           Forms\Components\TextInput::make('nama_jenis')
-            ->label('Nama Jenis Surat')
             ->required()
             ->maxLength(100)
-            ->placeholder('contoh: Bukti Kunjungan Tamu')
-            ->columnSpanFull(),
+            ->placeholder('contoh: Bukti Kunjungan Tamu'),
         ])
         ->columns(1),
 
-      Forms\Components\Section::make('Pengaturan Template Nomor')
-        ->description('Atur format nomor surat dengan placeholder.')
-        ->icon('heroicon-o-cog-6-tooth')
+      Section::make('Pengaturan Template Nomor')
         ->schema([
           Forms\Components\Select::make('template')
-            ->label('Template Nomor Surat')
             ->required()
             ->searchable()
             ->options([
@@ -132,7 +124,6 @@ class NomorSuratResource extends Resource
             ])
             ->createOptionForm([
               Forms\Components\TextInput::make('custom_template')
-                ->label('Template Custom')
                 ->required()
                 ->placeholder('{NOMOR}/{KODE}/{BULAN}/{TAHUN}')
                 ->helperText('Gunakan placeholder: {NOMOR}, {KODE}, {BULAN}, {TAHUN}, {TAHUN_PENDEK}, {ROMAWI}')
@@ -141,10 +132,8 @@ class NomorSuratResource extends Resource
             ->createOptionUsing(function (array $data) {
               return $data['custom_template'];
             })
-            ->helperText('Pilih format template atau ketik untuk mencari. Klik "Create" untuk template custom.')
-            ->columnSpanFull(),
+            ->helperText('Pilih format template atau ketik untuk mencari. Klik "Create" untuk template custom.'),
           Forms\Components\Select::make('kode_surat')
-            ->label('Kode Surat')
             ->required()
             ->searchable()
             ->options([
@@ -165,7 +154,6 @@ class NomorSuratResource extends Resource
             ])
             ->createOptionForm([
               Forms\Components\TextInput::make('custom_kode')
-                ->label('Kode Surat Baru')
                 ->required()
                 ->placeholder('contoh: SPM')
                 ->helperText('Singkatan surat (huruf kapital)')
@@ -176,37 +164,27 @@ class NomorSuratResource extends Resource
             })
             ->helperText('Pilih atau ketik kode singkatan surat. Klik "Create" untuk menambah kode baru.'),
           Forms\Components\TextInput::make('padding_length')
-            ->label('Panjang Padding Nomor')
             ->numeric()
             ->required()
-            ->default(6)
             ->minValue(1)
             ->maxValue(10)
             ->helperText('Jumlah digit nomor urut (misal: 6 = 000001).'),
         ])
         ->columns(2),
 
-      Forms\Components\Section::make('Keterangan & Status')
-        ->icon('heroicon-o-document-text')
+      Section::make('Keterangan & Status')
         ->schema([
           Forms\Components\Textarea::make('keterangan')
-            ->label('Keterangan')
             ->rows(3)
-            ->placeholder('Informasi tambahan tentang format nomor surat...')
-            ->columnSpanFull(),
+            ->placeholder('Informasi tambahan tentang format nomor surat...'),
           Forms\Components\Toggle::make('is_active')
-            ->label('Aktif')
-            ->default(true)
             ->helperText('Hanya template aktif yang akan digunakan.')
             ->inline(false),
         ]),
 
-      Forms\Components\Section::make('Contoh Hasil')
-        ->description('Pratinjau format nomor surat yang akan dihasilkan.')
-        ->icon('heroicon-o-eye')
+      Section::make('Contoh Hasil')
         ->schema([
           Forms\Components\Placeholder::make('preview')
-            ->label('Contoh Nomor Surat')
             ->content(function ($get) {
               $template = $get('template') ?: '{NOMOR}/{KODE}/{BULAN}/{TAHUN}';
               $kode = $get('kode_surat') ?: 'XX';
@@ -226,8 +204,7 @@ class NomorSuratResource extends Resource
               );
 
               return "**{$result}**";
-            })
-            ->columnSpanFull(),
+            }),
         ]),
     ]);
   }
@@ -273,15 +250,8 @@ class NomorSuratResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->actions([
-        Tables\Actions\ActionGroup::make([
-          Tables\Actions\EditAction::make(),
-          Tables\Actions\DeleteAction::make(),
-        ]),
-      ])
-      ->bulkActions([
-        Tables\Actions\DeleteBulkAction::make(),
-      ]);
+      ->actions([])
+      ->bulkActions([]);
   }
 
   public static function getRelations(): array

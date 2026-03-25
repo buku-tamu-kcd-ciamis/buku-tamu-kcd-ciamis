@@ -14,12 +14,12 @@ class RiwayatKunjungan extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
     protected static ?string $navigationLabel = 'Riwayat Kunjungan';
-    protected static ?string $navigationGroup = 'Informasi';
+    protected static string|\UnitEnum|null $navigationGroup = 'Informasi';
     protected static ?string $title = 'Riwayat Kunjungan Saya';
     protected static ?int $navigationSort = 4;
-    protected static string $view = 'filament.staff.pages.riwayat-kunjungan';
+    protected string $view = 'filament.staff.pages.riwayat-kunjungan';
 
     public function getTableRecordKey($record): string
     {

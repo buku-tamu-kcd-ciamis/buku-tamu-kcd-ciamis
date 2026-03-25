@@ -5,27 +5,25 @@ namespace App\Filament\Piket\Resources\ActivityLogResource\Pages;
 use App\Filament\Piket\Resources\ActivityLogResource;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 
 class ViewActivityLog extends ViewRecord
 {
   protected static string $resource = ActivityLogResource::class;
 
-  public function infolist(Infolist $infolist): Infolist
+  public function infolist(Schema $schema): Schema
   {
-    return $infolist->schema([
-      Infolists\Components\Section::make('Informasi Log Aktivitas')
-        ->schema([
-          Infolists\Components\Grid::make(2)
-            ->schema([
+    return $schema->components([
+      Section::make('Informasi Log Aktivitas')
+        ->components([
+          Grid::make(2)
+            ->components([
               Infolists\Components\TextEntry::make('created_at')
-                ->label('Waktu')
                 ->dateTime('d/m/Y H:i:s'),
-              Infolists\Components\TextEntry::make('causer.name')
-                ->label('User')
-                ->default('System'),
+              Infolists\Components\TextEntry::make('causer.name'),
               Infolists\Components\TextEntry::make('log_name')
-                ->label('Kategori')
                 ->badge()
                 ->formatStateUsing(fn(string $state): string => match ($state) {
                   'buku_tamu' => 'Buku Tamu',
@@ -39,22 +37,15 @@ class ViewActivityLog extends ViewRecord
                   'auth' => 'warning',
                   default => 'gray',
                 }),
-              Infolists\Components\TextEntry::make('description')
-                ->label('Deskripsi Aktivitas')
-                ->columnSpanFull(),
-              Infolists\Components\TextEntry::make('subject_type')
-                ->label('Tipe Subject')
-                ->default('-'),
-              Infolists\Components\TextEntry::make('subject_id')
-                ->label('ID Subject')
-                ->default('-'),
+              Infolists\Components\TextEntry::make('description'),
+              Infolists\Components\TextEntry::make('subject_type'),
+              Infolists\Components\TextEntry::make('subject_id'),
             ]),
         ]),
-      Infolists\Components\Section::make('Properties')
-        ->schema([
-          Infolists\Components\ViewEntry::make('properties')
-            ->label('')
-            ->view('filament.infolists.components.json-viewer'),
+      Section::make('Properties')
+        ->components([
+          Infolists\Components\TextEntry::make('properties')
+            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : (string) $state),
         ])
         ->collapsed()
         ->collapsible(),

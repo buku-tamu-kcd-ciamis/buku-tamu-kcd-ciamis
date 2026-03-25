@@ -6,7 +6,10 @@ use App\Filament\Resources\PegawaiPiketResource\Pages;
 use App\Models\DropdownOption;
 use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -18,9 +21,9 @@ class PegawaiPiketResource extends Resource
     protected static ?string $model = DropdownOption::class;
 
     protected static ?string $slug = 'pegawai-piket';
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Data Pegawai Piket';
-    protected static ?string $navigationGroup = 'Pengaturan';
+    protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
     protected static ?string $modelLabel = 'Pegawai Piket';
     protected static ?string $pluralModelLabel = 'Data Pegawai Piket';
     protected static ?int $navigationSort = 11;
@@ -38,36 +41,23 @@ class PegawaiPiketResource extends Resource
             ->where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET);
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('Informasi Pegawai Piket')
+        return $schema->components([
+            Section::make('Informasi Pegawai Piket')
                 ->description('Data pegawai yang bertugas sebagai petugas piket penerima tamu.')
                 ->schema([
-                    Forms\Components\Hidden::make('category')
-                        ->default(DropdownOption::CATEGORY_PEGAWAI_PIKET),
+                    Forms\Components\Hidden::make('category'),
                     Forms\Components\TextInput::make('label')
-                        ->label('Nama Lengkap')
                         ->required()
                         ->maxLength(255)
-                        ->live(onBlur: true)
-                        ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get, string $operation) {
-                            if ($operation === 'create' && empty($get('value'))) {
-                                $set('value', $state);
-                            }
-                        })
-                        ->helperText('Nama lengkap pegawai (contoh: Drs. H. Ahmad Suryadi, M.Pd.)')
-                        ->columnSpanFull(),
+                        ->helperText('Nama lengkap pegawai (contoh: Drs. H. Ahmad Suryadi, M.Pd.)'),
                     Forms\Components\TextInput::make('value')
-                        ->label('Nilai (ID Internal)')
                         ->required()
                         ->maxLength(255)
                         ->placeholder('Otomatis terisi dari nama...')
-                        ->helperText('ID internal untuk database. Otomatis terisi dari nama, bisa diubah jika perlu.')
-                        ->columnSpanFull(),
+                        ->helperText('ID internal untuk database. Otomatis terisi dari nama, bisa diubah jika perlu.'),
                     Forms\Components\Toggle::make('is_active')
-                        ->label('Aktif')
-                        ->default(true)
                         ->helperText('Nonaktifkan untuk menyembunyikan pegawai dari dropdown tanpa menghapus data.'),
                 ])
                 ->columns(2),
@@ -114,26 +104,8 @@ class PegawaiPiketResource extends Resource
                     ->trueLabel('Aktif')
                     ->falseLabel('Nonaktif'),
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make()
-                        ->requiresConfirmation()
-                        ->modalHeading('Hapus Data Pegawai Piket')
-                        ->modalDescription('Apakah Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan.')
-                        ->successNotificationTitle('Data berhasil dihapus'),
-                ])
-                    ->iconButton()
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->color('gray'),
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
-                    ->requiresConfirmation()
-                    ->modalHeading('Hapus Data Terpilih')
-                    ->modalDescription('Apakah Anda yakin ingin menghapus data yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
-                    ->successNotificationTitle('Data berhasil dihapus'),
-            ]);
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function getPages(): array

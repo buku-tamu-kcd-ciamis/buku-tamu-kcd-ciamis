@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Storage;
 
 class DownloadDokumen extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-down-tray';
     protected static ?string $navigationLabel = 'Download Dokumen';
-    protected static ?string $navigationGroup = 'Informasi';
+    protected static string|\UnitEnum|null $navigationGroup = 'Informasi';
     protected static ?string $title = 'Download Dokumen Internal';
     protected static ?int $navigationSort = 5;
-    protected static string $view = 'filament.staff.pages.download-dokumen';
+    protected string $view = 'filament.staff.pages.download-dokumen';
 
     /**
      * Get list of available documents for download.

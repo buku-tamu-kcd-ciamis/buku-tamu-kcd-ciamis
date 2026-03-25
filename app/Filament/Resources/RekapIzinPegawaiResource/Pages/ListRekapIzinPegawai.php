@@ -14,8 +14,11 @@ class ListRekapIzinPegawai extends ListRecords
 {
   protected static string $resource = RekapIzinPegawaiResource::class;
 
-  public function getTableRecordKey(Model $record): string
+  public function getTableRecordKey(Model|array $record): string
   {
+    if (is_array($record)) {
+      return $record['nip'];
+    }
     return $record->nip;
   }
 

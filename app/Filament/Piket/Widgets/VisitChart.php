@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class VisitChart extends ChartWidget
 {
-  protected static ?string $heading = 'Grafik Kunjungan Tamu';
+  protected ?string $heading = 'Grafik Kunjungan Tamu';
   protected static ?int $sort = 2;
   protected int | string | array $columnSpan = 'full';
 

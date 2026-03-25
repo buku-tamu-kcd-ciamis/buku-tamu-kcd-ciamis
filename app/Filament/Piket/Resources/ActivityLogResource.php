@@ -3,8 +3,9 @@
 namespace App\Filament\Piket\Resources;
 
 use App\Filament\Piket\Resources\ActivityLogResource\Pages;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -14,9 +15,9 @@ class ActivityLogResource extends Resource
 {
     protected static ?string $model = Activity::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
     protected static ?string $navigationLabel = 'Log Aktivitas';
-    protected static ?string $navigationGroup = 'Bantuan';
+    protected static string|\UnitEnum|null $navigationGroup = 'Bantuan';
     protected static ?string $modelLabel = 'Log Aktivitas';
     protected static ?string $pluralModelLabel = 'Log Aktivitas';
     protected static ?int $navigationSort = 98;
@@ -31,20 +32,15 @@ class ActivityLogResource extends Resource
         return false;
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('log_name')
-                    ->label('Nama Log'),
-                Forms\Components\TextInput::make('description')
-                    ->label('Deskripsi'),
-                Forms\Components\TextInput::make('subject_type')
-                    ->label('Tipe Subject'),
-                Forms\Components\TextInput::make('subject_id')
-                    ->label('ID Subject'),
+        return $schema
+            ->components([
+                Forms\Components\TextInput::make('log_name'),
+                Forms\Components\TextInput::make('description'),
+                Forms\Components\TextInput::make('subject_type'),
+                Forms\Components\TextInput::make('subject_id'),
                 Forms\Components\Textarea::make('properties')
-                    ->label('Properties')
                     ->rows(5),
             ]);
     }
@@ -103,10 +99,8 @@ class ActivityLogResource extends Resource
                     ]),
                 Tables\Filters\Filter::make('created_at')
                     ->form([
-                        Forms\Components\DatePicker::make('tanggal_dari')
-                            ->label('Dari Tanggal'),
-                        Forms\Components\DatePicker::make('tanggal_sampai')
-                            ->label('Sampai Tanggal'),
+                        Forms\Components\DatePicker::make('tanggal_dari'),
+                        Forms\Components\DatePicker::make('tanggal_sampai'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query
@@ -114,11 +108,7 @@ class ActivityLogResource extends Resource
                             ->when($data['tanggal_sampai'], fn($q, $date) => $q->whereDate('created_at', '<=', $date));
                     }),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->label('')
-                    ->icon('heroicon-m-ellipsis-horizontal'),
-            ]);
+            ->actions([]);
     }
 
     public static function getRelations(): array

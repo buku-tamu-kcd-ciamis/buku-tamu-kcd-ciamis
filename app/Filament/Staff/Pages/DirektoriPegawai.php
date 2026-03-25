@@ -13,12 +13,12 @@ class DirektoriPegawai extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Direktori Pegawai';
-    protected static ?string $navigationGroup = 'Informasi';
+    protected static string|\UnitEnum|null $navigationGroup = 'Informasi';
     protected static ?string $title = 'Direktori Pegawai';
     protected static ?int $navigationSort = 3;
-    protected static string $view = 'filament.staff.pages.direktori-pegawai';
+    protected string $view = 'filament.staff.pages.direktori-pegawai';
 
     public function getTableRecordKey($record): string
     {

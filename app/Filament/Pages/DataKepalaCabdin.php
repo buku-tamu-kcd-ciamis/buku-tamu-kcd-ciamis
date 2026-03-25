@@ -4,24 +4,26 @@ namespace App\Filament\Pages;
 
 use App\Models\PengaturanKcd;
 use App\Models\User;
-use Filament\Forms;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
 class DataKepalaCabdin extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-identification';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-identification';
     protected static ?string $navigationLabel = 'Data Kepala Cabang Dinas';
-    protected static ?string $navigationGroup = 'Pengaturan';
+    protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
     protected static ?string $title = 'Data Kepala Cabang Dinas';
     protected static ?int $navigationSort = 13;
-    protected static string $view = 'filament.pages.data-kepala-cabdin';
+    protected string $view = 'filament.pages.data-kepala-cabdin';
 
     public ?array $data = [];
 
@@ -42,44 +44,39 @@ class DataKepalaCabdin extends Page implements HasForms
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Section::make('Informasi Kepala Cabang Dinas')
+                Section::make('Informasi Kepala Cabang Dinas')
                     ->description('Data ini akan ditampilkan pada bagian tanda tangan di seluruh halaman cetak/print.')
                     ->icon('heroicon-o-identification')
                     ->schema([
-                        Forms\Components\TextInput::make('nama_kepala')
-                            ->label('Nama Lengkap Kepala Cabang Dinas')
+                        TextInput::make('nama_kepala')
                             ->placeholder('Contoh: Drs. H. Ahmad Suryadi, M.Pd.')
                             ->maxLength(255)
                             ->helperText('Nama lengkap beserta gelar depan dan belakang.')
                             ->required(),
 
-                        Forms\Components\TextInput::make('nip_kepala')
-                            ->label('NIP')
+                        TextInput::make('nip_kepala')
                             ->placeholder('Contoh: 196712051992031005')
                             ->mask('999999999999999999')
                             ->length(18)
                             ->helperText('NIP harus terdiri dari 18 digit.')
                             ->required(),
 
-                        Forms\Components\TextInput::make('jabatan')
-                            ->label('Jabatan')
-                            ->default('Kepala Cabang Dinas Pendidikan Wilayah XIII')
+                        TextInput::make('jabatan')
                             ->maxLength(255)
                             ->helperText('Jabatan yang ditampilkan di halaman cetak.')
                             ->required(),
                     ])
                     ->columns(1),
 
-                Forms\Components\Section::make('Preview Tanda Tangan')
+                Section::make('Preview Tanda Tangan')
                     ->description('Tampilan tanda tangan pada halaman cetak.')
                     ->icon('heroicon-o-eye')
                     ->schema([
-                        Forms\Components\Placeholder::make('preview')
-                            ->label('')
+                        Placeholder::make('preview')
                             ->content(function ($get) {
                                 $nama = $get('nama_kepala') ?: '(...............................................)';
                                 $nip = $get('nip_kepala') ? 'NIP. ' . $get('nip_kepala') : 'NIP. ..............................';

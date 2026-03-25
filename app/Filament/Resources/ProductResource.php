@@ -7,53 +7,44 @@ use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
     protected static ?string $slug = 'product';
-    protected static ?string $navigationGroup = 'Toko';
+    protected static string|\UnitEnum|null $navigationGroup = 'Toko';
     protected static ?string $navigationLabel = 'Produk';
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedShoppingBag;
     protected static ?int $navigationSort = 2;
     protected static bool $shouldRegisterNavigation = false;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('General')
                     ->description('this is description')
                     ->schema([
-                        Grid::make()
-                            ->schema([
-                                TextInput::make('name')
-                                    ->required()
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(fn(Set $set, ?string $state) => $set('slug', Str::slug($state))),
-                                TextInput::make('slug')
-                                    ->readOnly()
-                            ]),
+                        TextInput::make('name')
+                            ->required(),
+                        TextInput::make('slug')
+                            ->readOnly(),
                         TextInput::make('sku')
-                            ->required()
-                            ->live(onBlur: true),
+                            ->required(),
                         Textarea::make('excerpt')
                             ->autosize()
                             ->rows(10),
@@ -74,13 +65,10 @@ class ProductResource extends Resource
                         TextInput::make('price_sale')
                             ->numeric()
                             ->minValue(0),
-                        Checkbox::make('stock_status')
-                            ->default(Product::STATUS_IN_STOCK)
-                            ->live(),
+                        Checkbox::make('stock_status'),
                         TextInput::make('manage_stock')
                             ->numeric()
-                            ->minValue(0)
-                            ->hidden(fn(Get $get): bool => !$get('stock_status')),
+                            ->minValue(0),
                     ])
                     ->aside()
             ]);
@@ -103,24 +91,8 @@ class ProductResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->label('Lihat Detail')
-                        ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
-                        ->label('Edit')
-                        ->icon('heroicon-o-pencil-square'),
-                ])
-                    ->label(false)
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->color('gray'),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

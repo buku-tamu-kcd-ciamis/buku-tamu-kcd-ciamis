@@ -3,32 +3,38 @@
 namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
+use Filament\Panel;
 use Filament\Pages\Page;
-use Filament\Actions\Action;
-use Filament\Support\Enums\MaxWidth;
+use Filament\Support\Enums\Width;
 use Livewire\WithPagination;
 
 class ViewRiwayatTamu extends Page
 {
     use WithPagination;
-    protected static string $view = 'filament.piket.pages.view-riwayat-tamu';
+    protected string $view = 'filament.piket.pages.view-riwayat-tamu';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $title = 'Detail Riwayat Pengunjung';
 
-    public function getMaxContentWidth(): MaxWidth
+    public function getMaxContentWidth(): string | Width | null
     {
-        return MaxWidth::Full;
+        return Width::Full;
     }
 
     public ?string $nik = null;
 
-    public static function getRoutePath(): string
+    public static function getRoutePath(Panel $panel): string
     {
         return 'view-riwayat-tamu/{nik}';
     }
 
-    public static function getUrl(array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?\Illuminate\Database\Eloquent\Model $tenant = null): string
-    {
+    public static function getUrl(
+        array $parameters = [],
+        bool $isAbsolute = true,
+        ?string $panel = null,
+        ?\Illuminate\Database\Eloquent\Model $tenant = null,
+        bool $shouldGuessMissingParameters = false,
+        ?string $configuration = null,
+    ): string {
         return url('/piket/view-riwayat-tamu/' . ($parameters['nik'] ?? ''));
     }
 
@@ -64,12 +70,6 @@ class ViewRiwayatTamu extends Page
 
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('kembali')
-                ->label('Kembali')
-                ->icon('heroicon-o-arrow-left')
-                ->color('gray')
-                ->url(route('filament.piket.pages.riwayat-tamu')),
-        ];
+        return [];
     }
 }

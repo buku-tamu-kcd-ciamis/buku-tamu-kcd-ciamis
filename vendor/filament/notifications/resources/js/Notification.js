@@ -1,8 +1,17 @@
-import { v4 as uuid } from 'uuid-browser'
-
 class Notification {
     constructor() {
-        this.id(uuid())
+        // `crypto.randomUUID()` requires a secure context (HTTPS); fall back to
+        // `crypto.getRandomValues()` which works in all contexts including HTTP.
+        this.id(
+            crypto.randomUUID?.() ??
+                '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+                    (
+                        +c ^
+                        (crypto.getRandomValues(new Uint8Array(1))[0] &
+                            (15 >> (+c / 4)))
+                    ).toString(16),
+                ),
+        )
 
         return this
     }
@@ -281,19 +290,25 @@ class Action {
     }
 
     button() {
-        this.view('filament-actions::button-action')
+        this.view('filament::components.button.index')
 
         return this
     }
 
     grouped() {
-        this.view('filament-actions::grouped-action')
+        this.view('filament::components.dropdown.list.item')
+
+        return this
+    }
+
+    iconButton() {
+        this.view('filament::components.icon-button')
 
         return this
     }
 
     link() {
-        this.view('filament-actions::link-action')
+        this.view('filament::components.link')
 
         return this
     }

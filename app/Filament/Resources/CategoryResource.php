@@ -6,9 +6,9 @@ use App\Filament\Resources\CategoryResource\Pages;
 use App\Filament\Resources\CategoryResource\RelationManagers;
 use App\Models\Category;
 use Filament\Forms;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -21,22 +21,21 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
 
     protected static ?string $slug = 'category';
-    protected static ?string $navigationGroup = 'Toko';
+    protected static string|\UnitEnum|null $navigationGroup = 'Toko';
     protected static ?string $navigationLabel = 'Kategori';
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
     protected static ?int $navigationSort = 1;
     protected static bool $shouldRegisterNavigation = false;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('General')
                     ->description('Category General Data')
                     ->schema([
                         TextInput::make('name')
-                            ->required()
-                            ->live(onBlur: true),
+                            ->required(),
                     ])
                     ->aside()
             ]);
@@ -51,24 +50,8 @@ class CategoryResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->label('Lihat Detail')
-                        ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
-                        ->label('Edit')
-                        ->icon('heroicon-o-pencil-square'),
-                ])
-                    ->label(false)
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->color('gray'),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

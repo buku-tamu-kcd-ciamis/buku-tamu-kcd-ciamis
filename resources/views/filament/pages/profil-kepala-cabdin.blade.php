@@ -8,7 +8,7 @@
     @if($pendingRequest)
         <div class="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-4 mb-4">
             <div class="flex items-start gap-3">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                     <x-heroicon-o-clock class="h-6 w-6 text-yellow-500" />
                 </div>
                 <div class="flex-1">
@@ -133,3 +133,5 @@
         </div>
     @endif
 </x-filament-panels::page>
+
+

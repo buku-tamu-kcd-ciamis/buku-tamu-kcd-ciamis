@@ -17,11 +17,11 @@ class NotifikasiTamu extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-bell-alert';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';
     protected static ?string $navigationLabel = 'Notifikasi Tamu';
     protected static ?string $title = 'Notifikasi Tamu';
     protected static ?int $navigationSort = 1;
-    protected static string $view = 'filament.staff.pages.notifikasi-tamu';
+    protected string $view = 'filament.staff.pages.notifikasi-tamu';
 
     // Polling interval: auto-refresh every 5 seconds
     protected static string $pollingInterval = '5s';

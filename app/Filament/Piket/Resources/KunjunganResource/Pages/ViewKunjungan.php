@@ -6,41 +6,38 @@ use App\Filament\Piket\Resources\KunjunganResource;
 use App\Models\BukuTamu;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 
 class ViewKunjungan extends ViewRecord
 {
   protected static string $resource = KunjunganResource::class;
 
-  public function infolist(Infolist $infolist): Infolist
+  public function infolist(Schema $schema): Schema
   {
-    return $infolist->schema([
+    return $schema->components([
 
       // === Header: Foto Selfie + Info Utama ===
-      Infolists\Components\Section::make()
-        ->schema([
-          Infolists\Components\Grid::make(3)
-            ->schema([
+      Section::make()
+        ->components([
+          Grid::make(3)
+            ->components([
               // Foto Selfie (kolom kiri)
-              Infolists\Components\Group::make([
-                Infolists\Components\ViewEntry::make('foto_selfie')
-                  ->label('Foto Selfie')
-                  ->view('filament.infolists.components.image-base64-entry'),
+              Group::make([
+                Infolists\Components\ImageEntry::make('foto_selfie'),
               ])->columnSpan(1),
 
               // Info utama (kolom tengah-kanan)
-              Infolists\Components\Group::make([
+              Group::make([
                 Infolists\Components\TextEntry::make('nama_lengkap')
-                  ->label('Nama Lengkap')
-                  ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
-                  ->weight('bold'),
-                Infolists\Components\Grid::make(2)
-                  ->schema([
+                  ->size('lg'),
+                Grid::make(2)
+                  ->components([
                     Infolists\Components\TextEntry::make('jenis_id')
-                      ->label('Jenis ID')
                       ->icon('heroicon-o-identification'),
                     Infolists\Components\TextEntry::make('nik')
-                      ->label('Nomor ID')
                       ->icon('heroicon-o-finger-print')
                       ->copyable(),
                     Infolists\Components\TextEntry::make('instansi')
@@ -50,7 +47,6 @@ class ViewKunjungan extends ViewRecord
                       ->icon('heroicon-o-briefcase')
                       ->placeholder('-'),
                     Infolists\Components\TextEntry::make('nomor_hp')
-                      ->label('No. HP')
                       ->icon('heroicon-o-phone')
                       ->formatStateUsing(function ($state) {
                         if (!$state)
@@ -72,31 +68,26 @@ class ViewKunjungan extends ViewRecord
         ]),
 
       // === Informasi Kunjungan ===
-      Infolists\Components\Section::make('Informasi Kunjungan')
+      Section::make('Informasi Kunjungan')
         ->icon('heroicon-o-clipboard-document-list')
         ->columns(2)
-        ->schema([
+        ->components([
           Infolists\Components\TextEntry::make('kabupaten_kota')
-            ->label('Kabupaten / Kota')
             ->icon('heroicon-o-map-pin'),
           Infolists\Components\TextEntry::make('staff_dituju')
-            ->label('Staff Yang Dituju')
             ->icon('heroicon-o-building-office'),
           Infolists\Components\TextEntry::make('keperluan')
-            ->label('Keperluan')
-            ->icon('heroicon-o-document-text')
-            ->columnSpanFull(),
+            ->icon('heroicon-o-document-text'),
           Infolists\Components\TextEntry::make('created_at')
-            ->label('Waktu Kunjungan')
             ->icon('heroicon-o-clock')
             ->dateTime('d F Y, H:i:s'),
         ]),
 
       // === Status ===
-      Infolists\Components\Section::make('Status Kunjungan')
+      Section::make('Status Kunjungan')
         ->icon('heroicon-o-signal')
         ->columns(2)
-        ->schema([
+        ->components([
           Infolists\Components\TextEntry::make('status')
             ->badge()
             ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state))
@@ -109,25 +100,19 @@ class ViewKunjungan extends ViewRecord
               default => 'secondary',
             }),
           Infolists\Components\TextEntry::make('nama_penerima')
-            ->label('Nama Penerima')
             ->icon('heroicon-o-user')
             ->placeholder('Belum ada penerima'),
           Infolists\Components\TextEntry::make('catatan')
-            ->placeholder('Tidak ada catatan')
-            ->columnSpanFull(),
+            ->placeholder('Tidak ada catatan'),
         ]),
 
       // === Dokumen: Foto Penerimaan + Tanda Tangan ===
-      Infolists\Components\Section::make('Dokumen')
+      Section::make('Dokumen')
         ->icon('heroicon-o-camera')
         ->columns(2)
-        ->schema([
-          Infolists\Components\ViewEntry::make('foto_penerimaan')
-            ->label('Foto Penerimaan Berkas')
-            ->view('filament.infolists.components.image-base64-entry'),
-          Infolists\Components\ViewEntry::make('tanda_tangan')
-            ->label('Tanda Tangan')
-            ->view('filament.infolists.components.signature-base64-entry'),
+        ->components([
+          Infolists\Components\ImageEntry::make('foto_penerimaan'),
+          Infolists\Components\ImageEntry::make('tanda_tangan'),
         ]),
     ]);
   }

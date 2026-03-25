@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Dashboard extends BaseDashboard
 {
-  protected static ?string $navigationIcon = 'heroicon-o-home';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
   protected static ?string $navigationLabel = 'Dashboard';
   protected static ?string $title = 'Dashboard';
 

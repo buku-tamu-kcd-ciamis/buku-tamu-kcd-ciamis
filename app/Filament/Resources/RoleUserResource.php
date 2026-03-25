@@ -6,11 +6,10 @@ use App\Filament\Resources\RoleUserResource\Pages;
 use App\Filament\Resources\RoleUserResource\RelationManagers;
 use App\Models\RoleUser;
 use Filament\Forms;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -26,9 +25,9 @@ class RoleUserResource extends Resource
     protected static ?string $label = 'Role';
 
     protected static ?string $slug = 'role';
-    protected static ?string $navigationGroup = 'Pengguna';
+    protected static string|\UnitEnum|null $navigationGroup = 'Pengguna';
     protected static ?string $navigationLabel = 'Role';
-    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
     protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool
@@ -36,19 +35,15 @@ class RoleUserResource extends Resource
         return false;
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('General')
                     ->description('Role User General Data')
                     ->schema([
-                        Grid::make()
-                            ->schema([
-                                TextInput::make('name')
-                                    ->required()
-                                    ->live(onBlur: true),
-                            ]),
+                        TextInput::make('name')
+                            ->required(),
                         Select::make('need_approval')
                             ->required()
                             ->options(RoleUser::APPROVE_STATUS),
@@ -68,24 +63,8 @@ class RoleUserResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->label('Lihat Detail')
-                        ->icon('heroicon-o-eye'),
-                    Tables\Actions\EditAction::make()
-                        ->label('Edit')
-                        ->icon('heroicon-o-pencil-square'),
-                ])
-                    ->label(false)
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->color('gray'),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

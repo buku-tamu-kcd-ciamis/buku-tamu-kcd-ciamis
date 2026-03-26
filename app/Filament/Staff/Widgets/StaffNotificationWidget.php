@@ -35,16 +35,12 @@ class StaffNotificationWidget extends BaseWidget
         return [
             Stat::make('Notifikasi Baru', $unread)
                 ->description('Belum dibaca')
-                ->descriptionIcon('heroicon-o-envelope')
-                ->color($unread > 0 ? 'danger' : 'gray')
-                ->chart([$unread > 0 ? 1 : 0, $unread]),
+                ->color($unread > 0 ? 'danger' : 'gray'),
             Stat::make('Menunggu Respons', $pending)
                 ->description('Belum dijawab')
-                ->descriptionIcon('heroicon-o-clock')
                 ->color($pending > 0 ? 'warning' : 'gray'),
             Stat::make('Tamu Hari Ini', $todayTotal)
                 ->description("{$accepted} diterima")
-                ->descriptionIcon('heroicon-o-user-group')
                 ->color('primary'),
         ];
     }

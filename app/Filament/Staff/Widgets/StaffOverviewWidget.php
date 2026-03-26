@@ -35,27 +35,28 @@ class StaffOverviewWidget extends BaseWidget
             ->count();
 
         // Petugas Piket hari ini (from DropdownOption)
-        $piketHariIni = DropdownOption::where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)
+        $piketHariIniList = DropdownOption::where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)
             ->where('is_active', true)
             ->pluck('label')
-            ->implode(', ');
+            ->filter()
+            ->values();
 
-        if (empty($piketHariIni)) {
-            $piketHariIni = 'Belum ditentukan';
-        }
+        $totalPiket = $piketHariIniList->count();
+
+        $piketHariIni = $totalPiket > 0
+            ? 'Petugas piket aktif hari ini'
+            : 'Belum ditentukan';
 
         return [
             Stat::make('Izin Aktif', $izinAktif)
                 ->description($izinAktif > 0 ? 'sedang berjalan' : 'tidak ada izin aktif')
-                ->descriptionIcon($izinAktif > 0 ? 'heroicon-o-document-check' : 'heroicon-o-document')
                 ->color($izinAktif > 0 ? 'warning' : 'gray'),
             Stat::make('Kunjungan Bulan Ini', $kunjunganBulanIni)
                 ->description('tamu di bulan ' . now()->translatedFormat('F'))
-                ->descriptionIcon('heroicon-o-user-group')
                 ->color('primary'),
-            Stat::make('Petugas Piket', '')
+            Stat::make('Petugas Piket', (string) $totalPiket)
                 ->description($piketHariIni)
-                ->descriptionIcon('heroicon-o-shield-check')
+                ->extraAttributes(['class' => 'staff-piket-stat'])
                 ->color('success'),
         ];
     }

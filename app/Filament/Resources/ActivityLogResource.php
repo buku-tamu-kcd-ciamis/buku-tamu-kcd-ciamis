@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages;
 use Filament\Forms;
+use Filament\Actions\ViewAction;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -213,7 +214,7 @@ class ActivityLogResource extends Resource
             ])
             ->filtersFormColumns(2)
             ->actions([
-                Tables\Actions\ViewAction::make()
+                ViewAction::make()
                     ->label('Detail')
                     ->icon('heroicon-o-eye')
                     ->color('primary'),

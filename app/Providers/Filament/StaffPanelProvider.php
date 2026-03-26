@@ -27,10 +27,10 @@ class StaffPanelProvider extends PanelProvider
             ->login()
             ->profile(\App\Filament\Staff\Pages\EditProfile::class)
             ->darkMode(true)
-            ->brandName(fn() => 'Cadisdik XIII — ' . (auth()->user()?->role_user?->name ?? 'Staff'))
+            ->brandName(fn() => 'Cabang Dinas Pendidikan Wilayah XIII — ' . (auth()->user()?->role_user?->name ?? 'Staff'))
             ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Emerald,
             ])
             ->discoverResources(in: app_path('Filament/Staff/Resources'), for: 'App\\Filament\\Staff\\Resources')
             ->discoverPages(in: app_path('Filament/Staff/Pages'), for: 'App\\Filament\\Staff\\Pages')

@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Pages;
 
 use Filament\Forms;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Notifications\Notification;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
@@ -24,14 +25,73 @@ class EditProfile extends BaseEditProfile
     {
         return $schema
             ->components([
-                Section::make('Informasi Akun')
-                    ->description('Perbarui informasi akun Anda')
-                    ->icon('heroicon-o-user')
-                    ->schema([
-                        $this->getNameFormComponent(),
-                        $this->getEmailFormComponent(),
+          Grid::make([
+            'default' => 1,
+            'md' => 2,
+          ])
+            ->schema([
+              Section::make('Informasi Akun')
+                ->description('Perbarui data akun utama Anda')
+                ->icon('heroicon-o-user')
+                ->schema([
+                  $this->getNameFormComponent()
+                    ->label('Nama Lengkap'),
+                  $this->getEmailFormComponent()
+                    ->label('Email'),
+                ])
+                ->columnSpan(1),
+
+              Section::make('Keamanan Akun')
+                ->description('Untuk ganti password, masukkan password lama terlebih dahulu')
+                ->icon('heroicon-o-lock-closed')
+                ->schema([
+                  Forms\Components\TextInput::make('current_password')
+                    ->label('Password Saat Ini')
+                    ->password()
+                    ->revealable()
+                    ->dehydrated(false)
+                    ->required(fn(callable $get) => filled($get('password')))
+                    ->rules([
+                      fn() => function (string $attribute, $value, $fail) {
+                        $user = Auth::user();
+
+                        if ($user && !Hash::check((string) $value, $user->password)) {
+                          $fail('Password saat ini tidak sesuai.');
+                        }
+                      },
                     ]),
+                  Forms\Components\TextInput::make('password')
+                    ->label('Password Baru')
+                    ->password()
+                    ->revealable()
+                    ->rule(Password::default())
+                    ->same('passwordConfirmation')
+                    ->dehydrateStateUsing(fn(?string $state) => filled($state) ? Hash::make($state) : null),
+                  Forms\Components\TextInput::make('passwordConfirmation')
+                    ->label('Konfirmasi Password Baru')
+                    ->password()
+                    ->revealable()
+                    ->dehydrated(false)
+                    ->requiredWith('password'),
+                ])
+                ->columnSpan(1),
+            ]),
             ]);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+      if (blank($data['password'] ?? null)) {
+        unset($data['password']);
+      }
+
+      unset($data['current_password'], $data['passwordConfirmation']);
+
+      return $data;
     }
 
     protected function getSavedNotification(): ?Notification
@@ -52,7 +112,7 @@ class EditProfile extends BaseEditProfile
             top: '20px',
             left: '50%',
             transform: 'translateX(-50%) translateY(-100px)',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             color: 'white',
             padding: '16px 32px',
             borderRadius: '12px',
@@ -88,7 +148,7 @@ class EditProfile extends BaseEditProfile
     {
         return [
             $this->getSaveFormAction(),
-            $this->getCancelFormAction(),
+        $this->getCancelFormAction(),
         ];
     }
 }

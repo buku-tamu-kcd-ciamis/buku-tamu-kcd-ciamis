@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Pages;
 
 use App\Models\Pegawai;
 use Filament\Pages\Page;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -12,6 +13,11 @@ use Filament\Tables\Table;
 class DirektoriPegawai extends Page implements HasTable
 {
     use InteractsWithTable;
+
+    public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+    {
+        return null;
+    }
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Direktori Pegawai';

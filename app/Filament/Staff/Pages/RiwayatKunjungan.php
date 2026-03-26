@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Pages;
 
 use App\Models\BukuTamu;
 use Filament\Pages\Page;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\Auth;
 class RiwayatKunjungan extends Page implements HasTable
 {
     use InteractsWithTable;
+
+    public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+    {
+        return null;
+    }
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
     protected static ?string $navigationLabel = 'Riwayat Kunjungan';

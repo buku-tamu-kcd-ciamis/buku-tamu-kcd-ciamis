@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->profile(\App\Filament\Pages\EditProfile::class)
             ->darkMode(true)
-            ->brandName(fn() => 'Cadisdik XIII — ' . (Auth::user()?->role_user?->name ?? 'Admin'))
+            ->brandName(fn() => 'Cabang Dinas Pendidikan Wilayah XIII — ' . (Auth::user()?->role_user?->name ?? 'Admin'))
             ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
                 'primary' => Color::Green,

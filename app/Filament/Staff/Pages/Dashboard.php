@@ -13,7 +13,9 @@ class Dashboard extends BaseDashboard
     {
         return [
             \App\Filament\Staff\Widgets\StaffNotificationWidget::class,
+            \App\Filament\Staff\Widgets\StaffQuickActionWidget::class,
             \App\Filament\Staff\Widgets\StaffOverviewWidget::class,
+            \App\Filament\Staff\Widgets\StaffVisitTrendWidget::class,
         ];
     }
 }

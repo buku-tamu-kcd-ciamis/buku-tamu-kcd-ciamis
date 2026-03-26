@@ -79,8 +79,9 @@
 
 /* Brand name tidak wrap dan muat di sidebar */
 .fi-logo {
-    white-space: nowrap !important;
-    font-size: 0.875rem !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
+    font-size: 0.92rem !important;
     overflow: visible !important;
 }
 
@@ -89,4 +90,1090 @@
 th.fi-ta-header-cell.fi-table-header-cell-actions,
 .fi-ta-actions-header-cell .fi-ta-header-cell-label {
     display: none !important;
+}
+
+/* Staff and Piket login page theme */
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout {
+    min-height: 100vh;
+    position: relative;
+    padding: 1.25rem;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(15, 148, 85, 0.22), transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(15, 148, 85, 0.16), transparent 40%),
+        linear-gradient(160deg, #ecf8f1 0%, #dcefe4 100%);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main-ctn {
+    width: 100%;
+    margin-inline: auto;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main.fi-width-lg {
+    max-width: min(94vw, 30rem);
+    margin-inline: auto;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 1.25rem;
+    padding: 1.8rem;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #cfe7da;
+    box-shadow:
+        0 24px 55px -28px rgba(9, 73, 43, 0.45),
+        0 8px 18px -12px rgba(9, 73, 43, 0.4);
+    backdrop-filter: blur(6px);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-header {
+    gap: 0.6rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-header .fi-logo {
+    white-space: normal;
+    max-width: 100%;
+    font-size: 0.85rem !important;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #0b6d41;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #b8ddc7;
+    background: #edf8f2;
+    margin-inline: auto;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-header-heading {
+    color: #114a31;
+    font-weight: 700;
+    font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+    text-align: center;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-fo-field-label {
+    color: #22543d;
+    font-weight: 600;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-input-wrp {
+    border-radius: 0.8rem;
+    border-color: #c9e4d4;
+    background: #f8fdf9;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-input-wrp:focus-within {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.13);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-input {
+    color: #1f2937;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-input::placeholder {
+    color: #6b7280;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-checkbox-input:checked {
+    background-color: #0f9455;
+    border-color: #0f9455;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-page .fi-btn.fi-ac-btn-action {
+    border: none;
+    border-radius: 0.85rem;
+    min-height: 2.9rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background: linear-gradient(135deg, #0f9455 0%, #08703f 100%);
+    box-shadow: 0 10px 18px -12px rgba(8, 112, 63, 0.95);
+    color: #ffffff !important;
+    transition: transform 0.16s ease, box-shadow 0.2s ease;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-page .fi-btn.fi-ac-btn-action span,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-page .fi-btn.fi-ac-btn-action .fi-btn-label {
+    color: #ffffff !important;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-page .fi-btn.fi-ac-btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 22px -12px rgba(8, 112, 63, 0.95);
+}
+
+@media (max-width: 640px) {
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout {
+        padding: 0.85rem;
+    }
+
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main {
+        padding: 1.25rem;
+        border-radius: 1rem;
+    }
+}
+
+/* Staff dashboard and app shell redesign */
+.fi-body.fi-panel-staff.fi-body-has-navigation {
+    background:
+        radial-gradient(circle at 7% 7%, rgba(15, 148, 85, 0.14), transparent 33%),
+        radial-gradient(circle at 92% 88%, rgba(15, 148, 85, 0.11), transparent 32%),
+        linear-gradient(180deg, #f4f8f6 0%, #edf4f0 100%);
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-topbar {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.88);
+    border-bottom: 1px solid #d7e7df;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-topbar .fi-logo {
+    font-size: clamp(1rem, 1.2vw, 1.15rem) !important;
+    font-weight: 700;
+    line-height: 1.35 !important;
+    color: #114a31;
+    max-width: 52rem;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-sidebar {
+    background: rgba(255, 255, 255, 0.72);
+    border-inline-end: 1px solid #d7e7df;
+    backdrop-filter: blur(8px);
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-sidebar-nav-item-btn,
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-sidebar-item-button {
+    border-radius: 0.75rem;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-main {
+    max-width: min(95vw, 1480px);
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-page > h1,
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-page-heading {
+    font-size: clamp(1.9rem, 2.4vw, 2.35rem);
+    font-weight: 700;
+    color: #0e3c28;
+    letter-spacing: -0.02em;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-widget {
+    border-radius: 1rem;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat {
+    border-radius: 1rem;
+    border: 1px solid #d7e7df;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fcf9 100%);
+    box-shadow:
+        0 1px 2px rgba(16, 24, 40, 0.05),
+        0 18px 35px -32px rgba(8, 112, 63, 0.55);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    border-color: #b9d8c8;
+    box-shadow:
+        0 2px 4px rgba(16, 24, 40, 0.08),
+        0 26px 40px -30px rgba(8, 112, 63, 0.52);
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat-label {
+    color: #3f4c5a;
+    font-weight: 600;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat-value {
+    color: #0e3c28;
+    font-size: clamp(2rem, 2.6vw, 2.45rem);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat-description {
+    color: #4f5e6f;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .staff-quick-action {
+    cursor: pointer;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .staff-quick-action .fi-wi-stats-overview-stat-description {
+    font-weight: 600;
+    color: #116641;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .staff-piket-stat .fi-wi-stats-overview-stat-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.42;
+}
+
+.fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-chart-canvas-ctn {
+    border-radius: 1rem;
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation {
+    background:
+        radial-gradient(circle at 12% 10%, rgba(15, 148, 85, 0.16), transparent 35%),
+        linear-gradient(180deg, #0f1a15 0%, #101a16 100%);
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-topbar {
+    background: rgba(16, 24, 20, 0.86);
+    border-bottom-color: rgba(167, 214, 187, 0.2);
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-topbar .fi-logo {
+    color: #d9f4e6;
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-sidebar {
+    background: rgba(17, 25, 21, 0.8);
+    border-inline-end-color: rgba(167, 214, 187, 0.22);
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat {
+    border-color: rgba(167, 214, 187, 0.22);
+    background: linear-gradient(180deg, #16231d 0%, #121d18 100%);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.35),
+        0 22px 34px -30px rgba(8, 112, 63, 0.65);
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat-label {
+    color: #c6d6cb;
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat-value {
+    color: #ebf7ef;
+}
+
+.dark .fi-body.fi-panel-staff.fi-body-has-navigation .fi-wi-stats-overview-stat-description {
+    color: #9cb6a5;
+}
+
+@media (max-width: 1024px) {
+    .fi-body.fi-panel-staff.fi-body-has-navigation .fi-topbar .fi-logo {
+        font-size: 1.05rem !important;
+        max-width: 36rem;
+    }
+}
+
+/* Staff profile page redesign */
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl {
+    max-width: min(94vw, 1100px);
+    border-radius: 1.1rem;
+    background: linear-gradient(180deg, #f8fcf9 0%, #f2f8f4 100%);
+    border: 1px solid #d7e7df;
+    box-shadow:
+        0 20px 42px -34px rgba(8, 112, 63, 0.45),
+        0 2px 4px rgba(16, 24, 40, 0.05);
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-simple-header-heading {
+    font-size: clamp(1.65rem, 2.4vw, 2.15rem);
+    color: #0f3f2a;
+    letter-spacing: -0.02em;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-section {
+    border-radius: 0.95rem;
+    border: 1px solid #d4e6dc;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-section-header {
+    border-bottom: 1px solid #e5efe9;
+    padding-bottom: 0.85rem;
+    margin-bottom: 0.95rem;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-section-header-heading {
+    color: #124a32;
+    font-weight: 700;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-section-header-description {
+    color: #5a6b7f;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-input-wrp {
+    border-radius: 0.8rem;
+    border-color: #cfe1d7;
+    background: #fbfefc;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-input-wrp:focus-within {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.1);
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-btn[type='submit'] {
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, #0f9455 0%, #08703f 100%);
+    box-shadow: 0 12px 20px -14px rgba(8, 112, 63, 0.9);
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-btn[type='submit']:hover {
+    transform: translateY(-1px);
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-sc-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-ac.fi-align-start {
+    justify-content: center;
+}
+
+.fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl .fi-ac.fi-align-start .fi-btn[type='submit'] {
+    min-width: 0;
+}
+
+/* Staff availability status redesign */
+.fi-body.fi-panel-staff .staff-availability-page {
+    position: relative;
+}
+
+.fi-body.fi-panel-staff .staff-availability-hero {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    gap: 1rem;
+}
+
+.fi-body.fi-panel-staff .staff-availability-current {
+    border-radius: 1.1rem;
+    border: 1px solid #d4e6dc;
+    background:
+        radial-gradient(circle at 10% 16%, rgba(255, 255, 255, 0.7), transparent 40%),
+        linear-gradient(145deg, #f8fcfa 0%, #eef7f2 100%);
+    padding: 1.2rem;
+    box-shadow:
+        0 1px 2px rgba(16, 24, 40, 0.04),
+        0 18px 35px -30px rgba(8, 112, 63, 0.42);
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #1f4a36;
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid #dbe9e2;
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-dot {
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 999px;
+    background: #16a34a;
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.17);
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-body {
+    display: flex;
+    align-items: center;
+    gap: 0.95rem;
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-icon {
+    display: grid;
+    place-items: center;
+    width: 3.35rem;
+    height: 3.35rem;
+    border-radius: 0.95rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, #16a34a 0%, #0f7f3c 100%);
+    box-shadow: 0 14px 20px -14px rgba(15, 127, 60, 0.9);
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-title {
+    margin: 0;
+    font-size: clamp(1.35rem, 2vw, 1.65rem);
+    line-height: 1.15;
+    font-weight: 700;
+    color: #0f3f2a;
+}
+
+.fi-body.fi-panel-staff .staff-availability-current-description {
+    margin: 0.2rem 0 0;
+    color: #4f5e6f;
+}
+
+.fi-body.fi-panel-staff .staff-availability-current.is-amber .staff-availability-current-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.2);
+}
+
+.fi-body.fi-panel-staff .staff-availability-current.is-amber .staff-availability-current-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 14px 20px -14px rgba(217, 119, 6, 0.95);
+}
+
+.fi-body.fi-panel-staff .staff-availability-current.is-rose .staff-availability-current-dot {
+    background: #f43f5e;
+    box-shadow: 0 0 0 6px rgba(244, 63, 94, 0.2);
+}
+
+.fi-body.fi-panel-staff .staff-availability-current.is-rose .staff-availability-current-icon {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    box-shadow: 0 14px 20px -14px rgba(225, 29, 72, 0.95);
+}
+
+.fi-body.fi-panel-staff .staff-availability-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    border-radius: 1.1rem;
+    border: 1px solid #d7e8e0;
+    background: #ffffff;
+    padding: 1.05rem;
+    color: #19513a;
+}
+
+.fi-body.fi-panel-staff .staff-availability-note-title {
+    margin: 0;
+    font-weight: 700;
+    color: #0f3f2a;
+}
+
+.fi-body.fi-panel-staff .staff-availability-note-text {
+    margin: 0.3rem 0 0;
+    color: #4f5e6f;
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.fi-body.fi-panel-staff .staff-availability-options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option {
+    position: relative;
+    text-align: left;
+    border-radius: 1rem;
+    border: 1px solid #d7e8e0;
+    background: #ffffff;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option:hover {
+    transform: translateY(-1px);
+    border-color: #bddacb;
+    box-shadow: 0 16px 24px -20px rgba(8, 112, 63, 0.55);
+}
+
+.fi-body.fi-panel-staff .staff-availability-option:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.85rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: #edf8f2;
+    color: #108246;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f3f2a;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option-description {
+    margin: 0.18rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: #5d6e82;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option-state {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #446054;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-active {
+    border-width: 2px;
+    padding: calc(1rem - 1px);
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-active .staff-availability-option-state {
+    color: #0e3c28;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-amber .staff-availability-option-icon {
+    background: #fff3d5;
+    color: #b45309;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-rose .staff-availability-option-icon {
+    background: #ffe4ea;
+    color: #be123c;
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-active.is-green {
+    border-color: #53ba82;
+    background: linear-gradient(180deg, #ffffff 0%, #f2fbf6 100%);
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-active.is-amber {
+    border-color: #f1b84f;
+    background: linear-gradient(180deg, #fffef9 0%, #fff8eb 100%);
+}
+
+.fi-body.fi-panel-staff .staff-availability-option.is-active.is-rose {
+    border-color: #f78aa3;
+    background: linear-gradient(180deg, #fff9fa 0%, #ffeff3 100%);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-current {
+    border-color: rgba(167, 214, 187, 0.22);
+    background:
+        radial-gradient(circle at 10% 16%, rgba(68, 145, 98, 0.18), transparent 42%),
+        linear-gradient(145deg, #16261f 0%, #111d18 100%);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-current-chip {
+    border-color: rgba(167, 214, 187, 0.22);
+    color: #d2efe0;
+    background: rgba(12, 33, 24, 0.6);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-current-title {
+    color: #ebf7ef;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-current-description {
+    color: #a4c0b0;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-note {
+    border-color: rgba(167, 214, 187, 0.24);
+    background: rgba(16, 27, 22, 0.75);
+    color: #d2efe0;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-note-title {
+    color: #e2f5ea;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-note-text {
+    color: #a4c0b0;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option {
+    border-color: rgba(167, 214, 187, 0.22);
+    background: rgba(16, 27, 22, 0.7);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option:hover {
+    border-color: rgba(167, 214, 187, 0.5);
+    box-shadow: 0 16px 24px -20px rgba(7, 77, 42, 0.8);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option-title {
+    color: #e2f5ea;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option-description {
+    color: #9cb6a5;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option-state {
+    color: #a4c0b0;
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option.is-active.is-green {
+    border-color: rgba(83, 186, 130, 0.92);
+    background: linear-gradient(180deg, #1a2d24 0%, #122118 100%);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option.is-active.is-amber {
+    border-color: rgba(241, 184, 79, 0.92);
+    background: linear-gradient(180deg, #2a2213 0%, #1e1a10 100%);
+}
+
+.dark .fi-body.fi-panel-staff .staff-availability-option.is-active.is-rose {
+    border-color: rgba(247, 138, 163, 0.92);
+    background: linear-gradient(180deg, #2b1720 0%, #1f1218 100%);
+}
+
+@media (max-width: 1000px) {
+    .fi-body.fi-panel-staff .staff-availability-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .fi-body.fi-panel-staff .staff-availability-options-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Staff download documents redesign */
+.fi-body.fi-panel-staff .staff-download-page {
+    display: grid;
+    gap: 1rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-page [x-cloak] {
+    display: none !important;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 1rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero-main {
+    border-radius: 1.15rem;
+    padding: 1.35rem;
+    border: 1px solid #d5e8df;
+    background:
+        radial-gradient(circle at 92% 10%, rgba(16, 185, 129, 0.18), transparent 32%),
+        linear-gradient(148deg, #f8fcf9 0%, #edf7f2 100%);
+    box-shadow:
+        0 1px 2px rgba(16, 24, 40, 0.05),
+        0 18px 36px -30px rgba(8, 112, 63, 0.45);
+}
+
+.fi-body.fi-panel-staff .staff-download-kicker {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2a7f58;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero-title {
+    margin: 0.45rem 0 0;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    line-height: 1.16;
+    letter-spacing: -0.02em;
+    color: #0f3f2a;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero-text {
+    margin: 0.55rem 0 0;
+    max-width: 46ch;
+    color: #4f5e6f;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero-updated {
+    margin: 1rem 0 0;
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+    font-size: 0.83rem;
+    color: #4d6a5c;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid #dcece4;
+    border-radius: 999px;
+    padding: 0.34rem 0.72rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero-updated strong {
+    color: #0f3f2a;
+    font-weight: 700;
+}
+
+.fi-body.fi-panel-staff .staff-download-hero-stats {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-stat-card {
+    border-radius: 1rem;
+    border: 1px solid #d8e9e1;
+    background: #ffffff;
+    padding: 0.9rem 1rem;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.fi-body.fi-panel-staff .staff-download-stat-label {
+    display: block;
+    font-size: 0.78rem;
+    color: #5d6e82;
+}
+
+.fi-body.fi-panel-staff .staff-download-stat-value {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f3f2a;
+}
+
+.fi-body.fi-panel-staff .staff-download-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 13rem;
+    gap: 0.75rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-search,
+.fi-body.fi-panel-staff .staff-download-filter {
+    border-radius: 0.95rem;
+    border: 1px solid #d4e5dd;
+    background: #ffffff;
+    min-height: 3rem;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.fi-body.fi-panel-staff .staff-download-search {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-inline: 0.85rem;
+    color: #4f5e6f;
+}
+
+.fi-body.fi-panel-staff .staff-download-search input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #1f2937;
+    font-size: 0.92rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-filter {
+    display: grid;
+    align-items: center;
+    padding: 0.35rem 0.8rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-filter span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #5d6e82;
+}
+
+.fi-body.fi-panel-staff .staff-download-filter select {
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #1f2937;
+    font-size: 0.92rem;
+    padding: 0;
+}
+
+.fi-body.fi-panel-staff .staff-download-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-card {
+    border-radius: 1rem;
+    border: 1px solid #d8e9e1;
+    background: #ffffff;
+    padding: 0.95rem;
+    display: grid;
+    gap: 0.85rem;
+    box-shadow:
+        0 1px 2px rgba(16, 24, 40, 0.04),
+        0 16px 24px -24px rgba(8, 112, 63, 0.45);
+    transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.fi-body.fi-panel-staff .staff-download-card:hover {
+    transform: translateY(-2px);
+    border-color: #b8d8c8;
+    box-shadow:
+        0 2px 5px rgba(16, 24, 40, 0.08),
+        0 22px 32px -24px rgba(8, 112, 63, 0.52);
+}
+
+.fi-body.fi-panel-staff .staff-download-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fi-body.fi-panel-staff .staff-download-icon-wrap {
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 0.85rem;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+.fi-body.fi-panel-staff .staff-download-ext {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.18rem 0.6rem;
+    border: 1px solid #d4e5dd;
+    background: #f4faf7;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #3f5e50;
+}
+
+.fi-body.fi-panel-staff .staff-download-name {
+    margin: 0;
+    font-size: 0.98rem;
+    line-height: 1.3;
+    color: #0f3f2a;
+    font-weight: 700;
+}
+
+.fi-body.fi-panel-staff .staff-download-info {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #617285;
+}
+
+.fi-body.fi-panel-staff .staff-download-action {
+    width: 100%;
+    min-height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.38rem;
+    border-radius: 0.8rem;
+    border: 1px solid #c6ddcf;
+    background: linear-gradient(135deg, #ecf8f1 0%, #e0f1e8 100%);
+    color: #0d6d40;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.fi-body.fi-panel-staff .staff-download-action:hover {
+    border-color: #9ccab2;
+    background: linear-gradient(135deg, #e2f4ea 0%, #d1ebde 100%);
+    transform: translateY(-1px);
+}
+
+.fi-body.fi-panel-staff .staff-download-card.is-rose .staff-download-icon-wrap {
+    background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+}
+
+.fi-body.fi-panel-staff .staff-download-card.is-sky .staff-download-icon-wrap {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+}
+
+.fi-body.fi-panel-staff .staff-download-card.is-green .staff-download-icon-wrap {
+    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+}
+
+.fi-body.fi-panel-staff .staff-download-card.is-amber .staff-download-icon-wrap {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.fi-body.fi-panel-staff .staff-download-card.is-violet .staff-download-icon-wrap {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.fi-body.fi-panel-staff .staff-download-empty,
+.fi-body.fi-panel-staff .staff-download-empty-filter {
+    border-radius: 1rem;
+    border: 1px dashed #bfd8cc;
+    background: #f7fbf9;
+    padding: 1.1rem;
+    text-align: center;
+    color: #567065;
+}
+
+.fi-body.fi-panel-staff .staff-download-empty {
+    padding: 2.25rem 1.1rem;
+}
+
+.fi-body.fi-panel-staff .staff-download-empty-icon {
+    width: 4.4rem;
+    height: 4.4rem;
+    border-radius: 1rem;
+    margin: 0 auto 0.8rem;
+    display: grid;
+    place-items: center;
+    color: #5d6e82;
+    background: #e8f1ec;
+}
+
+.fi-body.fi-panel-staff .staff-download-empty h3 {
+    margin: 0;
+    color: #0f3f2a;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.fi-body.fi-panel-staff .staff-download-empty p {
+    margin: 0.4rem auto 0;
+    max-width: 56ch;
+    color: #607286;
+}
+
+.fi-body.fi-panel-staff .staff-download-empty p span {
+    display: inline-block;
+    margin-top: 0.35rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.45rem;
+    border: 1px solid #d2e4db;
+    background: #ffffff;
+    color: #0f3f2a;
+    font-size: 0.8rem;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-hero-main {
+    border-color: rgba(167, 214, 187, 0.22);
+    background:
+        radial-gradient(circle at 92% 10%, rgba(16, 185, 129, 0.2), transparent 32%),
+        linear-gradient(148deg, #152720 0%, #101c17 100%);
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-kicker {
+    color: #9cd2b7;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-hero-title {
+    color: #e2f5ea;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-hero-text,
+.dark .fi-body.fi-panel-staff .staff-download-hero-updated {
+    color: #9cb6a5;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-hero-updated {
+    border-color: rgba(167, 214, 187, 0.24);
+    background: rgba(12, 33, 24, 0.6);
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-hero-updated strong {
+    color: #d8efe2;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-stat-card,
+.dark .fi-body.fi-panel-staff .staff-download-search,
+.dark .fi-body.fi-panel-staff .staff-download-filter,
+.dark .fi-body.fi-panel-staff .staff-download-card {
+    border-color: rgba(167, 214, 187, 0.22);
+    background: rgba(16, 27, 22, 0.75);
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-stat-label,
+.dark .fi-body.fi-panel-staff .staff-download-info,
+.dark .fi-body.fi-panel-staff .staff-download-filter span,
+.dark .fi-body.fi-panel-staff .staff-download-empty,
+.dark .fi-body.fi-panel-staff .staff-download-empty-filter {
+    color: #9cb6a5;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-stat-value,
+.dark .fi-body.fi-panel-staff .staff-download-name,
+.dark .fi-body.fi-panel-staff .staff-download-search input,
+.dark .fi-body.fi-panel-staff .staff-download-filter select,
+.dark .fi-body.fi-panel-staff .staff-download-empty h3 {
+    color: #e2f5ea;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-ext {
+    border-color: rgba(167, 214, 187, 0.24);
+    background: rgba(18, 37, 28, 0.7);
+    color: #bfd7ca;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-action {
+    border-color: rgba(108, 182, 142, 0.44);
+    background: linear-gradient(135deg, rgba(16, 55, 36, 0.8) 0%, rgba(20, 76, 48, 0.76) 100%);
+    color: #c3ebd5;
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-action:hover {
+    border-color: rgba(133, 206, 165, 0.66);
+    background: linear-gradient(135deg, rgba(19, 67, 44, 0.9) 0%, rgba(24, 92, 58, 0.86) 100%);
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-empty,
+.dark .fi-body.fi-panel-staff .staff-download-empty-filter {
+    border-color: rgba(167, 214, 187, 0.3);
+    background: rgba(15, 26, 21, 0.74);
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-empty-icon {
+    color: #bdd7c8;
+    background: rgba(24, 43, 33, 0.76);
+}
+
+.dark .fi-body.fi-panel-staff .staff-download-empty p span {
+    border-color: rgba(167, 214, 187, 0.22);
+    background: rgba(17, 31, 24, 0.78);
+    color: #d2efe0;
+}
+
+@media (max-width: 1100px) {
+    .fi-body.fi-panel-staff .staff-download-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .fi-body.fi-panel-staff .staff-download-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .fi-body.fi-panel-staff .staff-download-hero-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .fi-body.fi-panel-staff .staff-download-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .fi-body.fi-panel-staff .staff-download-grid,
+    .fi-body.fi-panel-staff .staff-download-hero-stats {
+        grid-template-columns: 1fr;
+    }
 }

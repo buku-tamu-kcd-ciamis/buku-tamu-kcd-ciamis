@@ -4,11 +4,15 @@ namespace App\Filament\Staff\Pages;
 
 use App\Models\StaffNotification;
 use App\Models\BukuTamu;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\View\View;
@@ -16,6 +20,11 @@ use Illuminate\Contracts\View\View;
 class NotifikasiTamu extends Page implements HasTable
 {
     use InteractsWithTable;
+
+    public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+    {
+        return null;
+    }
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-bell-alert';
     protected static ?string $navigationLabel = 'Notifikasi Tamu';
@@ -110,8 +119,8 @@ class NotifikasiTamu extends Page implements HasTable
             ->defaultSort('created_at', 'desc')
             ->defaultPaginationPageOption(10)
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\Action::make('terima')
+                ActionGroup::make([
+                    Action::make('terima')
                         ->label('Terima Tamu')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
@@ -133,7 +142,7 @@ class NotifikasiTamu extends Page implements HasTable
                                 ->send();
                         })
                         ->visible(fn($record) => $record->response === null),
-                    Tables\Actions\Action::make('tolak')
+                    Action::make('tolak')
                         ->label('Tolak Tamu')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
@@ -150,7 +159,7 @@ class NotifikasiTamu extends Page implements HasTable
                                 ->send();
                         })
                         ->visible(fn($record) => $record->response === null),
-                    Tables\Actions\Action::make('tandai_dibaca')
+                    Action::make('tandai_dibaca')
                         ->label('Tandai Dibaca')
                         ->icon('heroicon-o-eye')
                         ->color('gray')
@@ -164,7 +173,7 @@ class NotifikasiTamu extends Page implements HasTable
                     ->color('gray'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkAction::make('tandai_semua_dibaca')
+                BulkAction::make('tandai_semua_dibaca')
                     ->label('Tandai Semua Dibaca')
                     ->icon('heroicon-o-check')
                     ->action(function ($records) {

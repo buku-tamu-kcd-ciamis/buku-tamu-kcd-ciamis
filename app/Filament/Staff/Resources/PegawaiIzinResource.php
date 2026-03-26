@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Resources;
 
 use App\Filament\Staff\Resources\PegawaiIzinResource\Pages;
 use App\Models\PegawaiIzin;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -189,7 +190,7 @@ class PegawaiIzinResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                ViewAction::make(),
             ]);
     }
 

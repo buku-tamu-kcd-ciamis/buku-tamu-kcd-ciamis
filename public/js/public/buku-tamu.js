@@ -11,6 +11,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const nikLabel = document.getElementById("nik_label");
     const nikInput = document.getElementById("nik");
     const nikIcon = document.getElementById("nik_icon");
+    const namaLengkapInput = document.getElementById("nama_lengkap");
+    const emailInput = document.getElementById("email");
 
     // ===== DYNAMIC DATA FROM DATABASE =====
     const __dd = window.__dropdownData || {};
@@ -184,6 +186,100 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnBarcode = document.getElementById("btnBarcode");
     const barcodeModal = document.getElementById("barcodeModal");
     const btnCloseBarcode = document.getElementById("btnCloseBarcode");
+    const surveyGateNote = document.getElementById("surveyGateNote");
+    const surveySubmitGate = document.getElementById("surveySubmitGate");
+    const surveyTimerText = document.getElementById("surveyTimerText");
+    const btnLanjutSubmit = document.getElementById("btnLanjutSubmit");
+    const bukuTamuForm = document.getElementById("bukuTamuForm");
+
+    const surveyWaitSeconds = 30;
+    let surveyCountdown = surveyWaitSeconds;
+    let surveyTimer = null;
+    let surveyGatePassed = false;
+
+    function stopSurveyTimer() {
+        if (surveyTimer) {
+            clearInterval(surveyTimer);
+            surveyTimer = null;
+        }
+    }
+
+    function resetSurveyModalUI() {
+        stopSurveyTimer();
+        surveyCountdown = surveyWaitSeconds;
+
+        if (surveySubmitGate) {
+            surveySubmitGate.classList.remove("active");
+        }
+
+        if (surveyTimerText) {
+            surveyTimerText.textContent = "";
+        }
+
+        if (btnLanjutSubmit) {
+            btnLanjutSubmit.disabled = true;
+        }
+
+        if (surveyGateNote) {
+            surveyGateNote.textContent =
+                "Scan barcode di bawah ini untuk mengisi survey";
+        }
+    }
+
+    function openSurveyModalOnly() {
+        resetSurveyModalUI();
+        barcodeModal.classList.add("active");
+    }
+
+    function openSurveyGateBeforeSubmit() {
+        resetSurveyModalUI();
+
+        if (surveyGateNote) {
+            surveyGateNote.textContent =
+                "Silakan scan barcode lalu isi survey. Tombol lanjut aktif setelah 30 detik.";
+        }
+
+        if (surveySubmitGate) {
+            surveySubmitGate.classList.add("active");
+        }
+
+        if (surveyTimerText) {
+            surveyTimerText.textContent =
+                "Isi survey kepuasan terlebih dahulu. Tunggu 30 detik sebelum lanjut kirim.";
+        }
+
+        if (btnLanjutSubmit) {
+            btnLanjutSubmit.disabled = true;
+        }
+
+        barcodeModal.classList.add("active");
+
+        surveyTimer = setInterval(function () {
+            surveyCountdown -= 1;
+
+            if (surveyCountdown > 0) {
+                if (surveyTimerText) {
+                    surveyTimerText.textContent =
+                        "Isi survey kepuasan terlebih dahulu. Tombol lanjut aktif dalam " +
+                        surveyCountdown +
+                        " detik.";
+                }
+                return;
+            }
+
+            stopSurveyTimer();
+            surveyCountdown = 0;
+
+            if (surveyTimerText) {
+                surveyTimerText.textContent =
+                    "Terima kasih. Anda bisa lanjutkan pengiriman data sekarang.";
+            }
+
+            if (btnLanjutSubmit) {
+                btnLanjutSubmit.disabled = false;
+            }
+        }, 1000);
+    }
 
     // --- Draggable floating button ---
     let isDragging = false;
@@ -243,22 +339,51 @@ document.addEventListener("DOMContentLoaded", function () {
     btnBarcode.addEventListener("click", function (e) {
         e.preventDefault();
         if (!hasDragged) {
-            barcodeModal.classList.add("active");
+            openSurveyModalOnly();
         }
     });
 
     btnCloseBarcode.addEventListener("click", function () {
         barcodeModal.classList.remove("active");
+        resetSurveyModalUI();
     });
 
     barcodeModal.addEventListener("click", function (e) {
         if (e.target === barcodeModal) {
             barcodeModal.classList.remove("active");
+            resetSurveyModalUI();
         }
     });
 
+    if (btnLanjutSubmit && bukuTamuForm) {
+        btnLanjutSubmit.addEventListener("click", function () {
+            if (btnLanjutSubmit.disabled) {
+                return;
+            }
+
+            surveyGatePassed = true;
+            barcodeModal.classList.remove("active");
+            resetSurveyModalUI();
+            bukuTamuForm.requestSubmit();
+        });
+    }
+
     // ===== NIK REAL-TIME VALIDATION & AUTO-FILL =====
     let autoFillTimeout = null;
+    let suppressAutoLookup = false;
+    let guestSuggestionIndex = -1;
+    let guestSuggestions = [];
+
+    const namaInputWrapper = namaLengkapInput
+        ? namaLengkapInput.closest(".input-wrapper")
+        : null;
+    const namaSuggestionList = document.createElement("div");
+    namaSuggestionList.className = "autocomplete-list";
+    namaSuggestionList.id = "nama_lengkap_list";
+
+    if (namaInputWrapper) {
+        namaInputWrapper.appendChild(namaSuggestionList);
+    }
 
     // Function to check if number has more than limit consecutive repeated digits
     function hasRepeatedDigits(value, limit) {
@@ -342,11 +467,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     "\u2713 " + config.digits + " digit \u2014 valid";
                 nikHint.className = "phone-hint valid";
 
-                // Auto-fill data jika NIK sudah pernah terdaftar
-                clearTimeout(autoFillTimeout);
-                autoFillTimeout = setTimeout(() => {
-                    fetchGuestDataByNik(this.value);
-                }, 500);
+                // Auto-fill data jika tamu pernah terdaftar
+                if (!suppressAutoLookup) {
+                    clearTimeout(autoFillTimeout);
+                    autoFillTimeout = setTimeout(() => {
+                        fetchGuestData({ nik: this.value });
+                    }, 500);
+                }
             }
         } else {
             // General valid if no digits specified but passed other checks
@@ -355,62 +482,208 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Function to fetch guest data by NIK
-    async function fetchGuestDataByNik(nik) {
-        if (!nik) return;
+    function normalizePhoneForLookup(value) {
+        let raw = (value || "").replace(/[^0-9]/g, "");
+
+        if (raw.startsWith("62")) {
+            raw = raw.substring(2);
+        }
+
+        if (raw.startsWith("0")) {
+            raw = raw.substring(1);
+        }
+
+        return raw;
+    }
+
+    function hideGuestSuggestions() {
+        guestSuggestionIndex = -1;
+        guestSuggestions = [];
+        namaSuggestionList.innerHTML = "";
+        namaSuggestionList.classList.remove("show");
+    }
+
+    function renderGuestSuggestions(suggestions) {
+        guestSuggestions = suggestions || [];
+        guestSuggestionIndex = -1;
+        namaSuggestionList.innerHTML = "";
+
+        if (!guestSuggestions.length) {
+            namaSuggestionList.classList.remove("show");
+            return;
+        }
+
+        guestSuggestions.forEach((item) => {
+            const div = document.createElement("div");
+            div.className = "autocomplete-item";
+            div.textContent =
+                item.display_label ||
+                item.nama_lengkap +
+                    " | " +
+                    (item.jenis_id || "-") +
+                    ": " +
+                    (item.nik || "-");
+
+            div.addEventListener("mousedown", function (e) {
+                e.preventDefault();
+                applyGuestDataToForm(item, "nama_lengkap");
+                hideGuestSuggestions();
+            });
+
+            namaSuggestionList.appendChild(div);
+        });
+
+        namaSuggestionList.classList.add("show");
+    }
+
+    function formatPhoneForInput(value) {
+        let phoneNumber = (value || "").replace(/[^0-9]/g, "");
+
+        if (phoneNumber.startsWith("62")) {
+            phoneNumber = phoneNumber.substring(2);
+        }
+
+        if (phoneNumber.startsWith("0")) {
+            phoneNumber = phoneNumber.substring(1);
+        }
+
+        let formatted = "";
+        for (let i = 0; i < phoneNumber.length; i++) {
+            if (i === 3 || i === 7) formatted += "-";
+            formatted += phoneNumber[i];
+        }
+
+        return formatted;
+    }
+
+    function setJenisIdAndNik(jenisId, nik) {
+        if (jenisId) {
+            const jenisValue = String(jenisId).toLowerCase();
+            const jenisMatch = jenisIdOptions.find(
+                (o) =>
+                    String(o.value).toLowerCase() === jenisValue ||
+                    String(o.label).toLowerCase() === jenisValue,
+            );
+
+            if (jenisMatch) {
+                selectOption(jenisMatch);
+            } else {
+                jenisIdHidden.value = jenisId;
+                jenisIdInput.value = jenisId;
+            }
+        }
+
+        if (nik) {
+            nikInput.value = nik;
+            nikInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+    }
+
+    function applyGuestDataToForm(data, matchedBy) {
+        suppressAutoLookup = true;
+
+        setJenisIdAndNik(data.jenis_id || "", data.nik || "");
+
+        namaLengkapInput.value = data.nama_lengkap || "";
+        document.getElementById("instansi").value = data.instansi || "";
+        document.getElementById("jabatan").value = data.jabatan || "";
+        document.getElementById("kabupaten_kota").value =
+            data.kabupaten_kota || "";
+        if (emailInput) {
+            emailInput.value = data.email || "";
+        }
+
+        if (data.nomor_hp) {
+            phoneInput.value = formatPhoneForInput(data.nomor_hp);
+            phoneInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
+        const nikHint = document.getElementById("nik_hint");
+        const originalText = nikHint.textContent;
+        const sourceText =
+            matchedBy === "nama_lengkap"
+                ? "nama"
+                : matchedBy === "nomor_hp"
+                    ? "nomor HP"
+                    : matchedBy === "email"
+                        ? "email"
+                        : "NIK";
+        nikHint.textContent =
+            "\u2713 Data otomatis terisi dari kunjungan sebelumnya (" +
+            sourceText +
+            ")";
+        nikHint.className = "phone-hint valid";
+
+        setTimeout(() => {
+            nikHint.textContent = originalText;
+            suppressAutoLookup = false;
+        }, 500);
+    }
+
+    async function fetchGuestSuggestions(criteria) {
+        const params = new URLSearchParams();
+
+        if (criteria.namaLengkap) {
+            params.append("nama_lengkap", criteria.namaLengkap);
+        }
+
+        if (criteria.nomorHp) {
+            params.append("nomor_hp", criteria.nomorHp);
+        }
+
+        if (criteria.email) {
+            params.append("email", criteria.email);
+        }
+
+        if (!params.toString()) {
+            hideGuestSuggestions();
+            return;
+        }
+
+        params.append("suggest", "1");
 
         try {
-            const response = await fetch(
-                `/api/guest-by-nik?nik=${encodeURIComponent(nik)}`,
-            );
+            const response = await fetch(`/api/guest-by-nik?${params.toString()}`);
+            const result = await response.json();
+            renderGuestSuggestions(result.suggestions || []);
+        } catch (error) {
+            console.error("Error fetching guest suggestions:", error);
+        }
+    }
+
+    // Function to fetch guest data by NIK / name / phone
+    async function fetchGuestData(criteria) {
+        const params = new URLSearchParams();
+
+        if (criteria.nik) {
+            params.append("nik", criteria.nik);
+        }
+
+        if (criteria.namaLengkap) {
+            params.append("nama_lengkap", criteria.namaLengkap);
+        }
+
+        if (criteria.nomorHp) {
+            params.append("nomor_hp", criteria.nomorHp);
+        }
+
+        if (criteria.email) {
+            params.append("email", criteria.email);
+        }
+
+        if (!params.toString()) return;
+
+        try {
+            const response = await fetch(`/api/guest-by-nik?${params.toString()}`);
             const result = await response.json();
 
             if (result.found && result.data) {
-                const data = result.data;
-
-                // Auto-fill form fields
-                document.getElementById("nama_lengkap").value =
-                    data.nama_lengkap || "";
-                document.getElementById("instansi").value = data.instansi || "";
-                document.getElementById("jabatan").value = data.jabatan || "";
-                document.getElementById("kabupaten_kota").value =
-                    data.kabupaten_kota || "";
-                document.getElementById("email").value = data.email || "";
-
-                // Handle phone number - remove +62 prefix if present
-                if (data.nomor_hp) {
-                    let phoneNumber = data.nomor_hp.replace(/[^0-9]/g, "");
-                    if (phoneNumber.startsWith("62")) {
-                        phoneNumber = phoneNumber.substring(2);
-                    }
-                    if (phoneNumber.startsWith("0")) {
-                        phoneNumber = phoneNumber.substring(1);
-                    }
-
-                    // Format: 8xx-xxxx-xxxx
-                    let formatted = "";
-                    for (let i = 0; i < phoneNumber.length; i++) {
-                        if (i === 3 || i === 7) formatted += "-";
-                        formatted += phoneNumber[i];
-                    }
-                    document.getElementById("nomor_hp").value = formatted;
-
-                    // Trigger validation hint
-                    phoneInput.dispatchEvent(
-                        new Event("input", { bubbles: true }),
-                    );
-                }
-
-                // Show notification
-                const nikHint = document.getElementById("nik_hint");
-                const originalText = nikHint.textContent;
-                nikHint.textContent =
-                    "\u2713 Data otomatis terisi dari kunjungan sebelumnya";
-                nikHint.className = "phone-hint valid";
-
-                setTimeout(() => {
-                    nikHint.textContent = originalText;
-                }, 3000);
+                applyGuestDataToForm(result.data, result.matched_by);
+                hideGuestSuggestions();
+            } else if (result.suggestions && result.suggestions.length > 0) {
+                renderGuestSuggestions(result.suggestions);
+            } else {
+                hideGuestSuggestions();
             }
         } catch (error) {
             console.error("Error fetching guest data:", error);
@@ -496,6 +769,121 @@ document.addEventListener("DOMContentLoaded", function () {
         this.value = clean;
         this.dispatchEvent(new Event("input"));
     });
+
+    // Auto-fill by phone number when user finishes typing valid phone number
+    phoneInput.addEventListener("blur", function () {
+        if (suppressAutoLookup) return;
+
+        const normalized = normalizePhoneForLookup(this.value);
+        if (normalized.length < MIN_DIGITS) return;
+
+        clearTimeout(autoFillTimeout);
+        autoFillTimeout = setTimeout(() => {
+            fetchGuestData({ nomorHp: normalized });
+        }, 350);
+    });
+
+    // Auto-fill by email when user leaves the field
+    if (emailInput) {
+        emailInput.addEventListener("blur", function () {
+            if (suppressAutoLookup) return;
+
+            const emailValue = (this.value || "").trim();
+            if (!emailValue || !emailValue.includes("@")) return;
+
+            clearTimeout(autoFillTimeout);
+            autoFillTimeout = setTimeout(() => {
+                fetchGuestData({ email: emailValue });
+            }, 350);
+        });
+    }
+
+    // Suggestion and auto-fill by full name
+    // Auto-fill by full name when user leaves the field
+    if (namaLengkapInput) {
+        namaLengkapInput.addEventListener("input", function () {
+            if (suppressAutoLookup) return;
+
+            const namaLengkap = (this.value || "").trim();
+            if (namaLengkap.length < 2) {
+                hideGuestSuggestions();
+                return;
+            }
+
+            clearTimeout(autoFillTimeout);
+            autoFillTimeout = setTimeout(() => {
+                fetchGuestSuggestions({ namaLengkap: namaLengkap });
+            }, 250);
+        });
+
+        namaLengkapInput.addEventListener("focus", function () {
+            if (suppressAutoLookup) return;
+
+            const namaLengkap = (this.value || "").trim();
+            if (namaLengkap.length >= 2) {
+                fetchGuestSuggestions({ namaLengkap: namaLengkap });
+            }
+        });
+
+        namaLengkapInput.addEventListener("keydown", function (e) {
+            const items = namaSuggestionList.querySelectorAll(".autocomplete-item");
+            if (!items.length) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                guestSuggestionIndex = Math.min(
+                    guestSuggestionIndex + 1,
+                    items.length - 1,
+                );
+                items.forEach((el, i) =>
+                    el.classList.toggle("active", i === guestSuggestionIndex),
+                );
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                guestSuggestionIndex = Math.max(guestSuggestionIndex - 1, 0);
+                items.forEach((el, i) =>
+                    el.classList.toggle("active", i === guestSuggestionIndex),
+                );
+            } else if (e.key === "Enter") {
+                if (guestSuggestionIndex >= 0 && guestSuggestions[guestSuggestionIndex]) {
+                    e.preventDefault();
+                    applyGuestDataToForm(
+                        guestSuggestions[guestSuggestionIndex],
+                        "nama_lengkap",
+                    );
+                    hideGuestSuggestions();
+                }
+            } else if (e.key === "Escape") {
+                hideGuestSuggestions();
+            }
+        });
+
+        namaLengkapInput.addEventListener("blur", function () {
+            if (suppressAutoLookup) return;
+
+            const namaLengkap = (this.value || "").trim();
+            if (namaLengkap.length < 3) {
+                setTimeout(() => hideGuestSuggestions(), 150);
+                return;
+            }
+
+            clearTimeout(autoFillTimeout);
+            autoFillTimeout = setTimeout(() => {
+                fetchGuestData({ namaLengkap: namaLengkap });
+            }, 350);
+
+            setTimeout(() => hideGuestSuggestions(), 150);
+        });
+
+        document.addEventListener("click", function (e) {
+            if (
+                !namaLengkapInput.contains(e.target) &&
+                !namaSuggestionList.contains(e.target)
+            ) {
+                hideGuestSuggestions();
+            }
+        });
+    }
 
     // ===== KABUPATEN/KOTA AUTOCOMPLETE (SELURUH INDONESIA) =====
     // Data loaded dynamically from database
@@ -2689,11 +3077,7 @@ document.addEventListener("DOMContentLoaded", function () {
             keperluanList.classList.remove("show");
         }
     });
-
-
-
     // ===== FORM SUBMIT VALIDATION =====
-    const bukuTamuForm = document.getElementById("bukuTamuForm");
     if (bukuTamuForm) {
         bukuTamuForm.addEventListener("submit", function (e) {
             // Check NIK validity (no repeated digits more than 3 times)
@@ -2789,6 +3173,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         ttdBox.closest(".form-group").classList.remove("shake"),
                     600,
                 );
+                return;
+            }
+
+            if (!surveyGatePassed) {
+                e.preventDefault();
+                openSurveyGateBeforeSubmit();
                 return;
             }
         });

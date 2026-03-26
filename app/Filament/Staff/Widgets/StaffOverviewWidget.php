@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class StaffOverviewWidget extends BaseWidget
 {
-    protected static ?string $pollingInterval = '30s';
+    protected ?string $pollingInterval = '30s';
 
     protected int|string|array $columnSpan = 'full';
 

@@ -217,7 +217,7 @@
                 </div>
 
                 <!-- Tombol Simpan -->
-                <button type="submit" class="btn-simpan">Simpan</button>
+                <button type="submit" class="btn-simpan">Kirim</button>
             </form>
         </div>
 
@@ -233,12 +233,16 @@
         <div class="barcode-modal">
             <button type="button" class="close-btn" id="btnCloseBarcode">&times;</button>
             <h3><i class="fa-solid"></i> Survey Kepuasan Masyarakat</h3>
-            <p>Scan barcode di bawah ini untuk mengisi survey</p>
+            <p id="surveyGateNote">Scan barcode di bawah ini untuk mengisi survey</p>
             @php
                 $pengaturan = \App\Models\PengaturanKcd::getSettings();
                 $barcodeUrl = $pengaturan->barcode_skm ? '/storage/' . ltrim($pengaturan->barcode_skm, '/') : asset('img/barcode-skm.png');
             @endphp
             <img src="{{ $barcodeUrl }}" alt="Barcode Survey Kepuasan Masyarakat">
+            <div class="survey-submit-gate" id="surveySubmitGate">
+                <p class="survey-timer-text" id="surveyTimerText"></p>
+                <button type="button" class="btn-lanjut-submit" id="btnLanjutSubmit" disabled>Lanjutkan Kirim</button>
+            </div>
         </div>
     </div>
 

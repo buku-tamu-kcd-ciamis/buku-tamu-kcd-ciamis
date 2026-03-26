@@ -14,6 +14,8 @@ class PegawaiSeeder extends Seeder
 {
   public function run(): void
   {
+    activity()->disableLogging();
+
     $pegawaiList = [
       [
         'nama' => 'Drs. H. Ahmad Suryadi, M.Pd.',
@@ -217,5 +219,7 @@ class PegawaiSeeder extends Seeder
         }
       }
     }
+
+    activity()->enableLogging();
   }
 }

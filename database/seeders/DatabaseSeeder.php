@@ -25,7 +25,10 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call([
+            DropdownOptionSeeder::class,
             RoleUserSeeder::class,
+            StaffRoleSeeder::class,
+            PegawaiSeeder::class,
             UserSeeder::class,
         ]);
         $this->command->info('sample user seeded.');

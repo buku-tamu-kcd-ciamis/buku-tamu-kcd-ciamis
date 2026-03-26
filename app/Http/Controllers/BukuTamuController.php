@@ -13,36 +13,228 @@ use Illuminate\Support\Facades\Log;
 class BukuTamuController extends Controller
 {
     /**
-     * Get guest data by NIK for auto-fill
+     * Lookup guest data for auto-fill by NIK, full name, phone number, or email.
      */
     public function getByNik(Request $request)
     {
-        $nik = $request->query('nik');
+        $nik = trim((string) $request->query('nik', ''));
+        $namaLengkap = trim((string) $request->query('nama_lengkap', ''));
+        $nomorHp = trim((string) $request->query('nomor_hp', ''));
+        $email = trim((string) $request->query('email', ''));
+        $isSuggest = $request->boolean('suggest', false);
 
-        if (!$nik) {
-            return response()->json(['found' => false]);
+        if ($nik === '' && $namaLengkap === '' && $nomorHp === '' && $email === '') {
+            return response()->json(['found' => false, 'suggestions' => []]);
         }
 
-        // Cari data tamu terakhir dengan NIK ini
-        $guest = BukuTamu::where('nik', $nik)
-            ->orderBy('created_at', 'desc')
-            ->first();
+        if ($isSuggest) {
+            $suggestions = $this->buildSuggestionPayload(
+                $this->findGuestSuggestions($namaLengkap, $nomorHp, $email)
+            );
+
+            return response()->json([
+                'found' => false,
+                'suggestions' => $suggestions,
+            ]);
+        }
+
+        $guest = null;
+        $matchedBy = null;
+
+        if ($nik !== '') {
+            $guest = BukuTamu::where('nik', $nik)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            $matchedBy = 'nik';
+        }
+
+        if (!$guest && $email !== '') {
+            $guest = BukuTamu::whereRaw('LOWER(email) = ?', [strtolower($email)])
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if (!$guest) {
+                $guest = BukuTamu::where('email', 'like', '%' . $email . '%')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
+
+            $matchedBy = 'email';
+        }
+
+        if (!$guest && $namaLengkap !== '') {
+            $nameMatches = BukuTamu::where('nama_lengkap', 'like', '%' . $namaLengkap . '%')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($nameMatches->count() > 1) {
+                $nameSuggestions = $this->buildSuggestionPayload($nameMatches);
+
+                if ($nameSuggestions->count() === 1) {
+                    return response()->json([
+                        'found' => true,
+                        'matched_by' => 'nama_lengkap',
+                        'data' => $nameSuggestions->first(),
+                    ]);
+                }
+
+                return response()->json([
+                    'found' => false,
+                    'multiple' => true,
+                    'matched_by' => 'nama_lengkap',
+                    'suggestions' => $nameSuggestions,
+                ]);
+            }
+
+            $guest = $nameMatches->first();
+            $matchedBy = 'nama_lengkap';
+        }
+
+        if (!$guest && $nomorHp !== '') {
+            $nomorHpNormalized = $this->normalizePhone($nomorHp);
+            $nomorHpLocal = str_starts_with($nomorHpNormalized, '62')
+                ? substr($nomorHpNormalized, 2)
+                : ltrim($nomorHpNormalized, '0');
+
+            $nomorHpDbExpr = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nomor_hp, '-', ''), ' ', ''), '+', ''), '(', ''), ')', ''), '.', '')";
+
+            $guest = BukuTamu::where(function ($query) use ($nomorHp, $nomorHpNormalized, $nomorHpLocal, $nomorHpDbExpr) {
+                $hasCondition = false;
+
+                if ($nomorHp !== '') {
+                    $query->where('nomor_hp', 'like', '%' . $nomorHp . '%');
+                    $hasCondition = true;
+                }
+
+                if ($nomorHpNormalized !== '') {
+                    $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
+                    $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpNormalized . '%']);
+                    $hasCondition = true;
+                }
+
+                if ($nomorHpLocal !== '' && $nomorHpLocal !== $nomorHpNormalized) {
+                    $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
+                    $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpLocal . '%']);
+                }
+            })
+                ->orderBy('created_at', 'desc')
+                ->first();
+            $matchedBy = 'nomor_hp';
+        }
 
         if (!$guest) {
-            return response()->json(['found' => false]);
+            return response()->json([
+                'found' => false,
+                'suggestions' => $this->buildSuggestionPayload(
+                    $this->findGuestSuggestions($namaLengkap, $nomorHp, $email)
+                ),
+            ]);
         }
 
         return response()->json([
             'found' => true,
-            'data' => [
-                'nama_lengkap' => $guest->nama_lengkap,
-                'instansi' => $guest->instansi,
-                'nomor_hp' => $guest->nomor_hp,
-                'jabatan' => $guest->jabatan,
-                'kabupaten_kota' => $guest->kabupaten_kota,
-                'email' => $guest->email,
-            ]
+            'matched_by' => $matchedBy,
+            'data' => $this->formatGuestData($guest),
         ]);
+    }
+
+    private function findGuestSuggestions(string $namaLengkap, string $nomorHp, string $email)
+    {
+        $namaLengkap = trim($namaLengkap);
+        $nomorHp = trim($nomorHp);
+        $email = trim($email);
+
+        if ($namaLengkap === '' && $nomorHp === '' && $email === '') {
+            return collect();
+        }
+
+        $nomorHpNormalized = $this->normalizePhone($nomorHp);
+        $nomorHpLocal = str_starts_with($nomorHpNormalized, '62')
+            ? substr($nomorHpNormalized, 2)
+            : ltrim($nomorHpNormalized, '0');
+
+        $nomorHpDbExpr = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nomor_hp, '-', ''), ' ', ''), '+', ''), '(', ''), ')', ''), '.', '')";
+
+        return BukuTamu::where(function ($query) use ($namaLengkap, $nomorHp, $email, $nomorHpNormalized, $nomorHpLocal, $nomorHpDbExpr) {
+            $hasCondition = false;
+
+            if ($namaLengkap !== '') {
+                $query->where('nama_lengkap', 'like', '%' . $namaLengkap . '%');
+                $hasCondition = true;
+            }
+
+            if ($email !== '') {
+                $method = $hasCondition ? 'orWhere' : 'where';
+                $query->{$method}('email', 'like', '%' . $email . '%');
+                $hasCondition = true;
+            }
+
+            if ($nomorHp !== '') {
+                $method = $hasCondition ? 'orWhere' : 'where';
+                $query->{$method}('nomor_hp', 'like', '%' . $nomorHp . '%');
+                $hasCondition = true;
+            }
+
+            if ($nomorHpNormalized !== '') {
+                $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
+                $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpNormalized . '%']);
+                $hasCondition = true;
+            }
+
+            if ($nomorHpLocal !== '' && $nomorHpLocal !== $nomorHpNormalized) {
+                $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
+                $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpLocal . '%']);
+            }
+        })
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    private function formatGuestData(BukuTamu $guest, bool $forSuggestion = false): array
+    {
+        $payload = [
+            'jenis_id' => $guest->jenis_id,
+            'nik' => $guest->nik,
+            'nama_lengkap' => $guest->nama_lengkap,
+            'instansi' => $guest->instansi,
+            'nomor_hp' => $guest->nomor_hp,
+            'jabatan' => $guest->jabatan,
+            'kabupaten_kota' => $guest->kabupaten_kota,
+            'email' => $guest->email,
+        ];
+
+        if ($forSuggestion) {
+            $payload['display_label'] = trim(
+                ($guest->nama_lengkap ?? '-') .
+                ' | ' .
+                ($guest->jenis_id ?? '-') . ': ' . ($guest->nik ?? '-') .
+                ' | ' .
+                ($guest->nomor_hp ?? '-')
+            );
+        }
+
+        return $payload;
+    }
+
+    private function buildSuggestionPayload($guests)
+    {
+        return $guests
+            ->unique(function (BukuTamu $guest) {
+                return strtolower(
+                    ($guest->nama_lengkap ?? '') . '|' .
+                    ($guest->nik ?? '') . '|' .
+                    ($guest->nomor_hp ?? '') . '|' .
+                    ($guest->email ?? '')
+                );
+            })
+            ->take(8)
+            ->map(fn(BukuTamu $guest) => $this->formatGuestData($guest, true))
+            ->values();
+    }
+
+    private function normalizePhone(string $value): string
+    {
+        return preg_replace('/\D+/', '', $value) ?? '';
     }
 
     public function store(Request $request)

@@ -9,6 +9,8 @@ class DropdownOptionSeeder extends Seeder
 {
   public function run(): void
   {
+    activity()->disableLogging();
+
     // =============================================
     // JENIS ID
     // =============================================
@@ -173,5 +175,7 @@ class DropdownOptionSeeder extends Seeder
     $this->command->info('- Kabupaten/Kota: ' . count($kabupatenKota) . ' options');
     $this->command->info('- Bagian Dituju: ' . count($bagianDitujuOptions) . ' options');
     $this->command->info('- Pegawai Piket: ' . count($pegawaiPiketOptions) . ' options');
+
+    activity()->enableLogging();
   }
 }

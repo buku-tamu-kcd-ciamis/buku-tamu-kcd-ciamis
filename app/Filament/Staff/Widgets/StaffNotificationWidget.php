@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class StaffNotificationWidget extends BaseWidget
 {
-    protected static ?string $pollingInterval = '5s';
+    protected ?string $pollingInterval = '5s';
 
     protected function getStats(): array
     {

@@ -2431,6 +2431,7 @@ document.addEventListener("DOMContentLoaded", function () {
             activeCameraId = null;
             fotoSelfieBox.innerHTML =
                 '<div class="camera-icon"><i class="fa-solid fa-camera"></i></div><p>Tekan tombol dibawah untuk<br>mengambil foto selfie.</p>';
+            fotoSelfieBox.classList.remove("has-media");
             btnCameraSelfie.textContent = "Mulai Kamera";
             btnFlipSelfie.style.display = "none";
         }
@@ -2440,6 +2441,7 @@ document.addEventListener("DOMContentLoaded", function () {
             activeCameraId = null;
             fotoPenerimaanBox.innerHTML =
                 '<div class="camera-icon"><i class="fa-solid fa-handshake"></i></div><p>Foto bersama resepsionis<br>saat penerimaan berkas.</p>';
+            fotoPenerimaanBox.classList.remove("has-media");
             btnCameraPenerimaan.textContent = "Mulai Kamera";
             btnFlipPenerimaan.style.display = "none";
         }
@@ -2459,6 +2461,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 var actuallyFront = isActuallyFrontCamera(mediaStream);
                 fotoSelfieBox.innerHTML = "";
+                fotoSelfieBox.classList.add("has-media");
                 var cam = createVideoElement(mediaStream, actuallyFront);
                 fotoSelfieBox.appendChild(cam.wrapper);
 
@@ -2583,6 +2586,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btnFlipSelfie.style.display = "none";
 
             fotoSelfieBox.innerHTML = "";
+            fotoSelfieBox.classList.add("has-media");
             const imgEl = document.createElement("img");
             imgEl.src = imageData;
             imgEl.style.width = "100%";
@@ -2626,6 +2630,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 var actuallyFront = isActuallyFrontCamera(mediaStream);
                 fotoPenerimaanBox.innerHTML = "";
+                fotoPenerimaanBox.classList.add("has-media");
                 var cam = createVideoElement(mediaStream, actuallyFront);
                 fotoPenerimaanBox.appendChild(cam.wrapper);
 
@@ -2766,6 +2771,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btnClosePenerimaan.style.display = "none";
 
             fotoPenerimaanBox.innerHTML = "";
+            fotoPenerimaanBox.classList.add("has-media");
             const imgEl = document.createElement("img");
             imgEl.src = imageData;
             imgEl.style.width = "100%";
@@ -2791,6 +2797,7 @@ document.addEventListener("DOMContentLoaded", function () {
         btnCameraPenerimaan.textContent = "Mulai Kamera";
         fotoPenerimaanBox.innerHTML =
             '<div class="camera-icon"><i class="fa-solid fa-handshake"></i></div><p>Foto bersama resepsionis<br>saat penerimaan berkas.</p>';
+        fotoPenerimaanBox.classList.remove("has-media");
         showToast(
             '<i class="fa-solid fa-circle-info"></i> Kamera penerimaan berkas ditutup.',
             "info",

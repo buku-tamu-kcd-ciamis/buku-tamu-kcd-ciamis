@@ -2,7 +2,9 @@
 
 namespace App\Filament\Staff\Resources;
 
+use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Filament\Staff\Resources\PegawaiIzinResource\Pages;
+use App\Models\User;
 use App\Models\PegawaiIzin;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
@@ -14,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PegawaiIzinResource extends Resource
 {
+    use ChecksStaffPermission;
+
     protected static ?string $model = PegawaiIzin::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
@@ -23,38 +27,77 @@ class PegawaiIzinResource extends Resource
     protected static ?string $pluralModelLabel = 'Izin Saya';
     protected static ?int $navigationSort = 2;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::hasStaffPermission('pegawai_izin');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::hasStaffPermission('pegawai_izin');
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::hasStaffPermission('pegawai_izin');
+    }
+
+    public static function resolveIdentityData(?User $user = null): array
+    {
+        /** @var User|null $user */
+        $user = $user ?? Auth::user();
+        $pegawai = $user?->pegawai;
+
+        return [
+            'nama_pegawai' => $pegawai?->nama ?? $user?->name ?? '',
+            'nip' => $pegawai?->nip ?? null,
+            'jabatan' => $pegawai?->jabatan ?? null,
+            'unit_kerja' => $pegawai?->unit_kerja ?? null,
+            'nomor_hp' => $pegawai?->nomor_hp ?? null,
+        ];
+    }
+
     public static function form(Schema $schema): Schema
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $pegawai = $user->pegawai;
+        $identityData = static::resolveIdentityData($user);
 
         return $schema
             ->components([
                 Forms\Components\Section::make('Informasi Pegawai')
-                    ->description('Data diambil dari profil pegawai Anda')
+                    ->description('Data identitas dikunci dari akun login Anda')
                     ->icon('heroicon-o-user')
                     ->schema([
                         Forms\Components\TextInput::make('nama_pegawai')
                             ->label('Nama Pegawai')
-                            ->default($pegawai?->nama ?? $user->name)
-                            ->required()
+                            ->default($identityData['nama_pegawai'])
+                            ->disabled()
+                            ->dehydrated(false)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('nip')
                             ->label('NIP')
-                            ->default($pegawai?->nip ?? '')
+                            ->default($identityData['nip'])
+                            ->disabled()
+                            ->dehydrated(false)
                             ->maxLength(18),
                         Forms\Components\TextInput::make('jabatan')
                             ->label('Jabatan')
-                            ->default($pegawai?->jabatan ?? '')
+                            ->default($identityData['jabatan'])
+                            ->disabled()
+                            ->dehydrated(false)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('unit_kerja')
                             ->label('Unit Kerja')
-                            ->default($pegawai?->unit_kerja ?? '')
+                            ->default($identityData['unit_kerja'])
+                            ->disabled()
+                            ->dehydrated(false)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('nomor_hp')
                             ->label('Nomor HP')
-                            ->default($pegawai?->nomor_hp ?? '')
+                            ->default($identityData['nomor_hp'])
+                            ->disabled()
+                            ->dehydrated(false)
                             ->maxLength(20),
                     ])
                     ->columns(2),
@@ -135,18 +178,21 @@ class PegawaiIzinResource extends Resource
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $pegawai = $user->pegawai;
+        $identityData = static::resolveIdentityData($user);
 
         return $table
             ->query(
                 PegawaiIzin::query()
-                    ->when($pegawai, function ($query) use ($pegawai) {
-                        // Filter by pegawai's own data
-                        $query->where('nama_pegawai', $pegawai->nama)
-                            ->orWhere('nip', $pegawai->nip);
-                    }, function ($query) use ($user) {
-                        // Fallback: filter by user name
-                        $query->where('nama_pegawai', $user->name);
+                    ->when(filled($identityData['nip']), function ($query) use ($identityData) {
+                        $query->where('nip', $identityData['nip']);
+                    }, function ($query) use ($identityData) {
+                        if (blank($identityData['nama_pegawai'])) {
+                            $query->whereRaw('1 = 0');
+
+                            return;
+                        }
+
+                        $query->where('nama_pegawai', $identityData['nama_pegawai']);
                     })
             )
             ->columns([

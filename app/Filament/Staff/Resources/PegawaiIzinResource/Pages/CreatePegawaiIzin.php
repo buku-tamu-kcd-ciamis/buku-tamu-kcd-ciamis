@@ -16,8 +16,13 @@ class CreatePegawaiIzin extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Set default status
+        $data = [
+            ...$data,
+            ...PegawaiIzinResource::resolveIdentityData(),
+        ];
+
         $data['status'] = 'menunggu';
+
         return $data;
     }
 }

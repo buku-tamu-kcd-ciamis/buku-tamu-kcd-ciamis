@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Models\BukuTamu;
 use Filament\Pages\Page;
 use Filament\Support\Contracts\TranslatableContentDriver;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 class RiwayatKunjungan extends Page implements HasTable
 {
     use InteractsWithTable;
+    use ChecksStaffPermission;
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {
@@ -26,6 +28,16 @@ class RiwayatKunjungan extends Page implements HasTable
     protected static ?string $title = 'Riwayat Kunjungan Saya';
     protected static ?int $navigationSort = 4;
     protected string $view = 'filament.staff.pages.riwayat-kunjungan';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::hasStaffPermission('riwayat_tamu');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::hasStaffPermission('riwayat_tamu');
+    }
 
     public function getTableRecordKey($record): string
     {

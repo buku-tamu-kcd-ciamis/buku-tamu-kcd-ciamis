@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use App\Helpers\ImageHelper;
@@ -83,6 +84,11 @@ class BukuTamu extends Model
                 default => "Aktivitas buku tamu: {$eventName}",
             })
             ->useLogName('buku_tamu');
+    }
+
+    public function bookingChats(): HasMany
+    {
+        return $this->hasMany(BookingChat::class, 'buku_tamu_id');
     }
 }
 

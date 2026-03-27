@@ -2,6 +2,7 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Models\Pegawai;
 use Filament\Pages\Page;
 use Filament\Support\Contracts\TranslatableContentDriver;
@@ -13,6 +14,7 @@ use Filament\Tables\Table;
 class DirektoriPegawai extends Page implements HasTable
 {
     use InteractsWithTable;
+    use ChecksStaffPermission;
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {
@@ -25,6 +27,16 @@ class DirektoriPegawai extends Page implements HasTable
     protected static ?string $title = 'Direktori Pegawai';
     protected static ?int $navigationSort = 3;
     protected string $view = 'filament.staff.pages.direktori-pegawai';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::hasStaffPermission('data_pegawai');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::hasStaffPermission('data_pegawai');
+    }
 
     public function getTableRecordKey($record): string
     {

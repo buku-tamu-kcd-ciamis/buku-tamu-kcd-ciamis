@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BukuTamu;
 use App\Models\NomorSuratSetting;
 use App\Models\StaffNotification;
+use App\Services\BookingChatManager;
 use App\Helpers\ImageHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -343,6 +344,8 @@ class BukuTamuController extends Controller
                         'message' => "Tamu baru '{$bukuTamu->nama_lengkap}' dari {$bukuTamu->instansi} ingin menemui Anda. Keperluan: {$bukuTamu->keperluan}",
                     ]);
                 }
+
+                app(BookingChatManager::class)->bootstrapForBooking($bukuTamu, Auth::user());
             }
 
             return redirect()->route('index')->with('success', 'Data buku tamu berhasil disimpan!');

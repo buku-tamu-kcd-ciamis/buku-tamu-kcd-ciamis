@@ -2,8 +2,9 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Models\StaffNotification;
-use App\Models\BukuTamu;
+use App\Services\BookingChatManager;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -15,11 +16,11 @@ use Filament\Tables\Table;
 use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Contracts\View\View;
 
 class NotifikasiTamu extends Page implements HasTable
 {
     use InteractsWithTable;
+    use ChecksStaffPermission;
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {
@@ -31,6 +32,16 @@ class NotifikasiTamu extends Page implements HasTable
     protected static ?string $title = 'Notifikasi Tamu';
     protected static ?int $navigationSort = 1;
     protected string $view = 'filament.staff.pages.notifikasi-tamu';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::hasStaffPermission('buku_tamu');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::hasStaffPermission('buku_tamu');
+    }
 
     // Polling interval: auto-refresh every 5 seconds
     protected static string $pollingInterval = '5s';
@@ -128,12 +139,7 @@ class NotifikasiTamu extends Page implements HasTable
                         ->modalHeading('Terima Tamu')
                         ->modalDescription(fn($record) => "Apakah Anda yakin ingin menerima tamu '{$record->bukuTamu?->nama_lengkap}'?")
                         ->action(function ($record) {
-                            $record->respond('diterima');
-
-                            // Update buku_tamu status to 'diproses'
-                            if ($record->bukuTamu && $record->bukuTamu->status === 'menunggu') {
-                                $record->bukuTamu->update(['status' => 'diproses']);
-                            }
+                            $record->respondAndSyncVisitStatus(StaffNotification::RESPONSE_DITERIMA);
 
                             Notification::make()
                                 ->title('Tamu diterima')
@@ -150,7 +156,7 @@ class NotifikasiTamu extends Page implements HasTable
                         ->modalHeading('Tolak Tamu')
                         ->modalDescription(fn($record) => "Apakah Anda yakin ingin menolak tamu '{$record->bukuTamu?->nama_lengkap}'?")
                         ->action(function ($record) {
-                            $record->respond('ditolak');
+                            $record->respondAndSyncVisitStatus(StaffNotification::RESPONSE_DITOLAK);
 
                             Notification::make()
                                 ->title('Tamu ditolak')
@@ -167,6 +173,23 @@ class NotifikasiTamu extends Page implements HasTable
                             $record->markAsRead();
                         })
                         ->visible(fn($record) => !$record->is_read),
+                    Action::make('chat')
+                        ->label('Buka Chat')
+                        ->icon('heroicon-o-chat-bubble-left-right')
+                        ->color('primary')
+                        ->url(function ($record): string {
+                            $booking = $record->bukuTamu;
+
+                            if (!$booking) {
+                                return ChatBooking::getUrl();
+                            }
+
+                            $chat = app(BookingChatManager::class)
+                                ->getOrCreateForBookingAndStaff($booking, Auth::user(), Auth::user());
+
+                            return ChatBooking::getUrl() . '?chat=' . $chat->id;
+                        })
+                        ->openUrlInNewTab(false),
                 ])
                     ->label(false)
                     ->icon('heroicon-m-ellipsis-vertical')

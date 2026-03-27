@@ -18,11 +18,28 @@
     }
 @endphp
 
-<div class="flex items-center justify-center">
+<div class="bt-avatar-cell">
     @if($imageUrl)
-        <img src="{{ $imageUrl }}" alt="{{ $name }}" class="w-10 h-10 rounded-full object-cover" loading="lazy"
-            onerror="this.onerror=null;this.src='{{ $fallback }}';" />
+        <div class="bt-avatar-frame">
+            <img
+                src="{{ $imageUrl }}"
+                alt="{{ $name }}"
+                class="bt-avatar-img"
+                width="128"
+                height="88"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='{{ $fallback }}';"
+            />
+        </div>
     @else
-        <img src="{{ $fallback }}" alt="{{ $name }}" class="w-10 h-10 rounded-full object-cover" />
+        <div class="bt-avatar-frame">
+            <img
+                src="{{ $fallback }}"
+                alt="{{ $name }}"
+                class="bt-avatar-img"
+                width="128"
+                height="88"
+            />
+        </div>
     @endif
 </div>

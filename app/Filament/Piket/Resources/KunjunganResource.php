@@ -3,8 +3,10 @@
 namespace App\Filament\Piket\Resources;
 
 use App\Filament\Piket\Resources\KunjunganResource\Pages;
+use App\Filament\Piket\Pages\ChatBooking;
 use App\Models\BukuTamu;
 use App\Models\DropdownOption;
+use App\Services\BookingChatManager;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
@@ -120,7 +122,26 @@ class KunjunganResource extends Resource
       ])
       ->actionsAlignment('center')
       ->actionsColumnLabel('Aksi')
-      ->actions([])
+      ->actions([
+        Action::make('chat')
+          ->label('Chat Staff')
+          ->icon('heroicon-o-chat-bubble-left-right')
+          ->color('primary')
+          ->url(function (BukuTamu $record): string {
+            $chat = $record->bookingChats()->first();
+
+            if (!$chat) {
+              $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+            }
+
+            if (!$chat) {
+              return ChatBooking::getUrl() . '?booking=' . $record->id;
+            }
+
+            return ChatBooking::getUrl() . '?chat=' . $chat->id;
+          })
+          ->openUrlInNewTab(false),
+      ])
       ->headerActions([])
       ->bulkActions([]);
   }

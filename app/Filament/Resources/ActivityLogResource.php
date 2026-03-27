@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Actions\ViewAction;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\TextSize;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Spatie\Activitylog\Models\Activity;
@@ -120,14 +121,14 @@ class ActivityLogResource extends Resource
                     ->label('Waktu')
                     ->dateTime('d/m/Y H:i:s')
                     ->sortable()
-                    ->size(Tables\Columns\TextColumn\TextColumnSize::Small)
+                    ->size(TextSize::Small)
                     ->color('gray'),
                 Tables\Columns\TextColumn::make('causer.name')
                     ->label('User')
                     ->searchable()
                     ->default('System')
                     ->icon('heroicon-o-user')
-                    ->size(Tables\Columns\TextColumn\TextColumnSize::Small),
+                    ->size(TextSize::Small),
                 Tables\Columns\TextColumn::make('log_name')
                     ->label('Modul')
                     ->badge()
@@ -159,7 +160,7 @@ class ActivityLogResource extends Resource
                 Tables\Columns\TextColumn::make('subject_type')
                     ->label('Model')
                     ->formatStateUsing(fn(?string $state) => $state ? class_basename($state) : '-')
-                    ->size(Tables\Columns\TextColumn\TextColumnSize::Small)
+                    ->size(TextSize::Small)
                     ->color('gray')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

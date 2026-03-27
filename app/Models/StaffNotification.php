@@ -73,4 +73,32 @@ class StaffNotification extends Model
             'is_read' => true,
         ]);
     }
+
+    public function respondAndSyncVisitStatus(string $response): void
+    {
+        if (!in_array($response, [self::RESPONSE_DITERIMA, self::RESPONSE_DITOLAK], true)) {
+            throw new \InvalidArgumentException('Invalid staff notification response.');
+        }
+
+        $this->respond($response);
+
+        $visit = $this->bukuTamu;
+
+        if (!$visit) {
+            return;
+        }
+
+        if ($response === self::RESPONSE_DITERIMA && $visit->status === BukuTamu::STATUS_MENUNGGU) {
+            $visit->update(['status' => BukuTamu::STATUS_DIPROSES]);
+
+            return;
+        }
+
+        if (
+            $response === self::RESPONSE_DITOLAK
+            && !in_array($visit->status, [BukuTamu::STATUS_SELESAI, BukuTamu::STATUS_DIBATALKAN], true)
+        ) {
+            $visit->update(['status' => BukuTamu::STATUS_DITOLAK]);
+        }
+    }
 }

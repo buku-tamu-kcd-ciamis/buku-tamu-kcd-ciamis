@@ -189,4 +189,19 @@ class User extends Authenticatable implements FilamentUser, HasEmailAuthenticati
     {
         return $this->hasMany(StaffNotification::class);
     }
+
+    public function bookingChatsAsStaff(): HasMany
+    {
+        return $this->hasMany(BookingChat::class, 'staff_user_id');
+    }
+
+    public function bookingChatsAsPiket(): HasMany
+    {
+        return $this->hasMany(BookingChat::class, 'piket_user_id');
+    }
+
+    public function bookingChatMessages(): HasMany
+    {
+        return $this->hasMany(BookingChatMessage::class, 'sender_user_id');
+    }
 }

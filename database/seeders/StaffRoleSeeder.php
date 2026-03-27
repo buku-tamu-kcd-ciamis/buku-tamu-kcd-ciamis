@@ -17,11 +17,11 @@ class StaffRoleSeeder extends Seeder
                 'need_approval' => false,
                 'author_id' => null,
                 'permissions' => json_encode([
-                    'buku_tamu' => false,
+                    'buku_tamu' => true,
                     'activity_log' => false,
                     'pegawai_izin' => true,
                     'rekap_izin' => false,
-                    'data_pegawai' => false,
+                    'data_pegawai' => true,
                     'dropdown_options' => false,
                     'pegawai_piket' => false,
                     'user_management' => false,

@@ -1177,3 +1177,763 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
         grid-template-columns: 1fr;
     }
 }
+
+/* Admin Buku Tamu photo thumbnail sizing */
+.fi-body.fi-panel-admin .bt-avatar-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.fi-body.fi-panel-admin .bt-avatar-frame {
+    width: 128px;
+    height: 88px;
+    border-radius: 0.7rem;
+    overflow: hidden;
+    border: 1px solid #d5e4dc;
+    background: #edf5f0;
+}
+
+.fi-body.fi-panel-admin .bt-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .fi-body.fi-panel-admin .bt-avatar-frame {
+        width: 112px;
+        height: 76px;
+    }
+}
+
+/* Booking chat interface (Staff + Piket) */
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-page {
+    min-height: 70vh;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-shell {
+    display: grid;
+    grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+    border-radius: 1rem;
+    border: 1px solid #d6e8df;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow:
+        0 2px 6px rgba(16, 24, 40, 0.06),
+        0 26px 40px -36px rgba(15, 100, 61, 0.46);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar {
+    border-inline-end: 1px solid #dbeae2;
+    background: #f8fcf9;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar-head {
+    padding: 0.9rem 1rem 0.7rem;
+    border-bottom: 1px solid #e3efe9;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #114731;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar-subtitle {
+    margin: 0.28rem 0 0;
+    color: #5a6f63;
+    font-size: 0.78rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-search-wrap {
+    padding: 0.72rem 0.9rem;
+    border-bottom: 1px solid #e3efe9;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-search {
+    width: 100%;
+    min-height: 2.55rem;
+    border: 1px solid #cfe2d7;
+    border-radius: 0.72rem;
+    padding: 0.55rem 0.75rem;
+    outline: none;
+    background: #ffffff;
+    color: #1f2937;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-search:focus {
+    border-color: #0f9455;
+    box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.1);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-list {
+    overflow: auto;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-separator {
+    margin: 0.2rem 0 0.1rem;
+    text-align: center;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #5f7868;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-item {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #d6e7de;
+    border-radius: 0.78rem;
+    padding: 0.65rem;
+    background: #ffffff;
+    display: block;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-item:hover {
+    border-color: #b7d5c5;
+    background: #f5fbf7;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-item.is-active {
+    border-color: #87c0a2;
+    background: #eaf7ef;
+    transform: translateY(-1px);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-main {
+    display: grid;
+    grid-template-columns: 2.3rem minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: flex-start;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-avatar {
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 999px;
+    object-fit: cover;
+    background: #e7f4ed;
+    border: 1px solid #b6d9c5;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-body {
+    min-width: 0;
+    display: grid;
+    gap: 0.26rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-title-row,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-last-row,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-booking-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #164a34;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-date {
+    font-size: 0.68rem;
+    color: #5b7364;
+    flex-shrink: 0;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #3b5b4b;
+    background: #edf7f1;
+    border: 1px solid #d0e4d8;
+    border-radius: 999px;
+    padding: 0.14rem 0.46rem;
+    flex-shrink: 0;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status.status-menunggu {
+    color: #8a6300;
+    background: #fff7dc;
+    border-color: #f7de95;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status.status-diproses {
+    color: #0c5e89;
+    background: #e1f2fe;
+    border-color: #badcf3;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status.status-selesai {
+    color: #166534;
+    background: #dcfce7;
+    border-color: #9fdeb3;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status.status-ditolak,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status.status-dibatalkan {
+    color: #991b1b;
+    background: #fee2e2;
+    border-color: #f8bbbb;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-instansi {
+    font-size: 0.68rem;
+    color: #63796d;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-unread {
+    min-width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0 0.2rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-preview {
+    margin: 0;
+    font-size: 0.72rem;
+    color: #5f7467;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-check {
+    margin-right: 0.2rem;
+    color: #7f9491;
+    font-size: 0.69rem;
+    font-weight: 700;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-check.is-read {
+    color: #1ea1d5;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-empty-list {
+    border: 1px dashed #c8ddd1;
+    border-radius: 0.8rem;
+    padding: 0.85rem;
+    color: #5d7266;
+    text-align: center;
+    background: #f5faf7;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-empty-list p {
+    margin: 0;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-empty-hint {
+    margin-top: 0.3rem !important;
+    font-size: 0.75rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    min-height: 66vh;
+    background: #0b141a;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-head {
+    padding: 0.58rem 0.9rem;
+    border-bottom: 1px solid #2f3b43;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.68rem;
+    background: #202c33;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer {
+    display: flex;
+    align-items: center;
+    gap: 0.56rem;
+    min-width: 0;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-avatar {
+    width: 2.05rem;
+    height: 2.05rem;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid #3a4d57;
+    background: #2a3942;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-title {
+    margin: 0;
+    color: #e9edef;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status {
+    margin: 0.08rem 0 0;
+    font-size: 0.72rem;
+    color: #99a9b4;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status.is-online,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status.is-typing {
+    color: #0e8b4d;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: #7f919c;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status.is-online .booking-chat-peer-dot,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status.is-typing .booking-chat-peer-dot {
+    background: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-dot {
+    margin-inline: 0.28rem;
+    color: #9bb2a3;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-booking-meta {
+    border-bottom: 1px solid #2f3b43;
+    background: #202c33;
+    padding: 0.5rem 0.9rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-booking-meta p {
+    margin: 0;
+    font-size: 0.71rem;
+    color: #aebcc6;
+    line-height: 1.4;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.24rem 0.58rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-status.status-menunggu {
+    background: #fff7dc;
+    color: #8a6300;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-status.status-diproses {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-status.status-selesai {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-status.status-ditolak,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-status.status-dibatalkan {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-messages {
+    overflow-y: auto;
+    padding: 0.95rem;
+    display: grid;
+    gap: 0.6rem;
+    overscroll-behavior: contain;
+    background-color: #0b141a;
+    background-image:
+        radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.03) 1px, transparent 0),
+        radial-gradient(circle at 8px 8px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
+    background-size: 40px 40px, 24px 24px;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message {
+    display: flex;
+    width: 100%;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 0.42rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message.is-mine {
+    justify-content: flex-end;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message.is-system {
+    justify-content: center;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-avatar {
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid #c4ddd0;
+    background: #e7f4ed;
+    flex-shrink: 0;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-bubble {
+    max-width: min(78%, 46rem);
+    border-radius: 1rem;
+    border: 0;
+    background: #202c33;
+    padding: 0.58rem 0.72rem;
+    box-shadow: none;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message.is-mine .booking-chat-message-bubble {
+    background: #005c4b;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message.is-system .booking-chat-message-bubble {
+    background: #111b21;
+    border-style: dashed;
+    border: 1px dashed #35424b;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-sender,
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-system-label {
+    margin: 0 0 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #8fa2ad;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-system-label {
+    text-align: center;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-text {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #e9edef;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-time {
+    margin: 0.35rem 0 0;
+    font-size: 0.66rem;
+    color: #9cb0bb;
+    text-align: right;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.1rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-check {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #9cb0bb;
+    letter-spacing: -0.05em;
+    margin-left: 0.02rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-check.is-read {
+    color: #53bdeb;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-separator {
+    margin: 0.08rem auto 0.02rem;
+    padding: 0.22rem 0.56rem;
+    border-radius: 0.5rem;
+    width: fit-content;
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+    line-height: 1;
+    white-space: nowrap;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #c3cfd6;
+    background: rgba(32, 44, 51, 0.78);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.26rem;
+    padding: 0.32rem 0.85rem;
+    color: #9db0bc;
+    font-size: 0.72rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-typing-indicator .dot {
+    width: 0.34rem;
+    height: 0.34rem;
+    border-radius: 999px;
+    background: #8ea1ac;
+    animation: booking-chat-typing 1.1s infinite ease-in-out;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-typing-indicator .dot:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-typing-indicator .dot:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-typing-indicator .label {
+    margin-left: 0.25rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-composer {
+    border-top: 1px solid #2f3b43;
+    background: #202c33;
+    padding: 0.6rem 0.8rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-composer-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.45rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-textarea {
+    width: 100%;
+    resize: none;
+    min-height: 2.52rem;
+    max-height: 8.25rem;
+    overflow-y: hidden;
+    overscroll-behavior: contain;
+    border: 1px solid #33444d;
+    border-radius: 1.26rem;
+    padding: 0.58rem 0.82rem;
+    outline: none;
+    background: #2a3942;
+    color: #e9edef;
+    line-height: 1.3;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-textarea:focus {
+    border-color: #3f5460;
+    box-shadow: none;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-send-btn {
+    border: 0;
+    border-radius: 999px;
+    width: 2.55rem;
+    height: 2.55rem;
+    min-height: 2.55rem;
+    min-width: 2.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #ffffff;
+    background: #00a884;
+    box-shadow: none;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-send-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    transform: translateX(0.03rem);
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-empty {
+    margin: auto;
+    text-align: center;
+    max-width: 34ch;
+    color: #5c7266;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-empty h3 {
+    margin: 0;
+    color: #164a34;
+    font-size: 1.12rem;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-empty p {
+    margin: 0.38rem 0 0;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-shell {
+    border-color: rgba(167, 214, 187, 0.24);
+    background: rgba(17, 28, 23, 0.84);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar {
+    border-inline-end-color: rgba(167, 214, 187, 0.2);
+    background: rgba(13, 23, 19, 0.88);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar-head,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-search-wrap,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-head,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-composer {
+    border-color: rgba(167, 214, 187, 0.2);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-search,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-item,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-bubble,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-textarea {
+    border-color: rgba(167, 214, 187, 0.24);
+    background: rgba(19, 34, 27, 0.78);
+    color: #e2f5ea;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-item.is-active {
+    background: rgba(29, 65, 45, 0.84);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-avatar {
+    border-color: rgba(132, 190, 156, 0.54);
+    background: rgba(29, 62, 45, 0.86);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-avatar,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-avatar {
+    border-color: rgba(132, 190, 156, 0.54);
+    background: rgba(29, 62, 45, 0.86);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar-title,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-name,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-title,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-text,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-empty h3 {
+    color: #e4f6eb;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar-subtitle,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-preview,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-date,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-instansi,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-time,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room-empty p,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-booking-meta p,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-separator,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-typing-indicator {
+    color: #9eb9aa;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-booking-meta {
+    border-color: rgba(167, 214, 187, 0.2);
+    background: rgba(18, 33, 26, 0.84);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-dot {
+    background: #6d8d7d;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status.is-online .booking-chat-peer-dot,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-peer-status.is-typing .booking-chat-peer-dot {
+    background: #22c55e;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-check,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-check {
+    color: #9eb9aa;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-check.is-read,
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-check.is-read {
+    color: #53c6f4;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-separator {
+    color: #c3cfd6;
+    background: rgba(32, 44, 51, 0.78);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-thread-status {
+    background: rgba(28, 58, 43, 0.82);
+    border-color: rgba(131, 190, 156, 0.35);
+    color: #cbebdb;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message.is-system .booking-chat-message-bubble {
+    background: rgba(29, 42, 36, 0.82);
+}
+
+@media (max-width: 1024px) {
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-sidebar {
+        min-height: 16rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-room {
+        min-height: 58vh;
+    }
+
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-message-bubble {
+        max-width: 92%;
+    }
+
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-booking-meta p {
+        line-height: 1.4;
+    }
+}
+
+@keyframes booking-chat-typing {
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.65;
+    }
+
+    30% {
+        transform: translateY(-0.16rem);
+        opacity: 1;
+    }
+}

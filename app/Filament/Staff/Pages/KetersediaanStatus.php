@@ -2,21 +2,32 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Models\Pegawai;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
 class KetersediaanStatus extends Page
 {
+    use ChecksStaffPermission;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-signal';
     protected static ?string $navigationLabel = 'Status Ketersediaan';
     protected static string|\UnitEnum|null $navigationGroup = 'Kepegawaian';
     protected static ?string $title = 'Status Ketersediaan';
     protected static ?int $navigationSort = 3;
     protected string $view = 'filament.staff.pages.ketersediaan-status';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::hasStaffPermission('data_pegawai');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::hasStaffPermission('data_pegawai');
+    }
 
     public ?string $availability_status = 'available';
 
@@ -25,9 +36,16 @@ class KetersediaanStatus extends Page
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $pegawai = $user->pegawai;
+        $allowedStatuses = array_keys(Pegawai::AVAILABILITY_LABELS);
 
         if ($pegawai) {
-            $this->availability_status = $pegawai->availability_status ?? 'available';
+            $currentStatus = $pegawai->availability_status ?? Pegawai::AVAILABILITY_AVAILABLE;
+
+            if (!in_array($currentStatus, $allowedStatuses, true)) {
+                $currentStatus = Pegawai::AVAILABILITY_AVAILABLE;
+            }
+
+            $this->availability_status = $currentStatus;
         }
     }
 
@@ -36,6 +54,17 @@ class KetersediaanStatus extends Page
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $pegawai = $user->pegawai;
+        $allowedStatuses = array_keys(Pegawai::AVAILABILITY_LABELS);
+
+        if (!in_array($status, $allowedStatuses, true)) {
+            Notification::make()
+                ->title('Status tidak valid')
+                ->body('Pilihan status ketersediaan tidak diizinkan.')
+                ->danger()
+                ->send();
+
+            return;
+        }
 
         if (!$pegawai) {
             Notification::make()

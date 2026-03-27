@@ -2,17 +2,30 @@
 
 namespace App\Filament\Staff\Pages;
 
+use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 
 class DownloadDokumen extends Page
 {
+    use ChecksStaffPermission;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-down-tray';
     protected static ?string $navigationLabel = 'Download Dokumen';
     protected static string|\UnitEnum|null $navigationGroup = 'Informasi';
     protected static ?string $title = 'Download Dokumen Internal';
     protected static ?int $navigationSort = 5;
     protected string $view = 'filament.staff.pages.download-dokumen';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::hasStaffPermission('riwayat_tamu');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::hasStaffPermission('riwayat_tamu');
+    }
 
     /**
      * Get list of available documents for download.

@@ -5,7 +5,7 @@ namespace App\Filament\Resources\VerifikasiProfilResource\Pages;
 use App\Filament\Resources\VerifikasiProfilResource;
 use App\Models\ProfileChangeRequest;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Components\Tab;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListVerifikasiProfil extends ListRecords

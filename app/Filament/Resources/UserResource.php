@@ -8,12 +8,12 @@ use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
@@ -37,39 +37,45 @@ class UserResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('General')
-                    ->description('User General Data')
+                Section::make('Informasi User')
+                    ->description('Data utama akun pengguna.')
+                    ->columns(2)
                     ->schema([
-                        Grid::make()
-                            ->schema([
-                                TextInput::make('name')
-                                    ->required(),
-                                TextInput::make('email')
-                                    ->required(fn(string $operation): bool => $operation === 'create')
-                                    ->unique(ignorable: fn(?User $record): ?User => $record)
-                            ]),
-                        Select::make('role_user_id')
+                        TextInput::make('name')
+                            ->label('Nama Lengkap')
+                            ->required(),
+                        TextInput::make('email')
+                            ->label('Email')
+                            ->email()
                             ->required()
-                            ->relationship('role_user', 'name'),
-                    ])
-                    ->aside(),
-                Section::make('Privacy')
-                    ->description('this is description')
+                            ->unique(ignorable: fn(?User $record): ?User => $record),
+                        Select::make('role_user_id')
+                            ->label('Role user')
+                            ->required()
+                            ->relationship('role_user', 'name')
+                            ->preload()
+                            ->searchable(),
+                    ]),
+                Section::make('Keamanan')
+                    ->description('Atur kata sandi akun pengguna.')
+                    ->columns(2)
                     ->schema([
-                        Grid::make()
-                            ->schema([
-                                TextInput::make('password')
-                                    ->password()
-                                    ->required(fn(string $operation): bool => $operation === 'create')
-                                    ->revealable()
-                                    ->same('passwordConfirmation'),
-                                TextInput::make('passwordConfirmation')
-                                    ->password()
-                                    ->required(fn(string $operation): bool => $operation === 'create')
-                                    ->revealable()
-                            ]),
+                        TextInput::make('password')
+                            ->label('Password')
+                            ->password()
+                            ->required(fn(string $operation): bool => $operation === 'create')
+                            ->revealable()
+                            ->dehydrated(fn(?string $state): bool => filled($state))
+                            ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                            ->same('passwordConfirmation'),
+                        TextInput::make('passwordConfirmation')
+                            ->label('Konfirmasi Password')
+                            ->password()
+                            ->required(fn(string $operation): bool => $operation === 'create')
+                            ->revealable()
+                            ->dehydrated(false),
                     ])
-                    ->aside(),
+                    ->collapsible(),
             ]);
     }
 

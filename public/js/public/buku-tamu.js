@@ -32,12 +32,19 @@ document.addEventListener("DOMContentLoaded", function () {
     };
     (__dd.jenisId || []).forEach(function (item) {
         if (item.metadata) {
+            const metadataMaxSequential = Number.parseInt(
+                item.metadata.max_sequential_digits,
+                10,
+            );
+
             idConfig[item.value] = {
                 label: item.metadata.id_label || item.label,
                 placeholder: item.metadata.placeholder || "Masukkan nomor ID",
                 digits: item.metadata.digits || null,
                 maxRepeated: item.metadata.max_repeated_digits || 3,
-                maxSequential: item.metadata.max_sequential_digits || 2,
+                maxSequential: Number.isNaN(metadataMaxSequential)
+                    ? 4
+                    : Math.max(metadataMaxSequential, 4),
             };
         } else {
             idConfig[item.value] = {
@@ -45,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 placeholder: "Masukkan nomor ID",
                 digits: null,
                 maxRepeated: 3,
-                maxSequential: 2,
+                maxSequential: 4,
             };
         }
     });
@@ -432,7 +439,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Check for repeated digits
         if (hasRepeatedDigits(val, config.maxRepeated)) {
             nikHint.textContent =
-                "\u2717 Angka tidak boleh sama lebih dari " + config.maxRepeated + " digit berturut-turut";
+                "\u2717 Angka tidak boleh sama lebih dari " +
+                config.maxRepeated +
+                " digit berturut-turut";
             nikHint.className = "phone-hint invalid";
             return;
         }
@@ -440,7 +449,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Check for sequential digits
         if (hasSequentialDigits(val, config.maxSequential)) {
             nikHint.textContent =
-                "\u2717 Angka tidak boleh berurutan lebih dari " + config.maxSequential + " digit";
+                "\u2717 Angka tidak boleh berurutan lebih dari " +
+                config.maxSequential +
+                " digit";
             nikHint.className = "phone-hint invalid";
             return;
         }
@@ -604,10 +615,10 @@ document.addEventListener("DOMContentLoaded", function () {
             matchedBy === "nama_lengkap"
                 ? "nama"
                 : matchedBy === "nomor_hp"
-                    ? "nomor HP"
-                    : matchedBy === "email"
-                        ? "email"
-                        : "NIK";
+                  ? "nomor HP"
+                  : matchedBy === "email"
+                    ? "email"
+                    : "NIK";
         nikHint.textContent =
             "\u2713 Data otomatis terisi dari kunjungan sebelumnya (" +
             sourceText +
@@ -643,7 +654,9 @@ document.addEventListener("DOMContentLoaded", function () {
         params.append("suggest", "1");
 
         try {
-            const response = await fetch(`/api/guest-by-nik?${params.toString()}`);
+            const response = await fetch(
+                `/api/guest-by-nik?${params.toString()}`,
+            );
             const result = await response.json();
             renderGuestSuggestions(result.suggestions || []);
         } catch (error) {
@@ -674,7 +687,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!params.toString()) return;
 
         try {
-            const response = await fetch(`/api/guest-by-nik?${params.toString()}`);
+            const response = await fetch(
+                `/api/guest-by-nik?${params.toString()}`,
+            );
             const result = await response.json();
 
             if (result.found && result.data) {
@@ -826,7 +841,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         namaLengkapInput.addEventListener("keydown", function (e) {
-            const items = namaSuggestionList.querySelectorAll(".autocomplete-item");
+            const items =
+                namaSuggestionList.querySelectorAll(".autocomplete-item");
             if (!items.length) return;
 
             if (e.key === "ArrowDown") {
@@ -845,7 +861,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     el.classList.toggle("active", i === guestSuggestionIndex),
                 );
             } else if (e.key === "Enter") {
-                if (guestSuggestionIndex >= 0 && guestSuggestions[guestSuggestionIndex]) {
+                if (
+                    guestSuggestionIndex >= 0 &&
+                    guestSuggestions[guestSuggestionIndex]
+                ) {
                     e.preventDefault();
                     applyGuestDataToForm(
                         guestSuggestions[guestSuggestionIndex],
@@ -987,7 +1006,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // ===== STAFF YANG DITUJU AUTOCOMPLETE =====
-    const staffData = (__dd.staffList || []);
+    const staffData = __dd.staffList || [];
     const staffInput = document.getElementById("staff_dituju_input");
     const staffHidden = document.getElementById("staff_dituju");
     const staffList = document.getElementById("staff_dituju_list");
@@ -998,7 +1017,11 @@ document.addEventListener("DOMContentLoaded", function () {
         function renderStaffList(filter) {
             const query = (filter || "").toLowerCase();
             const filtered = query
-                ? staffData.filter((s) => s.label.toLowerCase().includes(query) || s.value.toLowerCase().includes(query))
+                ? staffData.filter(
+                      (s) =>
+                          s.label.toLowerCase().includes(query) ||
+                          s.value.toLowerCase().includes(query),
+                  )
                 : staffData;
 
             staffList.innerHTML = "";
@@ -1049,12 +1072,18 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         staffInput.addEventListener("blur", function () {
-            setTimeout(function() {
+            setTimeout(function () {
                 staffList.classList.remove("show");
                 // If typed value doesn't match any staff, clear hidden
                 if (staffInput.value && !staffHidden.value) {
                     // Try to find exact match
-                    const match = staffData.find((s) => s.label.toLowerCase() === staffInput.value.toLowerCase() || s.value.toLowerCase() === staffInput.value.toLowerCase());
+                    const match = staffData.find(
+                        (s) =>
+                            s.label.toLowerCase() ===
+                                staffInput.value.toLowerCase() ||
+                            s.value.toLowerCase() ===
+                                staffInput.value.toLowerCase(),
+                    );
                     if (match) {
                         staffHidden.value = match.value;
                     }
@@ -1067,13 +1096,19 @@ document.addEventListener("DOMContentLoaded", function () {
             if (e.key === "ArrowDown") {
                 e.preventDefault();
                 staffActiveIdx = Math.min(staffActiveIdx + 1, items.length - 1);
-                items.forEach((el, i) => el.classList.toggle("active", i === staffActiveIdx));
-                if (items[staffActiveIdx]) items[staffActiveIdx].scrollIntoView({ block: "nearest" });
+                items.forEach((el, i) =>
+                    el.classList.toggle("active", i === staffActiveIdx),
+                );
+                if (items[staffActiveIdx])
+                    items[staffActiveIdx].scrollIntoView({ block: "nearest" });
             } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 staffActiveIdx = Math.max(staffActiveIdx - 1, 0);
-                items.forEach((el, i) => el.classList.toggle("active", i === staffActiveIdx));
-                if (items[staffActiveIdx]) items[staffActiveIdx].scrollIntoView({ block: "nearest" });
+                items.forEach((el, i) =>
+                    el.classList.toggle("active", i === staffActiveIdx),
+                );
+                if (items[staffActiveIdx])
+                    items[staffActiveIdx].scrollIntoView({ block: "nearest" });
             } else if (e.key === "Enter") {
                 e.preventDefault();
                 if (staffActiveIdx >= 0 && items[staffActiveIdx]) {
@@ -1088,7 +1123,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Close staff dropdown when clicking outside
         document.addEventListener("click", function (e) {
-            if (!staffInput.contains(e.target) && !staffList.contains(e.target)) {
+            if (
+                !staffInput.contains(e.target) &&
+                !staffList.contains(e.target)
+            ) {
                 staffList.classList.remove("show");
             }
         });

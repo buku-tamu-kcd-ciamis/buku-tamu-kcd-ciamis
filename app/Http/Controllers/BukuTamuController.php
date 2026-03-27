@@ -207,10 +207,10 @@ class BukuTamuController extends Controller
         if ($forSuggestion) {
             $payload['display_label'] = trim(
                 ($guest->nama_lengkap ?? '-') .
-                ' | ' .
-                ($guest->jenis_id ?? '-') . ': ' . ($guest->nik ?? '-') .
-                ' | ' .
-                ($guest->nomor_hp ?? '-')
+                    ' | ' .
+                    ($guest->jenis_id ?? '-') . ': ' . ($guest->nik ?? '-') .
+                    ' | ' .
+                    ($guest->nomor_hp ?? '-')
             );
         }
 
@@ -223,9 +223,9 @@ class BukuTamuController extends Controller
             ->unique(function (BukuTamu $guest) {
                 return strtolower(
                     ($guest->nama_lengkap ?? '') . '|' .
-                    ($guest->nik ?? '') . '|' .
-                    ($guest->nomor_hp ?? '') . '|' .
-                    ($guest->email ?? '')
+                        ($guest->nik ?? '') . '|' .
+                        ($guest->nomor_hp ?? '') . '|' .
+                        ($guest->email ?? '')
                 );
             })
             ->take(8)
@@ -255,7 +255,7 @@ class BukuTamuController extends Controller
 
                         $metadata = $option ? $option->metadata : [];
                         $maxRepeated = (int) ($metadata['max_repeated_digits'] ?? 3);
-                        $maxSequential = (int) ($metadata['max_sequential_digits'] ?? 2);
+                        $maxSequential = max((int) ($metadata['max_sequential_digits'] ?? 4), 4);
                         $requiredDigits = $metadata['digits'] ?? null;
 
                         // Check digits length if specified

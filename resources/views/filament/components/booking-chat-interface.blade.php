@@ -111,7 +111,7 @@
         </aside>
 
         <section
-            class="booking-chat-room"
+            class="booking-chat-room {{ $selectedChat ? '' : 'is-empty' }}"
             x-data="{
                 resizeComposer(el) {
                     const min = 40;

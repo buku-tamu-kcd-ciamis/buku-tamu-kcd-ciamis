@@ -103,8 +103,49 @@ class RoleUser extends Model
             return true;
         }
 
-        $permissions = $this->permissions ?? self::getDefaultPermissions();
+        $permissions = $this->permissions;
+
+        if (!is_array($permissions) || $permissions === []) {
+            $permissions = self::getSeedPermissionsForRole($this->name);
+        }
+
         return $permissions[$key] ?? false;
+    }
+
+    /**
+     * Fallback permissions by role name for legacy rows with null permissions.
+     */
+    public static function getSeedPermissionsForRole(?string $roleName): array
+    {
+        $defaults = self::getDefaultPermissions();
+
+        return match ($roleName) {
+            'Super Admin' => array_fill_keys(array_keys($defaults), true),
+            'Piket' => array_replace($defaults, [
+                'buku_tamu' => true,
+                'pegawai_izin' => true,
+                'riwayat_tamu' => true,
+                'pengantar_berkas' => true,
+                'can_print' => true,
+                'can_change_status' => true,
+            ]),
+            'Kepala Cabang Dinas' => array_replace($defaults, [
+                'buku_tamu' => true,
+                'pegawai_izin' => true,
+                'rekap_izin' => true,
+                'riwayat_tamu' => true,
+                'pengantar_berkas' => true,
+                'can_print' => true,
+                'can_change_status' => true,
+            ]),
+            'Staff' => array_replace($defaults, [
+                'buku_tamu' => true,
+                'pegawai_izin' => true,
+                'data_pegawai' => true,
+                'riwayat_tamu' => true,
+            ]),
+            default => $defaults,
+        };
     }
 
     /**

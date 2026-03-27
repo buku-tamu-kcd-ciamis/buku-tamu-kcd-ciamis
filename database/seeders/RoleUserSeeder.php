@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\RoleUser;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -15,43 +14,39 @@ class RoleUserSeeder extends Seeder
      */
     public function run(): void
     {
-        if (! DB::table('role_users')->where('name', '=', 'Super Admin')->exists()) {
-            DB::table('role_users')->insert([
-                'id'    => uniqid(),
-                'name' => 'Super Admin',
-                'need_approval' => false,
-                'author_id' => null,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-            ]);
-        }
+        $now = Carbon::now()->format('Y-m-d H:i:s');
 
-        if (! DB::table('role_users')->where('name', '=', 'Kepala Cabang Dinas')->exists()) {
-            DB::table('role_users')->insert([
-                'id'    => uniqid(),
-                'name' => 'Kepala Cabang Dinas',
-                'need_approval' => false,
-                'author_id' => null,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-            ]);
-        }
+        $roles = [
+            ['name' => 'Super Admin', 'need_approval' => false],
+            ['name' => 'Kepala Cabang Dinas', 'need_approval' => false],
+            ['name' => 'Piket', 'need_approval' => false],
+            ['name' => 'Customer', 'need_approval' => true],
+        ];
 
-        if (! DB::table('role_users')->where('name', '=', 'Piket')->exists()) {
-            DB::table('role_users')->insert([
-                'id'    => uniqid(),
-                'name' => 'Piket',
-                'need_approval' => false,
-                'author_id' => null,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
-            ]);
-        }
+        foreach ($roles as $role) {
+            $permissions = RoleUser::getSeedPermissionsForRole($role['name']);
 
-        if (! DB::table('role_users')->where('name', '=', 'Customer')->exists()) {
+            $existing = DB::table('role_users')->where('name', $role['name'])->first();
+
+            if ($existing) {
+                DB::table('role_users')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'need_approval' => $role['need_approval'],
+                        'author_id' => null,
+                        'permissions' => json_encode($permissions),
+                    ]);
+
+                continue;
+            }
+
             DB::table('role_users')->insert([
-                'id'    => uniqid(),
-                'name' => 'Customer',
-                'need_approval' => true,
+                'id' => uniqid(),
+                'name' => $role['name'],
+                'need_approval' => $role['need_approval'],
                 'author_id' => null,
-                'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
+                'permissions' => json_encode($permissions),
+                'created_at' => $now,
             ]);
         }
     }

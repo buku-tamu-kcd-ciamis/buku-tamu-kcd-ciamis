@@ -3,10 +3,12 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\Encoders\PngEncoder;
+use Throwable;
 
 class ImageHelper
 {
@@ -31,10 +33,11 @@ class ImageHelper
 
         // Deteksi apakah ini data:image/png;base64,... atau data:image/jpeg;base64,...
         $isSignature = false;
+        $declaredExtension = null;
         if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
-            $extension = strtolower($matches[1]);
+            $declaredExtension = strtolower($matches[1]);
             // Jika PNG (biasanya tanda tangan), simpan sebagai PNG agar transparan tetap terjaga
-            if ($extension === 'png') {
+            if ($declaredExtension === 'png') {
                 $isSignature = true;
             }
             // Hapus prefix data URI
@@ -46,34 +49,63 @@ class ImageHelper
             return null;
         }
 
-        // Buat gambar menggunakan Intervention Image
-        $image = Image::read($imageData);
+        try {
+            // Jalur utama: kompres/resize via Intervention Image.
+            $image = Image::read($imageData);
 
-        // Resize jika lebih besar dari maxWidth (pertahankan rasio aspek)
-        $currentWidth = $image->width();
-        if ($currentWidth > $maxWidth) {
-            $image->scaleDown(width: $maxWidth);
+            $currentWidth = $image->width();
+            if ($currentWidth > $maxWidth) {
+                $image->scaleDown(width: $maxWidth);
+            }
+
+            if ($isSignature) {
+                $encoded = $image->encode(new PngEncoder());
+                $ext = 'png';
+            } else {
+                $encoded = $image->encode(new JpegEncoder(quality: $quality));
+                $ext = 'jpg';
+            }
+
+            $filename = Str::uuid() . '.' . $ext;
+            $path = $folder . '/' . $filename;
+            Storage::disk('public')->put($path, (string) $encoded);
+
+            return $path;
+        } catch (Throwable $e) {
+            // Fallback ketika GD/Imagick tidak tersedia: simpan biner asli agar submit tidak gagal total.
+            Log::warning('Image processing fallback digunakan', ['error' => $e->getMessage()]);
+
+            $ext = self::detectExtension($imageData, $declaredExtension, $isSignature);
+            $filename = Str::uuid() . '.' . $ext;
+            $path = $folder . '/' . $filename;
+
+            Storage::disk('public')->put($path, $imageData);
+
+            return $path;
+        }
+    }
+
+    private static function detectExtension(string $imageData, ?string $declaredExtension, bool $isSignature): string
+    {
+        $declaredExtension = strtolower((string) $declaredExtension);
+
+        if (in_array($declaredExtension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return $declaredExtension === 'jpeg' ? 'jpg' : $declaredExtension;
         }
 
-        // Encode dengan kompresi
-        if ($isSignature) {
-            // Tanda tangan: simpan sebagai PNG (untuk transparansi)
-            $encoded = $image->encode(new PngEncoder());
-            $ext = 'png';
-        } else {
-            // Foto: simpan sebagai JPEG dengan kompresi
-            $encoded = $image->encode(new JpegEncoder(quality: $quality));
-            $ext = 'jpg';
+        if (str_starts_with($imageData, "\x89PNG\r\n\x1A\n")) {
+            return 'png';
         }
 
-        // Generate nama file unik
-        $filename = Str::uuid() . '.' . $ext;
-        $path = $folder . '/' . $filename;
+        if (str_starts_with($imageData, "\xFF\xD8\xFF")) {
+            return 'jpg';
+        }
 
-        // Simpan ke disk 'public'
-        Storage::disk('public')->put($path, (string) $encoded);
+        if (substr($imageData, 0, 4) === 'RIFF' && substr($imageData, 8, 4) === 'WEBP') {
+            return 'webp';
+        }
 
-        return $path;
+        return $isSignature ? 'png' : 'jpg';
     }
 
     /**

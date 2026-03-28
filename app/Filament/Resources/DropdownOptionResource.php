@@ -142,8 +142,8 @@ class DropdownOptionResource extends Resource
         Tables\Filters\TernaryFilter::make('is_active')
           ->label('Status'),
       ])
-      ->actions([])
-      ->bulkActions([]);
+      ->recordActions([])
+      ->toolbarActions([]);
   }
 
   public static function infolist(Schema $schema): Schema

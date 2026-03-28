@@ -25,8 +25,8 @@
                 src="{{ $imageUrl }}"
                 alt="{{ $name }}"
                 class="bt-avatar-img"
-                width="128"
-                height="88"
+                width="96"
+                height="66"
                 loading="lazy"
                 onerror="this.onerror=null;this.src='{{ $fallback }}';"
             />
@@ -37,8 +37,8 @@
                 src="{{ $fallback }}"
                 alt="{{ $name }}"
                 class="bt-avatar-img"
-                width="128"
-                height="88"
+                width="96"
+                height="66"
             />
         </div>
     @endif

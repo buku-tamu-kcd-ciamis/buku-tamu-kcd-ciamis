@@ -9,8 +9,10 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Pages\Page;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
@@ -18,9 +20,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
-class PengantarBerkas extends Page
+class PengantarBerkas extends Page implements HasTable
 {
   use InteractsWithTable;
+
+  public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+  {
+    return null;
+  }
 
   protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
   protected static ?string $navigationLabel = 'Pengantar Berkas';
@@ -86,8 +93,8 @@ class PengantarBerkas extends Page
         Tables\Filters\SelectFilter::make('status')
           ->options(BukuTamu::STATUS_LABELS),
       ])
-      ->actions([])
+      ->recordActions([])
       ->headerActions([])
-      ->bulkActions([]);
+      ->toolbarActions([]);
   }
 }

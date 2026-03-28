@@ -169,5 +169,3 @@ class RoleUser extends Model
     //     return $this->hasMany(User::class);
     // }
 }
-
-

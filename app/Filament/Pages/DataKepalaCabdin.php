@@ -4,8 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Models\PengaturanKcd;
 use App\Models\User;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -76,8 +76,8 @@ class DataKepalaCabdin extends Page implements HasForms
                     ->description('Tampilan tanda tangan pada halaman cetak.')
                     ->icon('heroicon-o-eye')
                     ->schema([
-                        Placeholder::make('preview')
-                            ->content(function ($get) {
+                        TextEntry::make('preview')
+                            ->state(function ($get) {
                                 $nama = $get('nama_kepala') ?: '(...............................................)';
                                 $nip = $get('nip_kepala') ? 'NIP. ' . $get('nip_kepala') : 'NIP. ..............................';
                                 $jabatan = $get('jabatan') ?: 'Kepala Cabang Dinas Pendidikan Wilayah XIII';

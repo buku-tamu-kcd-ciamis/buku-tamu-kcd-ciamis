@@ -101,16 +101,16 @@ class BukuTamuResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->options(BukuTamu::STATUS_LABELS),
                 Tables\Filters\Filter::make('tanggal')
-                    ->form([
+                    ->schema([
                         Forms\Components\DatePicker::make('tanggal'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query->when($data['tanggal'], fn($q, $date) => $q->whereDate('created_at', $date));
                     }),
             ])
-            ->actions([])
+            ->recordActions([])
             ->headerActions([])
-            ->bulkActions([]);
+            ->toolbarActions([]);
     }
 
     public static function getRelations(): array

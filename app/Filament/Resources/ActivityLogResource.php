@@ -191,7 +191,7 @@ class ActivityLogResource extends Resource
                     ->preload()
                     ->options(fn() => User::pluck('name', 'id')->toArray()),
                 Tables\Filters\Filter::make('created_at')
-                    ->form([
+                    ->schema([
                         Forms\Components\DatePicker::make('tanggal_dari')
                             ->label('Dari Tanggal'),
                         Forms\Components\DatePicker::make('tanggal_sampai')
@@ -214,7 +214,7 @@ class ActivityLogResource extends Resource
                     }),
             ])
             ->filtersFormColumns(2)
-            ->actions([
+            ->recordActions([
                 ViewAction::make()
                     ->label('Detail')
                     ->icon('heroicon-o-eye')

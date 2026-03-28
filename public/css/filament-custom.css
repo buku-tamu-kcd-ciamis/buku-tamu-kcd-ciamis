@@ -1303,23 +1303,26 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     }
 }
 
-/* Admin Buku Tamu photo thumbnail sizing */
-.fi-body.fi-panel-admin .bt-avatar-cell {
+/* Buku tamu photo thumbnail sizing */
+.fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff) .bt-avatar-cell {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-block: 0.3rem;
 }
 
-.fi-body.fi-panel-admin .bt-avatar-frame {
-    width: 128px;
-    height: 88px;
+.fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff)
+    .bt-avatar-frame {
+    width: 96px;
+    height: 66px;
     border-radius: 0.7rem;
     overflow: hidden;
     border: 1px solid #d5e4dc;
     background: #edf5f0;
+    margin: 0.1rem auto;
 }
 
-.fi-body.fi-panel-admin .bt-avatar-img {
+.fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff) .bt-avatar-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -1327,9 +1330,10 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 }
 
 @media (max-width: 768px) {
-    .fi-body.fi-panel-admin .bt-avatar-frame {
-        width: 112px;
-        height: 76px;
+    .fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff)
+        .bt-avatar-frame {
+        width: 84px;
+        height: 58px;
     }
 }
 

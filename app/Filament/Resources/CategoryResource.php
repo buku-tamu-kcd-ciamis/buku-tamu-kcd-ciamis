@@ -50,8 +50,8 @@ class CategoryResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([])
-            ->bulkActions([]);
+            ->recordActions([])
+            ->toolbarActions([]);
     }
 
     public static function getRelations(): array

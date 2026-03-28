@@ -235,7 +235,7 @@ class PegawaiIzinResource extends Resource
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
             ]);
     }

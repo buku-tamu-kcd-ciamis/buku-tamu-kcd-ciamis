@@ -151,8 +151,8 @@ class RekapIzinPegawaiResource extends Resource
           ->query(fn(Builder $query) => $query->having('sedang_izin', '>', 0))
           ->toggle(),
       ])
-      ->actions([])
-      ->bulkActions([])
+      ->recordActions([])
+      ->toolbarActions([])
       ->emptyStateHeading('Belum Ada Data Izin')
       ->emptyStateDescription('Data rekap izin pegawai akan muncul setelah ada data izin yang diinput dari panel Piket.')
       ->emptyStateIcon('heroicon-o-clipboard-document-list');

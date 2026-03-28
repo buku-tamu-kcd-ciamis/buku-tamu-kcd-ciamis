@@ -20,15 +20,17 @@ class ViewBukuTamu extends ViewRecord
     {
         return $schema->components([
 
-            // === Header: Foto Selfie + Info Utama ===
+            // === Informasi Tamu (full width) ===
             Section::make()
+                ->columnSpanFull()
                 ->components([
                     Grid::make(3)
                         ->components([
                             Group::make([
-                                Infolists\Components\ImageEntry::make('foto_selfie'),
+                                Infolists\Components\ImageEntry::make('foto_selfie')
+                                    ->label('Foto selfie')
+                                    ->disk('public'),
                             ])->columnSpan(1),
-
                             Group::make([
                                 Infolists\Components\TextEntry::make('nama_lengkap')
                                     ->size('lg'),
@@ -66,52 +68,62 @@ class ViewBukuTamu extends ViewRecord
                         ]),
                 ]),
 
-            // === Informasi Kunjungan ===
-            Section::make('Informasi Kunjungan')
-                ->icon('heroicon-o-clipboard-document-list')
-                ->columns(2)
+            // === Baris Tengah: Status + Informasi Kunjungan ===
+            Grid::make([
+                'default' => 1,
+                'lg' => 2,
+            ])
+                ->columnSpanFull()
                 ->components([
-                    Infolists\Components\TextEntry::make('kabupaten_kota')
-                        ->icon('heroicon-o-map-pin'),
-                    Infolists\Components\TextEntry::make('staff_dituju')
-                        ->icon('heroicon-o-building-office'),
-                    Infolists\Components\TextEntry::make('keperluan')
-                        ->icon('heroicon-o-document-text'),
-                    Infolists\Components\TextEntry::make('created_at')
-                        ->icon('heroicon-o-clock')
-                        ->dateTime('d F Y, H:i:s'),
+                    Section::make('Status Kunjungan')
+                        ->icon('heroicon-o-signal')
+                        ->columns(2)
+                        ->components([
+                            Infolists\Components\TextEntry::make('status')
+                                ->badge()
+                                ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state))
+                                ->color(fn(string $state) => match ($state) {
+                                    'menunggu' => 'warning',
+                                    'diproses' => 'info',
+                                    'selesai' => 'success',
+                                    'ditolak' => 'danger',
+                                    'dibatalkan' => 'gray',
+                                    default => 'secondary',
+                                }),
+                            Infolists\Components\TextEntry::make('nama_penerima')
+                                ->icon('heroicon-o-user')
+                                ->placeholder('Belum ada penerima'),
+                            Infolists\Components\TextEntry::make('catatan')
+                                ->placeholder('Tidak ada catatan'),
+                        ]),
+                    Section::make('Informasi Kunjungan')
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->columns(2)
+                        ->components([
+                            Infolists\Components\TextEntry::make('kabupaten_kota')
+                                ->icon('heroicon-o-map-pin'),
+                            Infolists\Components\TextEntry::make('staff_dituju')
+                                ->icon('heroicon-o-building-office'),
+                            Infolists\Components\TextEntry::make('keperluan')
+                                ->icon('heroicon-o-document-text'),
+                            Infolists\Components\TextEntry::make('created_at')
+                                ->icon('heroicon-o-clock')
+                                ->dateTime('d F Y, H:i:s'),
+                        ]),
                 ]),
 
-            // === Status ===
-            Section::make('Status Kunjungan')
-                ->icon('heroicon-o-signal')
-                ->columns(2)
-                ->components([
-                    Infolists\Components\TextEntry::make('status')
-                        ->badge()
-                        ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state))
-                        ->color(fn(string $state) => match ($state) {
-                            'menunggu' => 'warning',
-                            'diproses' => 'info',
-                            'selesai' => 'success',
-                            'ditolak' => 'danger',
-                            'dibatalkan' => 'gray',
-                            default => 'secondary',
-                        }),
-                    Infolists\Components\TextEntry::make('nama_penerima')
-                        ->icon('heroicon-o-user')
-                        ->placeholder('Belum ada penerima'),
-                    Infolists\Components\TextEntry::make('catatan')
-                        ->placeholder('Tidak ada catatan'),
-                ]),
-
-            // === Dokumen ===
+            // === Dokumen (full width) ===
             Section::make('Dokumen')
                 ->icon('heroicon-o-camera')
+                ->columnSpanFull()
                 ->columns(2)
                 ->components([
-                    Infolists\Components\ImageEntry::make('foto_penerimaan'),
-                    Infolists\Components\ImageEntry::make('tanda_tangan'),
+                    Infolists\Components\ImageEntry::make('foto_penerimaan')
+                        ->label('Foto penerimaan')
+                        ->disk('public'),
+                    Infolists\Components\ImageEntry::make('tanda_tangan')
+                        ->label('Tanda tangan')
+                        ->disk('public'),
                 ]),
         ]);
     }

@@ -184,8 +184,8 @@ class NomorSuratResource extends Resource
 
       Section::make('Contoh Hasil')
         ->schema([
-          Forms\Components\Placeholder::make('preview')
-            ->content(function ($get) {
+          \Filament\Infolists\Components\TextEntry::make('preview')
+            ->state(function ($get) {
               $template = $get('template') ?: '{NOMOR}/{KODE}/{BULAN}/{TAHUN}';
               $kode = $get('kode_surat') ?: 'XX';
               $padding = $get('padding_length') ?: 6;
@@ -250,8 +250,8 @@ class NomorSuratResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->actions([])
-      ->bulkActions([]);
+      ->recordActions([])
+      ->toolbarActions([]);
   }
 
   public static function getRelations(): array

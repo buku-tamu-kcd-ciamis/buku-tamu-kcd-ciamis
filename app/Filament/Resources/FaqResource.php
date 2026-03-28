@@ -122,8 +122,8 @@ class FaqResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->actions([])
-      ->bulkActions([]);
+      ->recordActions([])
+      ->toolbarActions([]);
   }
 
   public static function getRelations(): array

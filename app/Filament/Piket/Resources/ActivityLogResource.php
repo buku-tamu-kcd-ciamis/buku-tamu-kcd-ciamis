@@ -98,7 +98,7 @@ class ActivityLogResource extends Resource
                         'deleted' => 'Dihapus',
                     ]),
                 Tables\Filters\Filter::make('created_at')
-                    ->form([
+                    ->schema([
                         Forms\Components\DatePicker::make('tanggal_dari'),
                         Forms\Components\DatePicker::make('tanggal_sampai'),
                     ])
@@ -108,7 +108,7 @@ class ActivityLogResource extends Resource
                             ->when($data['tanggal_sampai'], fn($q, $date) => $q->whereDate('created_at', '<=', $date));
                     }),
             ])
-            ->actions([]);
+            ->recordActions([]);
     }
 
     public static function getRelations(): array

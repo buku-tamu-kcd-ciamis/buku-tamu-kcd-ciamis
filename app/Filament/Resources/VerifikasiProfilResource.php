@@ -92,8 +92,8 @@ class VerifikasiProfilResource extends Resource
           ->label('Status')
           ->options(ProfileChangeRequest::STATUS_LABELS),
       ])
-      ->actions([])
-      ->bulkActions([])
+      ->recordActions([])
+      ->toolbarActions([])
       ->emptyStateHeading('Belum Ada Pengajuan')
       ->emptyStateDescription('Pengajuan perubahan profil dari Kepala Cabang Dinas akan muncul di sini.')
       ->emptyStateIcon('heroicon-o-clipboard-document-check');

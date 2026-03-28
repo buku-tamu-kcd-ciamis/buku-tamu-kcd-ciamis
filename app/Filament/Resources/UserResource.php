@@ -4,9 +4,15 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
@@ -31,6 +37,19 @@ class UserResource extends Resource
         /** @var User $user */
         $user = Auth::user();
         return $user && $user->role_user && $user->role_user->hasPermission('user_management');
+    }
+
+    public static function canDelete($record): bool
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        return (bool) ($user && $user->hasRole('Super Admin'));
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::canDelete(null);
     }
 
     public static function form(Schema $schema): Schema
@@ -110,8 +129,71 @@ class UserResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([])
-            ->bulkActions([]);
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->label('Lihat')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
+                    EditAction::make()
+                        ->label('Edit')
+                        ->icon('heroicon-o-pencil-square')
+                        ->color('warning'),
+                    DeleteAction::make()
+                        ->label('Hapus')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->hidden(fn(): bool => !static::canDelete(null))
+                        ->disabled(fn(User $record): bool => !$record->isDeletable())
+                        ->tooltip(function (User $record): ?string {
+                            if ($record->isDeletable()) {
+                                return null;
+                            }
+
+                            if ($record->hasRole('Super Admin')) {
+                                return 'User dengan role Super Admin tidak dapat dihapus.';
+                            }
+
+                            return 'Minimal harus ada 1 user dengan role ' . ($record->role_user->name ?? 'ini') . '.';
+                        }),
+                    Action::make('resetPassword')
+                        ->label('Reset Password')
+                        ->icon('heroicon-o-key')
+                        ->color('gray')
+                        ->schema([
+                            TextInput::make('password')
+                                ->label('Password Baru')
+                                ->password()
+                                ->revealable()
+                                ->required()
+                                ->minLength(8)
+                                ->same('passwordConfirmation'),
+                            TextInput::make('passwordConfirmation')
+                                ->label('Konfirmasi Password Baru')
+                                ->password()
+                                ->revealable()
+                                ->required()
+                                ->dehydrated(false),
+                        ])
+                        ->modalHeading(fn(User $record): string => 'Reset password: ' . $record->name)
+                        ->modalSubmitActionLabel('Simpan')
+                        ->action(function (User $record, array $data): void {
+                            $record->update([
+                                'password' => Hash::make((string) ($data['password'] ?? '')),
+                            ]);
+
+                            Notification::make()
+                                ->title('Password berhasil direset')
+                                ->body('Password untuk user ' . $record->name . ' berhasil diperbarui.')
+                                ->success()
+                                ->send();
+                        }),
+                ])
+                    ->label(false)
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->color('gray'),
+            ])
+            ->toolbarActions([]);
     }
 
     public static function getRelations(): array

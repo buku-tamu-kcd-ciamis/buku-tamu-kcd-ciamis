@@ -244,8 +244,8 @@ class PegawaiIzinResource extends Resource
           ->label('Jenis Izin')
           ->options(PegawaiIzin::JENIS_IZIN_LABELS),
       ])
-      ->actions([])
-      ->bulkActions([]);
+      ->recordActions([])
+      ->toolbarActions([]);
   }
 
   public static function getRelations(): array

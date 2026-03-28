@@ -161,7 +161,8 @@ class PegawaiIzinResource extends Resource
           ->searchable()
           ->placeholder('Pilih nama petugas piket')
           ->required(),
-        Forms\Components\ViewField::make('tanda_tangan_piket')
+        Forms\Components\Textarea::make('tanda_tangan_piket')
+          ->rows(2)
           ->required(),
       ]),
     ]);
@@ -238,8 +239,8 @@ class PegawaiIzinResource extends Resource
           ->label('Jenis Izin')
           ->options(PegawaiIzin::JENIS_IZIN_LABELS),
       ])
-      ->actions([])
-      ->bulkActions([]);
+      ->recordActions([])
+      ->toolbarActions([]);
   }
 
   public static function getRelations(): array

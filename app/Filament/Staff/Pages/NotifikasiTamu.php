@@ -129,7 +129,7 @@ class NotifikasiTamu extends Page implements HasTable
             ])
             ->defaultSort('created_at', 'desc')
             ->defaultPaginationPageOption(10)
-            ->actions([
+            ->recordActions([
                 ActionGroup::make([
                     Action::make('terima')
                         ->label('Terima Tamu')
@@ -195,7 +195,7 @@ class NotifikasiTamu extends Page implements HasTable
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->color('gray'),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkAction::make('tandai_semua_dibaca')
                     ->label('Tandai Semua Dibaca')
                     ->icon('heroicon-o-check')

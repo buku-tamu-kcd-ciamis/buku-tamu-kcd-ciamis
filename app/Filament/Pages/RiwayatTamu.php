@@ -5,18 +5,26 @@ namespace App\Filament\Pages;
 use App\Models\BukuTamu;
 use App\Models\DropdownOption;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Pages\Page;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\View\View;
 
-class RiwayatTamu extends Page
+class RiwayatTamu extends Page implements HasTable
 {
   use InteractsWithTable;
+
+  public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+  {
+    return null;
+  }
 
   protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
   protected static ?string $navigationLabel = 'Riwayat Pengunjung';
@@ -100,8 +108,15 @@ class RiwayatTamu extends Page
       ->defaultSort('total_kunjungan', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
+      ->recordActions([
+        Action::make('view')
+          ->label('Lihat Detail')
+          ->icon('heroicon-o-eye')
+          ->color('primary')
+          ->url(fn($record) => ViewRiwayatTamu::getUrl(['nik' => $record->nik])),
+      ])
       ->headerActions([])
-      ->bulkActions([]);
+      ->toolbarActions([]);
   }
 
   public function getFooter(): ?View

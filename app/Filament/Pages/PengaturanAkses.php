@@ -7,9 +7,10 @@ use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
 class PengaturanAkses extends Page implements HasForms
@@ -50,37 +51,78 @@ class PengaturanAkses extends Page implements HasForms
     $settings = \App\Models\PengaturanKcd::getSettings();
 
     $this->form->fill([
-      'kepalaCabdin' => $kepalaCabdinPermissions,
-      'piket' => $piketPermissions,
+      'kepalaCabdin' => $this->getSelectedPermissions($kepalaCabdinPermissions),
+      'piket' => $this->getSelectedPermissions($piketPermissions),
       'paperSize' => $settings->paper_size ?? 'a4',
     ]);
   }
 
   public function form(Schema $form): Schema
   {
+    $resourcePermissionLabels = RoleUser::getResourcePermissionLabels();
+    $actionPermissionLabels = [
+      'can_print' => 'Bisa Cetak',
+      'can_change_status' => 'Bisa Ubah Status',
+    ];
+
     return $form->schema([
-      Forms\Components\Select::make('paperSize')
-        ->options([
-          'a4' => 'A4 (210 x 297 mm)',
-          'f4' => 'F4 (215 x 330 mm)',
+      Section::make('Akses Kepala Cabang Dinas')
+        ->description('Atur menu dan aksi yang dapat diakses oleh role Kepala Cabang Dinas.')
+        ->schema([
+          Forms\Components\CheckboxList::make('kepalaCabdin')
+            ->options($resourcePermissionLabels + $actionPermissionLabels)
+            ->columns(2)
+            ->bulkToggleable()
+            ->descriptions([
+              'can_print' => 'Mengizinkan akses tombol cetak pada halaman terkait.',
+              'can_change_status' => 'Mengizinkan perubahan status data yang memerlukan otorisasi.',
+            ]),
         ])
-        ->required(),
+        ->collapsible(),
+
+      Section::make('Akses Piket')
+        ->description('Atur menu dan aksi yang dapat diakses oleh role Piket.')
+        ->schema([
+          Forms\Components\CheckboxList::make('piket')
+            ->options($resourcePermissionLabels + $actionPermissionLabels)
+            ->columns(2)
+            ->bulkToggleable()
+            ->descriptions([
+              'can_print' => 'Mengizinkan akses tombol cetak pada halaman terkait.',
+              'can_change_status' => 'Mengizinkan perubahan status data yang memerlukan otorisasi.',
+            ]),
+        ])
+        ->collapsible(),
+
+      Section::make('Pengaturan Cetak')
+        ->description('Atur ukuran kertas default untuk fitur cetak surat dan laporan.')
+        ->schema([
+          Forms\Components\Select::make('paperSize')
+            ->label('Paper size')
+            ->options([
+              'a4' => 'A4 (210 x 297 mm)',
+              'f4' => 'F4 (215 x 330 mm)',
+            ])
+            ->required(),
+        ]),
     ]);
   }
 
   public function save(): void
   {
     $data = $this->form->getState();
+    $kepalaCabdinPermissions = $this->toPermissionMap($data['kepalaCabdin'] ?? []);
+    $piketPermissions = $this->toPermissionMap($data['piket'] ?? []);
 
     $kepalaCabdinRole = RoleUser::where('name', 'Kepala Cabang Dinas')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
 
     if ($kepalaCabdinRole) {
-      $kepalaCabdinRole->update(['permissions' => $data['kepalaCabdin']]);
+      $kepalaCabdinRole->update(['permissions' => $kepalaCabdinPermissions]);
     }
 
     if ($piketRole) {
-      $piketRole->update(['permissions' => $data['piket']]);
+      $piketRole->update(['permissions' => $piketPermissions]);
     }
 
     \App\Models\PengaturanKcd::getSettings()->update([
@@ -98,5 +140,23 @@ class PengaturanAkses extends Page implements HasForms
       ->title('Pengaturan akses berhasil disimpan!')
       ->body('Visibilitas menu dan pengaturan aksi telah diperbarui untuk semua role.')
       ->send();
+  }
+
+  private function getSelectedPermissions(array $permissions): array
+  {
+    return collect($permissions)
+      ->filter(fn($isAllowed) => (bool) $isAllowed)
+      ->keys()
+      ->values()
+      ->all();
+  }
+
+  private function toPermissionMap(array $selectedPermissions): array
+  {
+    $selected = array_flip($selectedPermissions);
+
+    return collect(RoleUser::getDefaultPermissions())
+      ->mapWithKeys(fn($value, $key) => [$key => isset($selected[$key])])
+      ->all();
   }
 }

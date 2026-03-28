@@ -7,15 +7,22 @@ use App\Models\DropdownOption;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Pages\Page;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
-class PengantarBerkas extends Page
+class PengantarBerkas extends Page implements HasTable
 {
   use InteractsWithTable;
+
+  public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+  {
+    return null;
+  }
 
   protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
   protected static ?string $navigationLabel = 'Pengantar Berkas';
@@ -81,8 +88,8 @@ class PengantarBerkas extends Page
         Tables\Filters\SelectFilter::make('status')
           ->options(BukuTamu::STATUS_LABELS),
       ])
-      ->actions([])
+      ->recordActions([])
       ->headerActions([])
-      ->bulkActions([]);
+      ->toolbarActions([]);
   }
 }

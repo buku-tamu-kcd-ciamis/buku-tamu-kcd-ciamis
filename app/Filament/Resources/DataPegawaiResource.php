@@ -130,7 +130,7 @@ class DataPegawaiResource extends Resource
       ->defaultSort('nama')
       ->defaultPaginationPageOption(25)
       ->paginationPageOptions([10, 25, 50])
-      ->actionsColumnLabel('')
+      ->recordActionsColumnLabel('')
       ->filters([
         Tables\Filters\TernaryFilter::make('is_active')
           ->label('Status')
@@ -138,8 +138,8 @@ class DataPegawaiResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->actions([])
-      ->bulkActions([]);
+      ->recordActions([])
+      ->toolbarActions([]);
   }
 
   public static function getRelations(): array

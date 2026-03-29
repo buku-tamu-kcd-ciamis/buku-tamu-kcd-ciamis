@@ -25,11 +25,15 @@ class PegawaiIzin extends Model
     'status',
     'nama_piket',
     'tanda_tangan_piket',
+    'diverifikasi_oleh',
+    'diverifikasi_pada',
+    'catatan_verifikasi',
   ];
 
   protected $casts = [
     'tanggal_mulai' => 'date',
     'tanggal_selesai' => 'date',
+    'diverifikasi_pada' => 'datetime',
   ];
 
   public const JENIS_IZIN_LABELS = [
@@ -54,6 +58,17 @@ class PegawaiIzin extends Model
     self::STATUS_SELESAI => 'Selesai',
   ];
 
+  public const VERIFIED_STATUSES = [
+    self::STATUS_DISETUJUI,
+    self::STATUS_AKTIF,
+    self::STATUS_SELESAI,
+  ];
+
+  public function isVerifiedByKcd(): bool
+  {
+    return in_array($this->status, self::VERIFIED_STATUSES, true);
+  }
+
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()
@@ -66,6 +81,9 @@ class PegawaiIzin extends Model
         'tanggal_selesai',
         'keterangan',
         'nama_piket',
+        'diverifikasi_oleh',
+        'diverifikasi_pada',
+        'catatan_verifikasi',
       ])
       ->logOnlyDirty()
       ->dontLogEmptyChanges()

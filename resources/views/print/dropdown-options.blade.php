@@ -7,9 +7,9 @@
     <title>Data Dropdown Options</title>
     @php
         $settings = \App\Models\PengaturanKcd::getSettings();
-        $paperSize = $settings->paper_size ?? 'a4';
+        $paperSize = \App\Support\PrintPaperSize::normalize($settings->paper_size ?? 'a4');
         $isF4 = $paperSize === 'f4';
-        $pageSize = $isF4 ? '215mm 330mm' : 'A4 portrait';
+        $pageSize = \App\Support\PrintPaperSize::pageSize($paperSize, 'portrait');
         $baseFontSize = $isF4 ? '12.5pt' : '12pt';
     @endphp
     <style>

@@ -8,9 +8,10 @@
     <title>Data Pegawai — Cadisdik XIII</title>
     @php
         $settings = \App\Models\PengaturanKcd::getSettings();
-        $paperSize = $settings->paper_size ?? 'a4';
+        $paperSize = \App\Support\PrintPaperSize::normalize($settings->paper_size ?? 'a4');
         $isF4 = $paperSize === 'f4';
-        $pageSize = $isF4 ? '215mm 330mm' : 'A4 portrait';
+        $pageSize = \App\Support\PrintPaperSize::pageSize($paperSize, 'portrait');
+        $pageWidth = \App\Support\PrintPaperSize::pageWidth($paperSize, 'portrait');
         $baseFontSize = $isF4 ? '11.5pt' : '11pt';
     @endphp
     <style>
@@ -39,7 +40,7 @@
 
         .page {
             max-width:
-                {{ $isF4 ? '215mm' : '210mm' }}
+                {{ $pageWidth }}
             ;
             margin: 0 auto;
             padding: 8mm;

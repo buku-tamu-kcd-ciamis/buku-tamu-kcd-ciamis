@@ -8,16 +8,28 @@
     <title>Surat Kunjungan — {{ $tamu->nama_lengkap }}</title>
     @php
         $settings = \App\Models\PengaturanKcd::getSettings();
-        $paperSize = $settings->paper_size ?? 'a4';
+        $paperSize = \App\Support\PrintPaperSize::normalize($settings->paper_size ?? 'a4');
         $isF4 = $paperSize === 'f4';
-        $pageSize = $isF4 ? '215mm 330mm' : 'A4';
+        $pageSize = \App\Support\PrintPaperSize::pageSize($paperSize, 'portrait');
+        $pageWidth = \App\Support\PrintPaperSize::pageWidth($paperSize, 'portrait');
         $baseFontSize = $isF4 ? '12pt' : '11pt';
+
+        $rawNomorHp = preg_replace('/\D+/', '', (string) ($tamu->nomor_hp ?? ''));
+        if ($rawNomorHp === '') {
+            $formattedNomorHp = '-';
+        } elseif (str_starts_with($rawNomorHp, '62')) {
+            $formattedNomorHp = '0' . substr($rawNomorHp, 2);
+        } elseif (str_starts_with($rawNomorHp, '8')) {
+            $formattedNomorHp = '0' . $rawNomorHp;
+        } else {
+            $formattedNomorHp = $rawNomorHp;
+        }
     @endphp
     <style>
         @page {
             size:
                 {{ $pageSize }}
-                portrait;
+                ;
             margin: 10mm 15mm;
         }
 
@@ -42,7 +54,7 @@
 
         .page {
             max-width:
-                {{ $isF4 ? '215mm' : '210mm' }}
+                {{ $pageWidth }}
             ;
             margin: 0 auto;
             padding:
@@ -69,43 +81,53 @@
         }
 
         .header-logo {
-            width: 90px;
-            height: auto;
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
             flex-shrink: 0;
+            margin-top: 0;
         }
 
         .header-spacer {
-            width: 90px;
+            width: 76px;
             flex-shrink: 0;
         }
 
         .header-logo-right {
-            width: 90px;
-            height: auto;
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
             flex-shrink: 0;
+            margin-top: 0;
         }
 
         .header-text {
             flex: 1;
             text-align: center;
+            min-width: 0;
         }
 
         .header-text h2 {
-            font-size: 14pt;
+            font-size: 13pt;
             text-transform: uppercase;
             font-weight: bold;
+            line-height: 1.25;
             margin-bottom: 2px;
+            white-space: nowrap;
         }
 
         .header-text h3 {
-            font-size: 18pt;
+            font-size: 15pt;
             text-transform: uppercase;
             font-weight: bold;
+            line-height: 1.2;
             margin-bottom: 2px;
+            white-space: nowrap;
         }
 
         .header-text p {
-            font-size: 12pt;
+            font-size: 10.5pt;
+            line-height: 1.3;
             margin: 0;
         }
 
@@ -233,6 +255,8 @@
         .signature-section {
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
             margin-top: auto;
             padding-top: 30px;
             page-break-inside: avoid;
@@ -240,31 +264,38 @@
 
         .signature-box {
             text-align: center;
-            width: 180px;
+            width: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .signature-box p {
+        .signature-role {
             font-size: 10pt;
+            margin-bottom: 8px;
         }
 
-        .signature-box .name {
-            margin-top: 50px;
+        .signature-space {
+            width: 100%;
+            height: 72px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .signature-name-line {
+            width: 100%;
+            min-height: 24px;
             font-weight: bold;
             border-bottom: 1px solid #000;
             padding-bottom: 2px;
+            line-height: 1.2;
         }
 
-        .signature-box img {
+        .signature-image {
             max-width: 120px;
             max-height: 60px;
             object-fit: contain;
-        }
-
-        .signature-box .name-signed {
-            margin-top: 5px;
-            font-weight: bold;
-            border-bottom: 1px solid #000;
-            padding-bottom: 2px;
         }
 
         /* === FOOTER === */
@@ -286,6 +317,36 @@
             .page {
                 padding: 0;
                 max-width: 100%;
+            }
+
+            .header {
+                gap: 10px;
+                padding-bottom: 8px;
+                margin-bottom: 14px;
+            }
+
+            .header-logo,
+            .header-spacer,
+            .header-logo-right {
+                width: 68px;
+            }
+
+            .header-logo,
+            .header-logo-right {
+                height: 68px;
+                margin-top: 0;
+            }
+
+            .header-text h2 {
+                font-size: 12pt;
+            }
+
+            .header-text h3 {
+                font-size: 14pt;
+            }
+
+            .header-text p {
+                font-size: 9.5pt;
             }
 
             .no-print {
@@ -379,7 +440,7 @@
                 <tr>
                     <td class="label">Nomor HP</td>
                     <td class="colon">:</td>
-                    <td>{{ $tamu->nomor_hp }}</td>
+                    <td>{{ $formattedNomorHp }}</td>
                 </tr>
                 <tr>
                     <td class="label">Email</td>
@@ -437,17 +498,18 @@
         <!-- SIGNATURE -->
         <div class="signature-section">
             <div class="signature-box">
-                <p>Tamu,</p>
-                @if($tamu->tanda_tangan_url)
-                    <img src="{{ $tamu->tanda_tangan_url }}" alt="TTD">
-                    <p class="name-signed">{{ $tamu->nama_lengkap }}</p>
-                @else
-                    <p class="name">{{ $tamu->nama_lengkap }}</p>
-                @endif
+                <p class="signature-role">Tamu,</p>
+                <div class="signature-space">
+                    @if($tamu->tanda_tangan_url)
+                        <img src="{{ $tamu->tanda_tangan_url }}" alt="TTD" class="signature-image">
+                    @endif
+                </div>
+                <p class="signature-name-line">{{ $tamu->nama_lengkap }}</p>
             </div>
             <div class="signature-box">
-                <p>Petugas Piket,</p>
-                <p class="name">{{ $tamu->nama_penerima ?? '(.................................)' }}</p>
+                <p class="signature-role">Petugas Piket,</p>
+                <div class="signature-space"></div>
+                <p class="signature-name-line">{{ $tamu->nama_penerima ?? '(.................................)' }}</p>
             </div>
         </div>
     </div>

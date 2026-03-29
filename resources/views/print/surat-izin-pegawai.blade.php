@@ -8,10 +8,14 @@
     <title>Surat Izin — {{ $pegawai->nama_pegawai }}</title>
     @php
         $settings = \App\Models\PengaturanKcd::getSettings();
-        $paperSize = $settings->paper_size ?? 'a4';
+        $paperSize = \App\Support\PrintPaperSize::normalize($settings->paper_size ?? 'a4');
         $isF4 = $paperSize === 'f4';
-        $pageSize = $isF4 ? '215mm 330mm' : 'A4 portrait';
+        $pageSize = \App\Support\PrintPaperSize::pageSize($paperSize, 'portrait');
+        $pageWidth = \App\Support\PrintPaperSize::pageWidth($paperSize, 'portrait');
         $baseFontSize = $isF4 ? '12.5pt' : '12pt';
+        $statusLabel = \App\Models\PegawaiIzin::STATUS_LABELS[$pegawai->status] ?? ucfirst($pegawai->status);
+        $isVerifiedByKcd = in_array($pegawai->status, \App\Models\PegawaiIzin::VERIFIED_STATUSES, true);
+        $verifiedAt = $pegawai->diverifikasi_pada?->translatedFormat('d F Y, H:i');
     @endphp
     <style>
         @page {
@@ -39,7 +43,7 @@
 
         .page {
             max-width:
-                {{ $isF4 ? '215mm' : '210mm' }}
+                {{ $pageWidth }}
             ;
             margin: 0 auto;
             padding:
@@ -365,11 +369,23 @@
                     <td><strong>{{ $pegawai->tanggal_mulai->diffInDays($pegawai->tanggal_selesai) + 1 }} Hari</strong>
                     </td>
                 </tr>
+                <tr>
+                    <td class="label">Status Verifikasi</td>
+                    <td class="colon">:</td>
+                    <td>{{ $statusLabel }}</td>
+                </tr>
                 @if($pegawai->keterangan)
                     <tr>
                         <td class="label">Keterangan</td>
                         <td class="colon">:</td>
                         <td>{{ $pegawai->keterangan }}</td>
+                    </tr>
+                @endif
+                @if($pegawai->catatan_verifikasi)
+                    <tr>
+                        <td class="label">Catatan Verifikasi</td>
+                        <td class="colon">:</td>
+                        <td>{{ $pegawai->catatan_verifikasi }}</td>
                     </tr>
                 @endif
             </table>
@@ -384,10 +400,18 @@
                     <p>Mengetahui,</p>
                     <p>Kepala Cabang Dinas Pendidikan</p>
                     <p>Wilayah XIII,</p>
+                    @if($isVerifiedByKcd && $verifiedAt)
+                        <p style="margin-top: 6px;">Diverifikasi: {{ $verifiedAt }}</p>
+                    @endif
                 </div>
                 <div class="signature-space"></div>
-                <p class="name">{{ $kepalaCabdin->formatted_nama }}</p>
-                <p class="nip">{{ $kepalaCabdin->formatted_nip }}</p>
+                @if($isVerifiedByKcd)
+                    <p class="name">{{ $kepalaCabdin->formatted_nama }}</p>
+                    <p class="nip">{{ $kepalaCabdin->formatted_nip }}</p>
+                @else
+                    <p class="name">(Menunggu Verifikasi)</p>
+                    <p class="nip">NIP. ..............................</p>
+                @endif
             </div>
             <div class="signature-box">
                 <div class="signature-label">

@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use Filament\Forms;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Notifications\Notification;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
@@ -24,47 +23,66 @@ class EditProfile extends BaseEditProfile
   public function form(Schema $schema): Schema
   {
     return $schema
+      ->columns([
+        'default' => 1,
+        'md' => 2,
+      ])
       ->components([
-        Grid::make(2)
+        Section::make('Informasi Akun')
+          ->icon('heroicon-o-user')
+          ->compact()
+          ->columns(2)
           ->schema([
-            Section::make('Informasi Akun')
-              ->description('Perbarui informasi akun Anda')
-              ->icon('heroicon-o-user')
-              ->schema([
-                $this->getNameFormComponent()
-                  ->label('Nama Lengkap'),
-                $this->getEmailFormComponent()
-                  ->label('Email'),
-              ])
+            $this->getNameFormComponent()
+              ->label('Nama Lengkap')
+              ->prefixIcon('heroicon-o-user-circle')
+              ->placeholder('Nama akun')
               ->columnSpan(1),
+            $this->getEmailFormComponent()
+              ->label('Email Akun')
+              ->prefixIcon('heroicon-o-envelope')
+              ->placeholder('email@domain.com')
+              ->columnSpan(1),
+          ])
+          ->columnSpan(1),
 
-            Section::make('Keamanan')
-              ->description('Ubah password akun Anda')
-              ->icon('heroicon-o-lock-closed')
-              ->schema([
-                Forms\Components\TextInput::make('current_password')
-                  ->password()
-                  ->revealable()
-                  ->required(fn(callable $get) => filled($get('password')))
-                  ->rules([
-                    fn() => function (string $attribute, $value, $fail) {
-                      $user = Auth::user();
-                      if ($user && ! Hash::check($value, $user->password)) {
-                        $fail('Password saat ini tidak sesuai.');
-                      }
-                    },
-                  ]),
-                Forms\Components\TextInput::make('password')
-                  ->password()
-                  ->revealable()
-                  ->rule(Password::default())
-                  ->same('passwordConfirmation'),
-                Forms\Components\TextInput::make('passwordConfirmation')
-                  ->password()
-                  ->revealable()
-                  ->requiredWith('password')
+        Section::make('Ubah Password')
+          ->icon('heroicon-o-lock-closed')
+          ->collapsible()
+          ->collapsed()
+          ->compact()
+          ->columns(2)
+          ->schema([
+            Forms\Components\TextInput::make('current_password')
+              ->label('Password Saat Ini')
+              ->prefixIcon('heroicon-o-key')
+              ->password()
+              ->revealable()
+              ->required(fn(callable $get) => filled($get('password')))
+              ->rules([
+                fn() => function (string $attribute, $value, $fail) {
+                  $user = Auth::user();
+                  if ($user && ! Hash::check($value, $user->password)) {
+                    $fail('Password saat ini tidak sesuai.');
+                  }
+                },
               ])
               ->columnSpan(1),
+            Forms\Components\TextInput::make('password')
+              ->label('Password Baru')
+              ->prefixIcon('heroicon-o-lock-closed')
+              ->password()
+              ->revealable()
+              ->rule(Password::default())
+              ->same('passwordConfirmation')
+              ->columnSpan(1),
+            Forms\Components\TextInput::make('passwordConfirmation')
+              ->label('Konfirmasi Password Baru')
+              ->prefixIcon('heroicon-o-check-badge')
+              ->password()
+              ->revealable()
+              ->requiredWith('password')
+              ->columnSpan(2),
           ]),
       ]);
   }

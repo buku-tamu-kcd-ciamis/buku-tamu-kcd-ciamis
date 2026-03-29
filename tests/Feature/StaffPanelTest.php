@@ -11,6 +11,22 @@ class StaffPanelTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function createStaffUser(): User
+    {
+        $staffRole = RoleUser::create([
+            'name' => 'Staff',
+            'need_approval' => false,
+            'permissions' => RoleUser::getDefaultPermissions(),
+        ]);
+
+        /** @var User $user */
+        $user = User::factory()->create([
+            'role_user_id' => $staffRole->id,
+        ]);
+
+        return $user;
+    }
+
     public function test_filament_staff_login_screen_can_be_rendered(): void
     {
         $response = $this->get('/staff/login');
@@ -27,15 +43,7 @@ class StaffPanelTest extends TestCase
 
     public function test_staff_user_can_access_staff_profile(): void
     {
-        $staffRole = RoleUser::create([
-            'name' => 'Staff',
-            'need_approval' => false,
-            'permissions' => RoleUser::getDefaultPermissions(),
-        ]);
-
-        $user = User::factory()->create([
-            'role_user_id' => $staffRole->id,
-        ]);
+        $user = $this->createStaffUser();
 
         $response = $this->actingAs($user)->get('/staff/profile');
 
@@ -44,15 +52,7 @@ class StaffPanelTest extends TestCase
 
     public function test_staff_user_cannot_access_admin_profile(): void
     {
-        $staffRole = RoleUser::create([
-            'name' => 'Staff',
-            'need_approval' => false,
-            'permissions' => RoleUser::getDefaultPermissions(),
-        ]);
-
-        $user = User::factory()->create([
-            'role_user_id' => $staffRole->id,
-        ]);
+        $user = $this->createStaffUser();
 
         $response = $this->actingAs($user)->get('/admin/profile');
 
@@ -61,15 +61,7 @@ class StaffPanelTest extends TestCase
 
     public function test_staff_user_cannot_access_piket_profile(): void
     {
-        $staffRole = RoleUser::create([
-            'name' => 'Staff',
-            'need_approval' => false,
-            'permissions' => RoleUser::getDefaultPermissions(),
-        ]);
-
-        $user = User::factory()->create([
-            'role_user_id' => $staffRole->id,
-        ]);
+        $user = $this->createStaffUser();
 
         $response = $this->actingAs($user)->get('/piket/profile');
 

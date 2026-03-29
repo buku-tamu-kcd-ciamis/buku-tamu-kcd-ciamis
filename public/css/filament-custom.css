@@ -72,9 +72,6 @@
 /* Membuat action button lebih compact dan simetris */
 .fi-ta-actions button[type="button"] {
     padding: 0.5rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
 }
 
 /* Brand name tidak wrap dan muat di sidebar */
@@ -92,8 +89,18 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     display: none !important;
 }
 
-/* Staff and Piket login page theme */
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout {
+/* Prevent table jump when bulk-selection indicator appears */
+.fi-ta-header-ctn:has(+ .fi-ta-selection-indicator) {
+    padding-bottom: 2.25rem;
+}
+
+.fi-ta-header-ctn:has(+ .fi-ta-selection-indicator) + .fi-ta-selection-indicator {
+    margin-top: -2.25rem;
+}
+
+/* Staff, Piket, and Admin login page theme */
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-layout {
     min-height: 100vh;
     position: relative;
     padding: 1.25rem;
@@ -111,17 +118,19 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
         linear-gradient(160deg, #ecf8f1 0%, #dcefe4 100%);
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main-ctn {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-main-ctn {
     width: 100%;
     margin-inline: auto;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main.fi-width-lg {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-main.fi-width-lg {
     max-width: min(94vw, 30rem);
     margin-inline: auto;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin) .fi-simple-main {
     width: 100%;
     max-width: 100%;
     border-radius: 1.25rem;
@@ -134,11 +143,13 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     backdrop-filter: blur(6px);
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-header {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-header {
     gap: 0.6rem;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-header .fi-logo {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-header .fi-logo {
     white-space: normal;
     max-width: 100%;
     font-size: 0.85rem !important;
@@ -152,21 +163,23 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     margin-inline: auto;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-header-heading {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-header-heading {
     color: #114a31;
     font-weight: 700;
     font-size: clamp(1.2rem, 2.5vw, 1.55rem);
     text-align: center;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-layout
     .fi-fo-field-label {
     color: #22543d;
     font-weight: 600;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-input-wrp {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-layout .fi-input-wrp {
     border-radius: 0.8rem;
     border-color: #c9e4d4;
     background: #f8fdf9;
@@ -175,31 +188,32 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
         box-shadow 0.2s ease;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-layout
     .fi-input-wrp:focus-within {
     border-color: #0f9455;
     box-shadow: 0 0 0 3px rgba(15, 148, 85, 0.13);
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout .fi-input {
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+    .fi-simple-layout .fi-input {
     color: #1f2937;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-layout
     .fi-input::placeholder {
     color: #6b7280;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-layout
     .fi-checkbox-input:checked {
     background-color: #0f9455;
     border-color: #0f9455;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-page
     .fi-btn.fi-ac-btn-action {
     border: none;
@@ -215,18 +229,18 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
         box-shadow 0.2s ease;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-page
     .fi-btn.fi-ac-btn-action
     span,
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-page
     .fi-btn.fi-ac-btn-action
     .fi-btn-label {
     color: #ffffff !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
     .fi-simple-page
     .fi-btn.fi-ac-btn-action:hover {
     transform: translateY(-1px);
@@ -234,11 +248,13 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 }
 
 @media (max-width: 640px) {
-    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-layout {
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+        .fi-simple-layout {
         padding: 0.85rem;
     }
 
-    .fi-body:is(.fi-panel-staff, .fi-panel-piket) .fi-simple-main {
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+        .fi-simple-main {
         padding: 1.25rem;
         border-radius: 1rem;
     }
@@ -357,6 +373,7 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     .staff-piket-stat
     .fi-wi-stats-overview-stat-description {
     display: -webkit-box;
+    line-clamp: 4;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -427,6 +444,11 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 }
 
 /* Staff profile page redesign */
+.fi-body.fi-panel-admin .fi-simple-main.fi-width-5xl {
+    max-width: min(94vw, 1100px);
+    margin-inline: auto;
+}
+
 .fi-body.fi-panel-staff .fi-simple-main.fi-width-5xl {
     max-width: min(94vw, 1100px);
     border-radius: 1.1rem;

@@ -12,6 +12,17 @@ class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        UserResource::validateSingleKepalaCabdin(
+            (string) ($data['role_user_id'] ?? ''),
+            (string) ($this->record?->id ?? ''),
+            (string) ($this->record?->role_user_id ?? ''),
+        );
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

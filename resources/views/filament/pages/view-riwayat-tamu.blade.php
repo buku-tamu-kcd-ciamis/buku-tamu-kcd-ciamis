@@ -3,15 +3,25 @@
         $tamu = $this->getTamu();
         $allKunjungan = $this->getAllKunjungan();
         $totalKunjungan = $allKunjungan->count();
+        $lastVisitAt = $allKunjungan->first()?->created_at;
+        $lastTarget = $tamu->staff_dituju ?? $tamu->bagian_dituju ?? '-';
 
-        $phone = $tamu->nomor_hp;
+        $phone = (string) ($tamu->nomor_hp ?? '');
         $formattedPhone = '-';
-        if ($phone) {
+        if ($phone !== '') {
             $cleaned = preg_replace('/[^0-9]/', '', $phone);
-            if (str_starts_with($cleaned, '0')) {
-                $cleaned = substr($cleaned, 1);
+
+            if ($cleaned !== '') {
+                if (str_starts_with($cleaned, '62')) {
+                    $cleaned = '0' . substr($cleaned, 2);
+                } elseif (str_starts_with($cleaned, '8')) {
+                    $cleaned = '0' . $cleaned;
+                } elseif (! str_starts_with($cleaned, '0')) {
+                    $cleaned = '0' . $cleaned;
+                }
+
+                $formattedPhone = $cleaned;
             }
-            $formattedPhone = '+62 ' . $cleaned;
         }
 
         $statusCounts = $allKunjungan->groupBy('status')->map->count();
@@ -27,23 +37,73 @@
     @endphp
 
     <style>
+        .rt-shell {
+            display: grid;
+            gap: 1rem;
+        }
+
         .rt-page {
             display: grid;
             gap: 1rem;
         }
 
+        .rt-hero {
+            border-radius: 1rem;
+            border: 1px solid #bfe8da;
+            background:
+                radial-gradient(circle at top right, rgba(16, 185, 129, 0.16), transparent 45%),
+                linear-gradient(135deg, #f0fdf4 0%, #f8fffc 100%);
+            padding: 1rem 1.1rem;
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .rt-hero-title {
+            margin: 0;
+            font-size: 1.12rem;
+            line-height: 1.25;
+            font-weight: 800;
+            color: #065f46;
+        }
+
+        .rt-hero-subtitle {
+            margin: 0;
+            color: #166534;
+            font-size: 0.86rem;
+        }
+
+        .rt-hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.2rem;
+        }
+
+        .rt-hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            border-radius: 999px;
+            border: 1px solid #a7f3d0;
+            background: #ffffff;
+            color: #065f46;
+            padding: 0.23rem 0.62rem;
+            font-size: 0.77rem;
+            font-weight: 700;
+        }
+
         .rt-card {
             background: #ffffff;
-            border: 1px solid #dbe3e8;
+            border: 1px solid #dcebe5;
             border-radius: 0.9rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
             overflow: hidden;
         }
 
         .rt-card-header {
             padding: 0.95rem 1rem;
-            border-bottom: 1px solid #e8edf1;
-            background: linear-gradient(180deg, #f8fafc 0%, #f2f6f9 100%);
+            border-bottom: 1px solid #e7eeeb;
+            background: linear-gradient(180deg, #f7fffb 0%, #eef8f4 100%);
         }
 
         .rt-kicker {
@@ -52,7 +112,7 @@
             letter-spacing: 0.06em;
             text-transform: uppercase;
             font-weight: 700;
-            color: #34698b;
+            color: #0f766e;
         }
 
         .rt-title {
@@ -88,10 +148,10 @@
         }
 
         .rt-field {
-            border: 1px solid #e6edf2;
+            border: 1px solid #e3ece8;
             border-radius: 0.7rem;
             padding: 0.7rem 0.8rem;
-            background: #fcfdff;
+            background: #fbfffd;
         }
 
         .rt-field-label {
@@ -118,10 +178,30 @@
         }
 
         .rt-stat {
-            border: 1px solid #dbe3e8;
+            border: 1px solid #dcebe5;
             border-radius: 0.8rem;
             background: #ffffff;
             padding: 0.8rem;
+        }
+
+        .rt-stat:nth-child(1) {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+        }
+
+        .rt-stat:nth-child(2) {
+            background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+        }
+
+        .rt-stat:nth-child(3) {
+            background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+        }
+
+        .rt-stat:nth-child(4) {
+            background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
+        }
+
+        .rt-stat:nth-child(5) {
+            background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
         }
 
         .rt-stat-label {
@@ -345,6 +425,24 @@
             border-color: #374151;
         }
 
+        .dark .rt-hero {
+            border-color: #14532d;
+            background:
+                radial-gradient(circle at top right, rgba(16, 185, 129, 0.2), transparent 45%),
+                linear-gradient(135deg, #052e1f 0%, #064e3b 100%);
+        }
+
+        .dark .rt-hero-title,
+        .dark .rt-hero-subtitle,
+        .dark .rt-hero-pill {
+            color: #d1fae5;
+        }
+
+        .dark .rt-hero-pill {
+            border-color: #1f7a5d;
+            background: rgba(5, 150, 105, 0.22);
+        }
+
         .dark .rt-card-header,
         .dark .rt-item-body {
             background: #0f172a;
@@ -390,7 +488,18 @@
         }
     </style>
 
-    <div class="rt-page">
+    <div class="rt-shell">
+        <section class="rt-hero">
+            <h2 class="rt-hero-title">Detail Riwayat Pengunjung</h2>
+            <p class="rt-hero-subtitle">Ringkasan kunjungan pengunjung untuk membantu pelacakan layanan.</p>
+            <div class="rt-hero-meta">
+                <span class="rt-hero-pill">NIK: {{ $tamu->nik }}</span>
+                <span class="rt-hero-pill">Total: {{ $totalKunjungan }} kunjungan</span>
+                <span class="rt-hero-pill">Terakhir: {{ $lastVisitAt?->translatedFormat('d M Y H:i') ?? '-' }}</span>
+            </div>
+        </section>
+
+        <div class="rt-page">
         <section class="rt-card">
             <div class="rt-card-header">
                 <span class="rt-kicker">Data Pengunjung</span>
@@ -414,6 +523,10 @@
                     <div class="rt-field">
                         <p class="rt-field-label">Instansi</p>
                         <p class="rt-field-value">{{ $tamu->instansi ?? '-' }}</p>
+                    </div>
+                    <div class="rt-field">
+                        <p class="rt-field-label">Staff Yang Dituju</p>
+                        <p class="rt-field-value">{{ $lastTarget }}</p>
                     </div>
                     <div class="rt-field">
                         <p class="rt-field-label">No. HP</p>
@@ -482,8 +595,8 @@
                                 <div class="rt-item-body">
                                     <div class="rt-item-grid">
                                         <div class="rt-field">
-                                            <p class="rt-field-label">Bagian Dituju</p>
-                                            <p class="rt-field-value">{{ $item->bagian_dituju ?? '-' }}</p>
+                                            <p class="rt-field-label">Staff Yang Dituju</p>
+                                            <p class="rt-field-value">{{ $item->staff_dituju ?? $item->bagian_dituju ?? '-' }}</p>
                                         </div>
                                         <div class="rt-field">
                                             <p class="rt-field-label">Kabupaten / Kota</p>
@@ -538,5 +651,6 @@
                 @endif
             </div>
         </section>
+        </div>
     </div>
 </x-filament-panels::page>

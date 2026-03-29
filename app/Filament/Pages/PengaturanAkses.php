@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\RoleUser;
 use App\Models\User;
+use App\Support\PrintPaperSize;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -99,10 +100,8 @@ class PengaturanAkses extends Page implements HasForms
         ->schema([
           Forms\Components\Select::make('paperSize')
             ->label('Paper size')
-            ->options([
-              'a4' => 'A4 (210 x 297 mm)',
-              'f4' => 'F4 (215 x 330 mm)',
-            ])
+            ->options(PrintPaperSize::options())
+            ->searchable()
             ->required(),
         ]),
     ]);

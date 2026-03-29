@@ -132,6 +132,7 @@ class RekapIzinPegawaiResource extends Resource
           ->sortable(),
       ])
       ->defaultSort('total_izin', 'desc')
+      ->defaultKeySort(false)
       ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record->nip]))
       ->filters([
         Tables\Filters\SelectFilter::make('jenis_izin')

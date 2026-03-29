@@ -29,6 +29,7 @@ class ViewBukuTamu extends ViewRecord
                             Group::make([
                                 Infolists\Components\ImageEntry::make('foto_selfie')
                                     ->label('Foto selfie')
+                                    ->imageHeight(260)
                                     ->disk('public'),
                             ])->columnSpan(1),
                             Group::make([
@@ -107,6 +108,7 @@ class ViewBukuTamu extends ViewRecord
                             Infolists\Components\TextEntry::make('keperluan')
                                 ->icon('heroicon-o-document-text'),
                             Infolists\Components\TextEntry::make('created_at')
+                                ->label('Waktu kunjungan')
                                 ->icon('heroicon-o-clock')
                                 ->dateTime('d F Y, H:i:s'),
                         ]),

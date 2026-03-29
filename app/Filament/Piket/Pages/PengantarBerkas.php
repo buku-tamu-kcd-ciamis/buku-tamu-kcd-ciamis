@@ -48,12 +48,8 @@ class PengantarBerkas extends Page implements HasTable
     return $table
       ->query(
         BukuTamu::query()
-          ->where(function ($q) {
-            $q->where('keperluan', 'like', '%berkas%')
-              ->orWhere('keperluan', 'like', '%surat%')
-              ->orWhere('keperluan', 'like', '%dokumen%')
-              ->orWhere('keperluan', 'like', '%legalisir%');
-          })
+          ->whereNotNull('foto_penerimaan')
+          ->where('foto_penerimaan', '!=', '')
       )
       ->columns([
         Tables\Columns\ViewColumn::make('foto_selfie')
@@ -66,8 +62,8 @@ class PengantarBerkas extends Page implements HasTable
         Tables\Columns\TextColumn::make('instansi')
           ->searchable(),
         Tables\Columns\TextColumn::make('keperluan'),
-        Tables\Columns\TextColumn::make('bagian_dituju')
-          ->label('Bagian Dituju'),
+        Tables\Columns\TextColumn::make('staff_dituju')
+          ->label('Staff Yang Dituju'),
         Tables\Columns\TextColumn::make('status')
           ->badge()
           ->color(fn(string $state): string => match ($state) {

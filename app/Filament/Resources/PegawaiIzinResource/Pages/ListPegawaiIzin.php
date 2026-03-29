@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\PegawaiIzinResource\Pages;
 
 use App\Filament\Resources\PegawaiIzinResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListPegawaiIzin extends ListRecords
@@ -12,8 +11,6 @@ class ListPegawaiIzin extends ListRecords
 
   protected function getHeaderActions(): array
   {
-    return [
-      Actions\CreateAction::make(),
-    ];
+    return [];
   }
 }

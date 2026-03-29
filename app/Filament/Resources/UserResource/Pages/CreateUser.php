@@ -12,6 +12,8 @@ class CreateUser extends CreateRecord
 
     public function mutateFormDataBeforeCreate(array $data): array
     {
+        UserResource::validateSingleKepalaCabdin((string) ($data['role_user_id'] ?? ''));
+
         $data['author_id'] = auth()->user()->id;
 
         return $data;

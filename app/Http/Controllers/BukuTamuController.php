@@ -379,36 +379,54 @@ class BukuTamuController extends Controller
      */
     public function printBulk(Request $request)
     {
-        $query = BukuTamu::query()->where('status', 'selesai');
+        $selectedIds = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn(string $id): int => (int) trim($id))
+            ->filter(fn(int $id): bool => $id > 0)
+            ->unique()
+            ->values();
 
-        if ($request->has('start_date') && $request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        }
+        if ($selectedIds->isNotEmpty()) {
+            $query = BukuTamu::query()->whereIn('id', $selectedIds->all());
+        } else {
+            $query = BukuTamu::query()->where('status', 'selesai');
 
-        if ($request->has('end_date') && $request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
+            if ($request->has('start_date') && $request->start_date) {
+                $query->whereDate('created_at', '>=', $request->start_date);
+            }
 
-        if ($request->has('nama') && $request->nama) {
-            $query->where('nama_lengkap', 'like', '%' . $request->nama . '%');
-        }
+            if ($request->has('end_date') && $request->end_date) {
+                $query->whereDate('created_at', '<=', $request->end_date);
+            }
 
-        if ($request->has('keperluan') && $request->keperluan) {
-            $query->where('keperluan', 'like', '%' . $request->keperluan . '%');
-        }
+            if ($request->has('nama') && $request->nama) {
+                $query->where('nama_lengkap', 'like', '%' . $request->nama . '%');
+            }
 
-        if ($request->has('type') && $request->type === 'pengantar') {
-            $query->where(function ($q) {
-                $q->where('keperluan', 'like', '%berkas%')
-                    ->orWhere('keperluan', 'like', '%surat%')
-                    ->orWhere('keperluan', 'like', '%dokumen%')
-                    ->orWhere('keperluan', 'like', '%legalisir%');
-            });
+            if ($request->has('keperluan') && $request->keperluan) {
+                $query->where('keperluan', 'like', '%' . $request->keperluan . '%');
+            }
+
+            if ($request->has('type') && $request->type === 'pengantar') {
+                $query->where(function ($q) {
+                    $q->where('keperluan', 'like', '%berkas%')
+                        ->orWhere('keperluan', 'like', '%surat%')
+                        ->orWhere('keperluan', 'like', '%dokumen%')
+                        ->orWhere('keperluan', 'like', '%legalisir%');
+                });
+            }
         }
 
         $tamuList = $query->orderBy('created_at', 'desc')->get();
 
         $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
+        $nomorSuratSetting = NomorSuratSetting::getByJenis('buku_tamu');
+
+        $filterLog = [
+            'ids' => $selectedIds->isNotEmpty() ? $selectedIds->all() : null,
+            'start_date' => $selectedIds->isEmpty() ? $request->start_date : null,
+            'end_date' => $selectedIds->isEmpty() ? $request->end_date : null,
+            'nama' => $selectedIds->isEmpty() ? $request->nama : null,
+        ];
 
         if (Auth::check()) {
             activity('cetak')
@@ -416,13 +434,13 @@ class BukuTamuController extends Controller
                 ->withProperties([
                     'jumlah' => $tamuList->count(),
                     'tipe' => $request->query('type', 'buku_tamu_bulk'),
-                    'filter' => array_filter([
-                        'start_date' => $request->start_date,
-                        'end_date' => $request->end_date,
-                        'nama' => $request->nama,
-                    ]),
+                    'filter' => array_filter($filterLog, fn($value): bool => !blank($value)),
                 ])
                 ->log('Mencetak laporan buku tamu (' . $tamuList->count() . ' data)');
+        }
+
+        if ($selectedIds->isNotEmpty()) {
+            return view('print.buku-tamu-bulk-per-orang', compact('tamuList', 'nomorSuratSetting'));
         }
 
         return view('print.buku-tamu-bulk', compact('tamuList', 'kepalaCabdin'));

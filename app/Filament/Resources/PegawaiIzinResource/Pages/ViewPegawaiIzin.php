@@ -64,8 +64,14 @@ class ViewPegawaiIzin extends ViewRecord
             ->icon('heroicon-o-clipboard-document-list'),
           Infolists\Components\TextEntry::make('status')
             ->badge()
-            ->color(fn($state) => $state === 'aktif' ? 'success' : 'gray')
-            ->formatStateUsing(fn($state) => ucfirst($state))
+            ->color(fn($state) => match ($state) {
+              PegawaiIzin::STATUS_DISETUJUI, PegawaiIzin::STATUS_AKTIF => 'success',
+              PegawaiIzin::STATUS_MENUNGGU => 'warning',
+              PegawaiIzin::STATUS_DITOLAK => 'danger',
+              PegawaiIzin::STATUS_SELESAI => 'gray',
+              default => 'gray',
+            })
+            ->formatStateUsing(fn($state) => PegawaiIzin::STATUS_LABELS[$state] ?? ucfirst($state))
             ->icon('heroicon-o-signal'),
           Infolists\Components\TextEntry::make('tanggal_mulai')
             ->date('d F Y')
@@ -79,6 +85,26 @@ class ViewPegawaiIzin extends ViewRecord
           Infolists\Components\TextEntry::make('keterangan')
             ->icon('heroicon-o-document-text')
             ->placeholder('-'),
+        ]),
+
+      Section::make('Verifikasi Kepala KCD')
+        ->icon('heroicon-o-check-badge')
+        ->columns(2)
+        ->components([
+          Infolists\Components\TextEntry::make('diverifikasi_oleh')
+            ->label('Diverifikasi Oleh')
+            ->placeholder('-')
+            ->icon('heroicon-o-user-circle'),
+          Infolists\Components\TextEntry::make('diverifikasi_pada')
+            ->label('Diverifikasi Pada')
+            ->dateTime('d F Y, H:i:s')
+            ->placeholder('-')
+            ->icon('heroicon-o-clock'),
+          Infolists\Components\TextEntry::make('catatan_verifikasi')
+            ->label('Catatan Verifikasi')
+            ->placeholder('-')
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->columnSpanFull(),
         ]),
 
       // === Tanda Tangan Piket ===

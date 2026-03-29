@@ -8,9 +8,10 @@
     <title>Log Aktivitas Sistem — Cadisdik XIII</title>
     @php
         $settings = \App\Models\PengaturanKcd::getSettings();
-        $paperSize = $settings->paper_size ?? 'a4';
+        $paperSize = \App\Support\PrintPaperSize::normalize($settings->paper_size ?? 'a4');
         $isF4 = $paperSize === 'f4';
-        $pageSize = $isF4 ? '330mm 215mm' : 'A4 landscape';
+        $pageSize = \App\Support\PrintPaperSize::pageSize($paperSize, 'landscape');
+        $pageWidth = \App\Support\PrintPaperSize::pageWidth($paperSize, 'landscape');
         $baseFontSize = $isF4 ? '11.5pt' : '11pt';
     @endphp
     <style>
@@ -39,7 +40,7 @@
 
         .page {
             max-width:
-                {{ $isF4 ? '330mm' : '297mm' }}
+                {{ $pageWidth }}
             ;
             margin: 0 auto;
             padding: 8mm;

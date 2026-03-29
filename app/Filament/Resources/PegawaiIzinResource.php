@@ -7,12 +7,18 @@ use App\Models\Pegawai;
 use App\Models\DropdownOption;
 use App\Models\PegawaiIzin;
 use App\Models\User;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class PegawaiIzinResource extends Resource
@@ -32,6 +38,39 @@ class PegawaiIzinResource extends Resource
     /** @var User $user */
     $user = Auth::user();
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
+  }
+
+  public static function canCreate(): bool
+  {
+    return false;
+  }
+
+  public static function canEdit($record): bool
+  {
+    return false;
+  }
+
+  public static function canDelete($record): bool
+  {
+    return false;
+  }
+
+  public static function canDeleteAny(): bool
+  {
+    return false;
+  }
+
+  protected static function canVerifyByCurrentUser(): bool
+  {
+    /** @var User|null $user */
+    $user = Auth::user();
+
+    return (bool) $user && $user->hasAnyRole(['Kepala Cabang Dinas', 'Super Admin']);
+  }
+
+  protected static function canVerifyRecord(PegawaiIzin $record): bool
+  {
+    return static::canVerifyByCurrentUser() && $record->status === PegawaiIzin::STATUS_MENUNGGU;
   }
 
   public static function form(Schema $schema): Schema
@@ -217,29 +256,156 @@ class PegawaiIzinResource extends Resource
         Tables\Columns\TextColumn::make('status')
           ->badge()
           ->color(fn(string $state): string => match ($state) {
-            'disetujui' => 'success',
-            'aktif' => 'success',
-            'selesai' => 'gray',
-            'menunggu' => 'warning',
-            'ditolak' => 'danger',
+            PegawaiIzin::STATUS_DISETUJUI => 'success',
+            PegawaiIzin::STATUS_AKTIF => 'success',
+            PegawaiIzin::STATUS_SELESAI => 'gray',
+            PegawaiIzin::STATUS_MENUNGGU => 'warning',
+            PegawaiIzin::STATUS_DITOLAK => 'danger',
             default => 'gray',
           })
           ->formatStateUsing(fn(string $state) => PegawaiIzin::STATUS_LABELS[$state] ?? ucfirst($state)),
+        Tables\Columns\TextColumn::make('diverifikasi_oleh')
+          ->label('Verifikator KCD')
+          ->placeholder('-')
+          ->toggleable(isToggledHiddenByDefault: true),
+        Tables\Columns\TextColumn::make('diverifikasi_pada')
+          ->label('Waktu Verifikasi')
+          ->since()
+          ->tooltip(fn($record) => $record->diverifikasi_pada?->format('d/m/Y H:i') ?? '-')
+          ->placeholder('-')
+          ->toggleable(isToggledHiddenByDefault: true),
       ])
-      ->defaultSort('tanggal_mulai', 'desc')
+      ->modifyQueryUsing(fn(Builder $query): Builder => $query->latest())
+      ->defaultSort('created_at', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
       ->filters([
         Tables\Filters\SelectFilter::make('status')
-          ->options([
-            'aktif' => 'Aktif',
-            'selesai' => 'Selesai',
-          ]),
+          ->options(PegawaiIzin::STATUS_LABELS),
         Tables\Filters\SelectFilter::make('jenis_izin')
           ->label('Jenis Izin')
           ->options(PegawaiIzin::JENIS_IZIN_LABELS),
       ])
-      ->recordActions([])
+      ->recordActions([
+        ActionGroup::make([
+          ViewAction::make()
+            ->label('Lihat')
+            ->icon('heroicon-o-eye')
+            ->color('gray'),
+          Action::make('approve')
+            ->label('Setujui')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->form([
+              Textarea::make('catatan_verifikasi')
+                ->label('Catatan Verifikasi')
+                ->placeholder('Opsional')
+                ->rows(3)
+                ->maxLength(500),
+            ])
+            ->requiresConfirmation()
+            ->modalHeading('Setujui Pengajuan Izin')
+            ->modalDescription('Pengajuan ini akan diverifikasi oleh Kepala Cabang Dinas.')
+            ->modalSubmitActionLabel('Setujui')
+            ->visible(fn(PegawaiIzin $record): bool => static::canVerifyRecord($record))
+            ->action(function (PegawaiIzin $record, array $data): void {
+              if ($record->status !== PegawaiIzin::STATUS_MENUNGGU) {
+                Notification::make()
+                  ->warning()
+                  ->title('Pengajuan sudah diproses')
+                  ->body('Status pengajuan ini sudah berubah dan tidak bisa diverifikasi ulang.')
+                  ->send();
+
+                return;
+              }
+
+              $izinBerjalan = PegawaiIzin::query()
+                ->where('id', '!=', $record->id)
+                ->when(filled($record->nip), function ($query) use ($record) {
+                  $query->where('nip', $record->nip);
+                }, function ($query) use ($record) {
+                  $query->where('nama_pegawai', $record->nama_pegawai);
+                })
+                ->whereIn('status', [PegawaiIzin::STATUS_DISETUJUI, PegawaiIzin::STATUS_AKTIF])
+                ->whereDate('tanggal_selesai', '>=', now()->toDateString())
+                ->exists();
+
+              if ($izinBerjalan) {
+                Notification::make()
+                  ->danger()
+                  ->title('Gagal menyetujui pengajuan')
+                  ->body('Pegawai ini masih memiliki izin yang sedang berjalan.')
+                  ->send();
+
+                return;
+              }
+
+              $record->update([
+                'status' => PegawaiIzin::STATUS_DISETUJUI,
+                'diverifikasi_oleh' => Auth::user()?->name,
+                'diverifikasi_pada' => now(),
+                'catatan_verifikasi' => blank($data['catatan_verifikasi'] ?? null)
+                  ? null
+                  : $data['catatan_verifikasi'],
+              ]);
+
+              Notification::make()
+                ->success()
+                ->title('Pengajuan disetujui')
+                ->body('Pengajuan izin berhasil diverifikasi Kepala Cabang Dinas.')
+                ->send();
+            }),
+          Action::make('reject')
+            ->label('Tolak')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->form([
+              Textarea::make('catatan_verifikasi')
+                ->label('Alasan Penolakan')
+                ->rows(3)
+                ->required()
+                ->maxLength(500),
+            ])
+            ->requiresConfirmation()
+            ->modalHeading('Tolak Pengajuan Izin')
+            ->modalDescription('Pengajuan ini akan ditandai sebagai ditolak.')
+            ->modalSubmitActionLabel('Tolak')
+            ->visible(fn(PegawaiIzin $record): bool => static::canVerifyRecord($record))
+            ->action(function (PegawaiIzin $record, array $data): void {
+              if ($record->status !== PegawaiIzin::STATUS_MENUNGGU) {
+                Notification::make()
+                  ->warning()
+                  ->title('Pengajuan sudah diproses')
+                  ->body('Status pengajuan ini sudah berubah dan tidak bisa ditolak ulang.')
+                  ->send();
+
+                return;
+              }
+
+              $record->update([
+                'status' => PegawaiIzin::STATUS_DITOLAK,
+                'diverifikasi_oleh' => Auth::user()?->name,
+                'diverifikasi_pada' => now(),
+                'catatan_verifikasi' => $data['catatan_verifikasi'],
+              ]);
+
+              Notification::make()
+                ->success()
+                ->title('Pengajuan ditolak')
+                ->body('Status izin pegawai berhasil diperbarui menjadi ditolak.')
+                ->send();
+            }),
+          Action::make('print')
+            ->label('Cetak')
+            ->icon('heroicon-o-printer')
+            ->color('gray')
+            ->url(fn(PegawaiIzin $record): string => route('admin.pegawai-izin.print', ['id' => $record->id]))
+            ->openUrlInNewTab(),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
+      ])
       ->toolbarActions([]);
   }
 
@@ -252,9 +418,7 @@ class PegawaiIzinResource extends Resource
   {
     return [
       'index' => Pages\ListPegawaiIzin::route('/'),
-      'create' => Pages\CreatePegawaiIzin::route('/create'),
       'view' => Pages\ViewPegawaiIzin::route('/{record}'),
-      'edit' => Pages\EditPegawaiIzin::route('/{record}/edit'),
     ];
   }
 }

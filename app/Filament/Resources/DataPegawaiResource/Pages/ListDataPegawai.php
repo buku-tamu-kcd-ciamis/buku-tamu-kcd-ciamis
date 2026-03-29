@@ -2,8 +2,15 @@
 
 namespace App\Filament\Resources\DataPegawaiResource\Pages;
 
+use App\Exports\PegawaiTemplateExport;
 use App\Filament\Resources\DataPegawaiResource;
+use App\Imports\PegawaiImport;
+use Filament\Actions;
+use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ListDataPegawai extends ListRecords
 {
@@ -11,6 +18,84 @@ class ListDataPegawai extends ListRecords
 
   protected function getHeaderActions(): array
   {
-    return [];
+    return [
+      Actions\CreateAction::make()
+        ->label('Tambahkan Data Pegawai')
+        ->color('info'),
+      Actions\Action::make('importPegawaiExcel')
+        ->label('Import Pegawai')
+        ->icon('heroicon-o-arrow-up-tray')
+        ->color('success')
+        ->modalHeading('Import Data Pegawai dari Excel')
+        ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai.')
+        ->form([
+          FileUpload::make('file')
+            ->label('File Excel')
+            ->disk('local')
+            ->directory('imports/pegawai')
+            ->preserveFilenames()
+            ->acceptedFileTypes([
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              'application/vnd.ms-excel',
+            ])
+            ->maxSize(5120)
+            ->required(),
+        ])
+        ->action(function (array $data): void {
+          $uploadedState = $data['file'] ?? null;
+          $relativePath = is_array($uploadedState)
+            ? (string) ($uploadedState[0] ?? '')
+            : (string) $uploadedState;
+
+          if ($relativePath === '' || !Storage::disk('local')->exists($relativePath)) {
+            Notification::make()
+              ->danger()
+              ->title('File tidak ditemukan')
+              ->body('Silakan unggah ulang file Excel untuk proses import.')
+              ->send();
+
+            return;
+          }
+
+          try {
+            $importer = (new PegawaiImport())->import(Storage::disk('local')->path($relativePath));
+
+            if ($importer->hasErrors()) {
+              $errors = array_slice($importer->getErrors(), 0, 3);
+
+              Notification::make()
+                ->warning()
+                ->title('Import selesai dengan catatan')
+                ->body($importer->getSummary() . '. Contoh error: ' . implode(' | ', $errors))
+                ->send();
+            } else {
+              Notification::make()
+                ->success()
+                ->title('Import berhasil')
+                ->body($importer->getSummary())
+                ->send();
+            }
+          } catch (Throwable $exception) {
+            Notification::make()
+              ->danger()
+              ->title('Import gagal')
+              ->body('Terjadi kesalahan saat memproses file Excel.')
+              ->send();
+          } finally {
+            Storage::disk('local')->delete($relativePath);
+          }
+        }),
+      Actions\Action::make('downloadTemplatePegawai')
+        ->label('Download Template')
+        ->icon('heroicon-o-document-arrow-down')
+        ->color('gray')
+        ->action(fn() => (new PegawaiTemplateExport())->download()),
+      Actions\Action::make('exportPegawaiPdf')
+        ->label('Export PDF')
+        ->icon('heroicon-o-document-arrow-down')
+        ->color('danger')
+        ->url(route('data-pegawai.print'))
+        ->openUrlInNewTab(true),
+    ];
   }
 }

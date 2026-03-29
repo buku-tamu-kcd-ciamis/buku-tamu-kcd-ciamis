@@ -94,7 +94,8 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     padding-bottom: 2.25rem;
 }
 
-.fi-ta-header-ctn:has(+ .fi-ta-selection-indicator) + .fi-ta-selection-indicator {
+.fi-ta-header-ctn:has(+ .fi-ta-selection-indicator)
+    + .fi-ta-selection-indicator {
     margin-top: -2.25rem;
 }
 
@@ -149,7 +150,8 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 }
 
 .fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
-    .fi-simple-header .fi-logo {
+    .fi-simple-header
+    .fi-logo {
     white-space: normal;
     max-width: 100%;
     font-size: 0.85rem !important;
@@ -179,7 +181,8 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 }
 
 .fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
-    .fi-simple-layout .fi-input-wrp {
+    .fi-simple-layout
+    .fi-input-wrp {
     border-radius: 0.8rem;
     border-color: #c9e4d4;
     background: #f8fdf9;
@@ -196,7 +199,8 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 }
 
 .fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
-    .fi-simple-layout .fi-input {
+    .fi-simple-layout
+    .fi-input {
     color: #1f2937;
 }
 
@@ -258,6 +262,28 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
         padding: 1.25rem;
         border-radius: 1rem;
     }
+}
+
+/* Unify light-green success buttons to theme green */
+.fi-btn.fi-color-success,
+.fi-btn.fi-btn-color-success,
+.fi-btn-color-success,
+.fi-ac-btn-action.fi-color-success,
+button.fi-color-success,
+a.fi-color-success {
+    background-color: #169b53 !important;
+    border-color: #169b53 !important;
+    color: #ffffff !important;
+}
+
+.fi-btn.fi-color-success:hover,
+.fi-btn.fi-btn-color-success:hover,
+.fi-btn-color-success:hover,
+.fi-ac-btn-action.fi-color-success:hover,
+button.fi-color-success:hover,
+a.fi-color-success:hover {
+    background-color: #128747 !important;
+    border-color: #128747 !important;
 }
 
 /* Staff dashboard and app shell redesign */

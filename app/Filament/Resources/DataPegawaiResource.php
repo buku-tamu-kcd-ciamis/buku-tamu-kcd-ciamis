@@ -37,6 +37,7 @@ class DataPegawaiResource extends Resource
     return $schema->components([
       Section::make('Informasi Pegawai')
         ->description('Data lengkap pegawai untuk otomatisasi formulir izin.')
+        ->columnSpanFull()
         ->columns(2)
         ->schema([
           Forms\Components\TextInput::make('nama')

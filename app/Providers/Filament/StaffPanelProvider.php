@@ -31,6 +31,7 @@ class StaffPanelProvider extends PanelProvider
             ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
                 'primary' => Color::Emerald,
+                'success' => Color::Emerald,
             ])
             ->discoverResources(in: app_path('Filament/Staff/Resources'), for: 'App\\Filament\\Staff\\Resources')
             ->discoverPages(in: app_path('Filament/Staff/Pages'), for: 'App\\Filament\\Staff\\Pages')

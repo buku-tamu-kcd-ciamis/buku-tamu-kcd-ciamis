@@ -5,6 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DropdownOptionResource\Pages;
 use App\Models\DropdownOption;
 use App\Models\User;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Infolists;
@@ -142,7 +146,25 @@ class DropdownOptionResource extends Resource
         Tables\Filters\TernaryFilter::make('is_active')
           ->label('Status'),
       ])
-      ->recordActions([])
+      ->recordActions([
+        ActionGroup::make([
+          ViewAction::make()
+            ->label('Lihat')
+            ->icon('heroicon-o-eye')
+            ->color('primary'),
+          EditAction::make()
+            ->label('Edit')
+            ->icon('heroicon-o-pencil-square')
+            ->color('warning'),
+          DeleteAction::make()
+            ->label('Hapus')
+            ->icon('heroicon-o-trash')
+            ->color('danger'),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
+      ])
       ->toolbarActions([]);
   }
 

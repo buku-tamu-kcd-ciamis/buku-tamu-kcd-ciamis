@@ -12,7 +12,11 @@ class ListFaqs extends ListRecords
 
   protected function getHeaderActions(): array
   {
-    return [];
+    return [
+      Actions\CreateAction::make()
+        ->label('Tambahkan FAQ')
+        ->color('info'),
+    ];
   }
 
   public function getTabs(): array

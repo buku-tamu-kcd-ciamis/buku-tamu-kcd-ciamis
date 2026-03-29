@@ -46,6 +46,7 @@ class PegawaiPiketResource extends Resource
         return $schema->components([
             Section::make('Informasi Pegawai Piket')
                 ->description('Data pegawai yang bertugas sebagai petugas piket penerima tamu.')
+                ->columnSpanFull()
                 ->schema([
                     Forms\Components\Hidden::make('category'),
                     Forms\Components\TextInput::make('label')

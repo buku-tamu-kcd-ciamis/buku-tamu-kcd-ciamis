@@ -36,6 +36,7 @@ class PiketPanelProvider extends PanelProvider
       ->favicon(asset('img/logo-cadisdik.png'))
       ->colors([
         'primary' => Color::Green,
+        'success' => Color::Green,
       ])
       ->discoverResources(in: app_path('Filament/Piket/Resources'), for: 'App\\Filament\\Piket\\Resources')
       ->discoverPages(in: app_path('Filament/Piket/Pages'), for: 'App\\Filament\\Piket\\Pages')

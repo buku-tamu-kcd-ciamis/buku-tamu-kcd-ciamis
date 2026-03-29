@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 
 use App\Filament\Resources\DropdownOptionResource;
 use App\Models\DropdownOption;
+use Filament\Actions;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\View\View;
@@ -15,7 +16,11 @@ class ListDropdownOptions extends ListRecords
 
   protected function getHeaderActions(): array
   {
-    return [];
+    return [
+      Actions\CreateAction::make()
+        ->label('Tambahkan Opsi Dropdown')
+        ->color('info'),
+    ];
   }
 
   public function getTabs(): array

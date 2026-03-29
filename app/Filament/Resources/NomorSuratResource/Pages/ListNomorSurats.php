@@ -14,7 +14,8 @@ class ListNomorSurats extends ListRecords
   {
     return [
       Actions\CreateAction::make()
-        ->label('Tambah Template Nomor Surat'),
+        ->label('Tambahkan Nomor Surat')
+        ->color('info'),
     ];
   }
 }

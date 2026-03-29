@@ -36,6 +36,7 @@ class NomorSuratResource extends Resource
   {
     return $schema->components([
       Section::make('Informasi Jenis Surat')
+        ->columnSpanFull()
         ->schema([
           Forms\Components\Select::make('jenis_surat')
             ->required()
@@ -180,31 +181,6 @@ class NomorSuratResource extends Resource
           Forms\Components\Toggle::make('is_active')
             ->helperText('Hanya template aktif yang akan digunakan.')
             ->inline(false),
-        ]),
-
-      Section::make('Contoh Hasil')
-        ->schema([
-          \Filament\Infolists\Components\TextEntry::make('preview')
-            ->state(function ($get) {
-              $template = $get('template') ?: '{NOMOR}/{KODE}/{BULAN}/{TAHUN}';
-              $kode = $get('kode_surat') ?: 'XX';
-              $padding = $get('padding_length') ?: 6;
-
-              $nomor = str_pad(123, $padding, '0', STR_PAD_LEFT);
-              $bulan = date('m');
-              $tahun = date('Y');
-              $tahunPendek = date('y');
-              $bulanRomawi = ['01' => 'I', '02' => 'II', '03' => 'III', '04' => 'IV', '05' => 'V', '06' => 'VI', '07' => 'VII', '08' => 'VIII', '09' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII'];
-              $romawi = $bulanRomawi[$bulan] ?? 'I';
-
-              $result = str_replace(
-                ['{NOMOR}', '{KODE}', '{BULAN}', '{TAHUN}', '{TAHUN_PENDEK}', '{ROMAWI}'],
-                [$nomor, $kode, $bulan, $tahun, $tahunPendek, $romawi],
-                $template
-              );
-
-              return "**{$result}**";
-            }),
         ]),
     ]);
   }

@@ -19,13 +19,10 @@ class ListDataPegawai extends ListRecords
   protected function getHeaderActions(): array
   {
     return [
-      Actions\CreateAction::make()
-        ->label('Tambahkan Data Pegawai')
-        ->color('info'),
       Actions\Action::make('importPegawaiExcel')
-        ->label('Import Pegawai')
+        ->label('Import')
         ->icon('heroicon-o-arrow-up-tray')
-        ->color('success')
+        ->color('gray')
         ->modalHeading('Import Data Pegawai dari Excel')
         ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai.')
         ->form([
@@ -86,16 +83,19 @@ class ListDataPegawai extends ListRecords
           }
         }),
       Actions\Action::make('downloadTemplatePegawai')
-        ->label('Download Template')
+        ->label('Template')
         ->icon('heroicon-o-document-arrow-down')
         ->color('gray')
         ->action(fn() => (new PegawaiTemplateExport())->download()),
       Actions\Action::make('exportPegawaiPdf')
-        ->label('Export PDF')
+        ->label('Export')
         ->icon('heroicon-o-document-arrow-down')
-        ->color('danger')
+        ->color('gray')
         ->url(route('data-pegawai.print'))
         ->openUrlInNewTab(true),
+      Actions\CreateAction::make()
+        ->label('Buat')
+        ->color('success'),
     ];
   }
 }

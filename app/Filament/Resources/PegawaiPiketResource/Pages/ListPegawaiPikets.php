@@ -19,13 +19,10 @@ class ListPegawaiPikets extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()
-                ->label('Tambahkan Pegawai Piket')
-                ->color('info'),
             Actions\Action::make('importPegawaiPiketExcel')
-                ->label('Import Pegawai Piket')
+                ->label('Import')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('success')
+                ->color('gray')
                 ->modalHeading('Import Data Pegawai Piket dari Excel')
                 ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai piket.')
                 ->form([
@@ -86,16 +83,19 @@ class ListPegawaiPikets extends ListRecords
                     }
                 }),
             Actions\Action::make('downloadTemplatePegawaiPiket')
-                ->label('Download Template')
+                ->label('Template')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->action(fn() => (new PegawaiPiketTemplateExport())->download()),
             Actions\Action::make('exportPegawaiPiketPdf')
-                ->label('Export PDF')
+                ->label('Export')
                 ->icon('heroicon-o-document-arrow-down')
-                ->color('danger')
+                ->color('gray')
                 ->url(route('pegawai-piket.print'))
                 ->openUrlInNewTab(true),
+            Actions\CreateAction::make()
+                ->label('Buat')
+                ->color('success'),
         ];
     }
 }

@@ -221,6 +221,12 @@
             </form>
         </div>
 
+        <footer class="public-footer" role="contentinfo" aria-label="Footer halaman buku tamu">
+            <a href="{{ route('developer.about') }}" class="public-footer__link" title="Tentang Developer">
+                Cadisdik Wilayah XIII • © <span id="realtimeYear">{{ now()->year }}</span>
+            </a>
+        </footer>
+
     </div>{{-- /.wrapper --}}
 
     <!-- Floating Barcode Button -->
@@ -271,6 +277,21 @@
             bagianDituju: @json($bagianDitujuOptions ?? []),
             staffList: @json($staffList ?? []),
         };
+
+        // Keep footer year always in sync with current year.
+        (function syncRealtimeYear() {
+            const yearNode = document.getElementById('realtimeYear');
+            if (!yearNode) {
+                return;
+            }
+
+            const updateYear = () => {
+                yearNode.textContent = String(new Date().getFullYear());
+            };
+
+            updateYear();
+            setInterval(updateYear, 60 * 1000);
+        })();
     </script>
     <script src="{{ asset('js/public/buku-tamu.js') }}"></script>
 @endpush

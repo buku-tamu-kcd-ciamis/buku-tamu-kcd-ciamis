@@ -5,6 +5,9 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PegawaiPiketResource\Pages;
 use App\Models\DropdownOption;
 use App\Models\User;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -105,7 +108,21 @@ class PegawaiPiketResource extends Resource
                     ->trueLabel('Aktif')
                     ->falseLabel('Nonaktif'),
             ])
-            ->recordActions([])
+            ->recordActions([
+                ActionGroup::make([
+                    EditAction::make()
+                        ->label('Edit')
+                        ->icon('heroicon-o-pencil-square')
+                        ->color('warning'),
+                    DeleteAction::make()
+                        ->label('Hapus')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger'),
+                ])
+                    ->label(false)
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->color('gray'),
+            ])
             ->toolbarActions([]);
     }
 

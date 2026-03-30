@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Resources\BukuTamuResource as BukuTamuFilamentResource;
 use App\Models\BukuTamu;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -43,6 +42,14 @@ class PengantarBerkas extends Page implements HasTable
     /** @var User $user */
     $user = Auth::user();
     return $user && $user->hasRole('Super Admin');
+  }
+
+  public static function getNavigationItemActiveRoutePattern(): string | array
+  {
+    return [
+      static::getRouteName(),
+      ViewPengantarBerkas::getRouteName(),
+    ];
   }
 
   public function table(Table $table): Table
@@ -109,13 +116,14 @@ class PengantarBerkas extends Page implements HasTable
             ->all())
           ->searchable(),
       ])
+      ->recordUrl(fn(BukuTamu $record): string => ViewPengantarBerkas::getUrl(['record' => $record->id]))
       ->recordActions([
         ActionGroup::make([
           Action::make('view_detail')
             ->label('Lihat Detail')
             ->icon('heroicon-o-eye')
             ->color('primary')
-            ->url(fn(BukuTamu $record): string => BukuTamuFilamentResource::getUrl('view', ['record' => $record])),
+            ->url(fn(BukuTamu $record): string => ViewPengantarBerkas::getUrl(['record' => $record->id])),
           Action::make('print')
             ->label('Print')
             ->icon('heroicon-o-printer')

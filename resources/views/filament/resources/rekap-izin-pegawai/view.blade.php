@@ -1,184 +1,540 @@
 <x-filament-panels::page>
     @php
+        $rekap = $this->rekap;
         $paginatedRiwayat = $this->getRiwayatPaginated();
         $totalRiwayat = $this->allRiwayat->count();
 
-        $jenisIzinConfig = [
-            'sakit' => ['badge' => 'bg-red-500 text-white', 'num_bg' => 'bg-red-500 text-white shadow-lg', 'num_idle' => 'bg-red-100 text-red-700 dark:bg-red-500/30 dark:text-red-300', 'border_active' => 'border-red-400 dark:border-red-500'],
-            'cuti' => ['badge' => 'bg-blue-500 text-white', 'num_bg' => 'bg-blue-500 text-white shadow-lg', 'num_idle' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/30 dark:text-blue-300', 'border_active' => 'border-blue-400 dark:border-blue-500'],
-            'dinas_luar' => ['badge' => 'bg-yellow-500 text-white', 'num_bg' => 'bg-yellow-500 text-white shadow-lg', 'num_idle' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/30 dark:text-yellow-300', 'border_active' => 'border-yellow-400 dark:border-yellow-500'],
-            'izin_pribadi' => ['badge' => 'bg-purple-500 text-white', 'num_bg' => 'bg-purple-500 text-white shadow-lg', 'num_idle' => 'bg-purple-100 text-purple-700 dark:bg-purple-500/30 dark:text-purple-300', 'border_active' => 'border-purple-400 dark:border-purple-500'],
-            'lainnya' => ['badge' => 'bg-gray-500 text-white', 'num_bg' => 'bg-gray-500 text-white shadow-lg', 'num_idle' => 'bg-gray-100 text-gray-700 dark:bg-gray-500/30 dark:text-gray-300', 'border_active' => 'border-gray-400 dark:border-gray-500'],
-        ];
+        $formatPhone = static function (?string $phone): string {
+            if (! filled($phone)) {
+                return '-';
+            }
+
+            $cleaned = preg_replace('/[^0-9]/', '', $phone);
+
+            if (! filled($cleaned)) {
+                return '-';
+            }
+
+            if (str_starts_with($cleaned, '62')) {
+                return '+62' . substr($cleaned, 2);
+            }
+
+            if (str_starts_with($cleaned, '0')) {
+                return '+62' . substr($cleaned, 1);
+            }
+
+            return '+62' . ltrim($cleaned, '0');
+        };
+
+        $statusLabels = \App\Models\PegawaiIzin::STATUS_LABELS;
         $jenisIzinLabels = \App\Models\PegawaiIzin::JENIS_IZIN_LABELS;
+
+        $statusClassMap = [
+            'menunggu' => 'rk-badge-warn',
+            'disetujui' => 'rk-badge-info',
+            'aktif' => 'rk-badge-active',
+            'selesai' => 'rk-badge-success',
+            'ditolak' => 'rk-badge-danger',
+            'dibatalkan' => 'rk-badge-muted',
+        ];
     @endphp
 
-    {{ $this->rekapInfolist }}
+    <style>
+        .rk-page {
+            display: grid;
+            gap: 1rem;
+        }
 
-    {{-- ===== RIWAYAT IZIN (ACCORDION STYLE) ===== --}}
-    <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm mt-6">
-        <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-primary-500/10 dark:bg-primary-500/20 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Riwayat Izin</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $totalRiwayat }} data izin keseluruhan</p>
-                    </div>
-                </div>
+        .rk-hero {
+            border-radius: 1rem;
+            border: 1px solid #bfe8da;
+            background:
+                radial-gradient(circle at top right, rgba(15, 148, 85, 0.16), transparent 45%),
+                linear-gradient(135deg, #f0fdf4 0%, #f8fffc 100%);
+            padding: 1rem 1.1rem;
+            display: grid;
+            gap: 0.7rem;
+        }
+
+        .rk-title {
+            margin: 0;
+            font-size: 1.12rem;
+            line-height: 1.25;
+            font-weight: 800;
+            color: #065f46;
+        }
+
+        .rk-subtitle {
+            margin: 0;
+            color: #166534;
+            font-size: 0.86rem;
+        }
+
+        .rk-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .rk-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            border: 1px solid #a7f3d0;
+            background: #ffffff;
+            color: #065f46;
+            padding: 0.25rem 0.65rem;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .rk-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            align-items: start;
+        }
+
+        .rk-card {
+            background: #ffffff;
+            border: 1px solid #dcebe5;
+            border-radius: 0.9rem;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+        }
+
+        .rk-card-head {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e7eeeb;
+            background: linear-gradient(180deg, #f7fffb 0%, #eef8f4 100%);
+        }
+
+        .rk-card-kicker {
+            margin: 0;
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #0f766e;
+        }
+
+        .rk-card-title {
+            margin: 0.25rem 0 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .rk-card-body {
+            padding: 1rem;
+        }
+
+        .rk-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+
+        .rk-field {
+            border: 1px solid #e3ece8;
+            border-radius: 0.7rem;
+            padding: 0.72rem 0.8rem;
+            background: #fbfffd;
+        }
+
+        .rk-field-label {
+            margin: 0;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .rk-field-value {
+            margin: 0.24rem 0 0;
+            color: #111827;
+            font-size: 0.93rem;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .rk-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+        }
+
+        .rk-stat {
+            border: 1px solid #dcebe5;
+            border-radius: 0.8rem;
+            background: #ffffff;
+            padding: 0.8rem;
+            min-height: 84px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .rk-stat:nth-child(1) { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); }
+        .rk-stat:nth-child(2) { background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%); }
+        .rk-stat:nth-child(3) { background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%); }
+        .rk-stat:nth-child(4) { background: linear-gradient(180deg, #ffffff 0%, #fdf4ff 100%); }
+        .rk-stat:nth-child(5) { background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); }
+
+        .rk-stat-label {
+            margin: 0;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #64748b;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rk-stat-value {
+            margin: 0.25rem 0 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #0f172a;
+        }
+
+        .rk-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .rk-item {
+            border: 1px solid #dbe8e2;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .rk-item > summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 0.8rem 0.9rem;
+            display: flex;
+            gap: 0.7rem;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .rk-item > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .rk-item-main {
+            min-width: 0;
+        }
+
+        .rk-item-title {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.3;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .rk-item-subtitle {
+            margin: 0.22rem 0 0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .rk-item-meta {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .rk-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0.2rem 0.55rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .rk-badge-warn { color: #854d0e; background: #fffbeb; border-color: #fde68a; }
+        .rk-badge-info { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
+        .rk-badge-active { color: #14532d; background: #dcfce7; border-color: #86efac; }
+        .rk-badge-success { color: #166534; background: #ecfdf5; border-color: #86efac; }
+        .rk-badge-danger { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
+        .rk-badge-muted { color: #374151; background: #f3f4f6; border-color: #d1d5db; }
+
+        .rk-item-body {
+            border-top: 1px solid #e7eeeb;
+            background: #fbfffd;
+            padding: 0.82rem 0.9rem 0.95rem;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .rk-item-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.62rem;
+        }
+
+        .rk-note {
+            margin: 0;
+            font-size: 0.87rem;
+            color: #334155;
+            background: #ffffff;
+            border: 1px solid #e6edf2;
+            border-radius: 0.55rem;
+            padding: 0.65rem 0.75rem;
+            line-height: 1.45;
+        }
+
+        .rk-pagination {
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #e7eeeb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rk-page-btns {
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+        }
+
+        .rk-page-btn {
+            border-radius: 0.55rem;
+            border: 1px solid #d2e5dc;
+            background: #ffffff;
+            color: #244737;
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-width: 2rem;
+            height: 2rem;
+            padding: 0 0.5rem;
+            transition: all 0.18s ease;
+        }
+
+        .rk-page-btn:hover {
+            background: #eef8f2;
+            border-color: #b7ddc8;
+        }
+
+        .rk-page-btn.is-active {
+            background: linear-gradient(135deg, #0f9455 0%, #0b7a46 100%);
+            border-color: #0b7a46;
+            color: #ffffff;
+        }
+
+        .rk-page-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .rk-span-8 { grid-column: span 8 / span 8; }
+        .rk-span-4 { grid-column: span 4 / span 4; }
+        .rk-span-12 { grid-column: span 12 / span 12; }
+
+        @media (max-width: 1140px) {
+            .rk-span-8,
+            .rk-span-4,
+            .rk-span-12 {
+                grid-column: span 12 / span 12;
+            }
+
+            .rk-stats {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .rk-fields,
+            .rk-item-grid,
+            .rk-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .rk-item > summary {
+                flex-direction: column;
+            }
+
+            .rk-item-meta {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+
+    <div class="rk-page">
+        <section class="rk-hero">
+            <h2 class="rk-title">Ringkasan Izin Pegawai</h2>
+            <p class="rk-subtitle">Detail rekap izin dengan tampilan terstruktur sesuai tema utama aplikasi.</p>
+            <div class="rk-meta">
+                <span class="rk-pill">{{ $rekap->nama_pegawai }}</span>
+                <span class="rk-pill">NIP: {{ $rekap->nip }}</span>
+                <span class="rk-pill">Total Izin: {{ $rekap->total_izin }} kali</span>
+                <span class="rk-pill">Total Hari: {{ $rekap->total_hari }} hari</span>
             </div>
-        </div>
+        </section>
 
-        <div class="p-6">
-            @if($paginatedRiwayat->isEmpty())
-                <div class="text-center py-12">
-                    <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <p class="text-gray-500 dark:text-gray-400 font-medium">Belum ada data riwayat izin</p>
+        <div class="rk-grid">
+            <section class="rk-card rk-span-8">
+                <div class="rk-card-head">
+                    <p class="rk-card-kicker">Profil</p>
+                    <h3 class="rk-card-title">Informasi Pegawai</h3>
                 </div>
-            @else
-                <div x-data="{ openItem: 0 }" class="space-y-4">
-                    @foreach($paginatedRiwayat as $index => $item)
-                    @php
-                        $globalIndex = ($paginatedRiwayat->currentPage() - 1) * $paginatedRiwayat->perPage() + $index;
-                        $config = $jenisIzinConfig[$item->jenis_izin] ?? $jenisIzinConfig['lainnya'];
-                        $durasi = $item->tanggal_mulai->diffInDays($item->tanggal_selesai) + 1;
-                    @endphp
-                    <div x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 transform translate-y-2"
-                         x-transition:enter-end="opacity-100 transform translate-y-0">
-                        <div class="relative rounded-2xl bg-white dark:bg-gray-800 transition-all duration-300 overflow-hidden"
-                             :class="openItem === {{ $index }} ? 'shadow-xl' : 'shadow-md hover:shadow-lg'">
+                <div class="rk-card-body">
+                    <div class="rk-fields">
+                        <div class="rk-field">
+                            <p class="rk-field-label">Nama Pegawai</p>
+                            <p class="rk-field-value">{{ $rekap->nama_pegawai }}</p>
+                        </div>
+                        <div class="rk-field">
+                            <p class="rk-field-label">NIP</p>
+                            <p class="rk-field-value">{{ $rekap->nip }}</p>
+                        </div>
+                        <div class="rk-field">
+                            <p class="rk-field-label">Jabatan</p>
+                            <p class="rk-field-value">{{ $rekap->jabatan ?: '-' }}</p>
+                        </div>
+                        <div class="rk-field">
+                            <p class="rk-field-label">Unit Kerja</p>
+                            <p class="rk-field-value">{{ $rekap->unit_kerja ?: '-' }}</p>
+                        </div>
+                        <div class="rk-field">
+                            <p class="rk-field-label">Nomor HP</p>
+                            <p class="rk-field-value">{{ $formatPhone($rekap->nomor_hp) }}</p>
+                        </div>
+                        <div class="rk-field">
+                            <p class="rk-field-label">Izin Terakhir</p>
+                            <p class="rk-field-value">{{ $rekap->terakhir_izin ? \Carbon\Carbon::parse($rekap->terakhir_izin)->translatedFormat('d F Y') : '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                            {{-- Accordion Header --}}
-                            <button @click="openItem = (openItem === {{ $index }} ? null : {{ $index }})"
-                                    class="relative z-10 w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all duration-200">
-                                <div class="flex items-center gap-4 flex-1 min-w-0">
-                                    {{-- Numbered circle --}}
-                                    <div class="shrink-0">
-                                        <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base transition-all duration-300"
-                                             :class="openItem === {{ $index }} ? '{{ $config['num_bg'] }}' : '{{ $config['num_idle'] }}'">
-                                            {{ $globalIndex + 1 }}
+            <section class="rk-card rk-span-4">
+                <div class="rk-card-head">
+                    <p class="rk-card-kicker">Statistik</p>
+                    <h3 class="rk-card-title">Jenis Izin</h3>
+                </div>
+                <div class="rk-card-body">
+                    <div class="rk-stats">
+                        <article class="rk-stat">
+                            <p class="rk-stat-label">Sakit</p>
+                            <p class="rk-stat-value">{{ (int) $rekap->total_sakit }}</p>
+                        </article>
+                        <article class="rk-stat">
+                            <p class="rk-stat-label">Cuti</p>
+                            <p class="rk-stat-value">{{ (int) $rekap->total_cuti }}</p>
+                        </article>
+                        <article class="rk-stat">
+                            <p class="rk-stat-label">Dinas Luar</p>
+                            <p class="rk-stat-value">{{ (int) $rekap->total_dinas_luar }}</p>
+                        </article>
+                        <article class="rk-stat">
+                            <p class="rk-stat-label">Izin Pribadi</p>
+                            <p class="rk-stat-value">{{ (int) $rekap->total_izin_pribadi }}</p>
+                        </article>
+                        <article class="rk-stat">
+                            <p class="rk-stat-label">Lainnya</p>
+                            <p class="rk-stat-value">{{ (int) $rekap->total_lainnya }}</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rk-card rk-span-12">
+                <div class="rk-card-head">
+                    <p class="rk-card-kicker">Riwayat</p>
+                    <h3 class="rk-card-title">Riwayat Izin Pegawai ({{ $totalRiwayat }} data)</h3>
+                </div>
+
+                <div class="rk-card-body">
+                    @if($paginatedRiwayat->isEmpty())
+                        <p class="rk-note">Belum ada data riwayat izin.</p>
+                    @else
+                        <div class="rk-list">
+                            @foreach($paginatedRiwayat as $item)
+                                @php
+                                    $durasi = $item->tanggal_mulai->diffInDays($item->tanggal_selesai) + 1;
+                                    $statusLabel = $statusLabels[$item->status] ?? ucfirst((string) $item->status);
+                                    $statusClass = $statusClassMap[$item->status] ?? 'rk-badge-muted';
+                                    $jenisLabel = $jenisIzinLabels[$item->jenis_izin] ?? ucfirst((string) $item->jenis_izin);
+                                @endphp
+                                <details class="rk-item" @if($loop->first) open @endif>
+                                    <summary>
+                                        <div class="rk-item-main">
+                                            <p class="rk-item-title">{{ $jenisLabel }}</p>
+                                            <p class="rk-item-subtitle">
+                                                {{ $item->tanggal_mulai->translatedFormat('d F Y') }} - {{ $item->tanggal_selesai->translatedFormat('d F Y') }}
+                                            </p>
                                         </div>
+                                        <div class="rk-item-meta">
+                                            <span class="rk-badge rk-badge-info">{{ $durasi }} hari</span>
+                                            <span class="rk-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                                        </div>
+                                    </summary>
+
+                                    <div class="rk-item-body">
+                                        <div class="rk-item-grid">
+                                            <div class="rk-field">
+                                                <p class="rk-field-label">Tanggal Mulai</p>
+                                                <p class="rk-field-value">{{ $item->tanggal_mulai->translatedFormat('d F Y') }}</p>
+                                            </div>
+                                            <div class="rk-field">
+                                                <p class="rk-field-label">Tanggal Selesai</p>
+                                                <p class="rk-field-value">{{ $item->tanggal_selesai->translatedFormat('d F Y') }}</p>
+                                            </div>
+                                            <div class="rk-field">
+                                                <p class="rk-field-label">Petugas Piket</p>
+                                                <p class="rk-field-value">{{ $item->nama_piket ?: '-' }}</p>
+                                            </div>
+                                            <div class="rk-field">
+                                                <p class="rk-field-label">Diverifikasi Oleh</p>
+                                                <p class="rk-field-value">{{ $item->diverifikasi_oleh ?: '-' }}</p>
+                                            </div>
+                                        </div>
+
+                                        <p class="rk-note"><strong>Keterangan:</strong> {{ $item->keterangan ?: '-' }}</p>
+
+                                        @if(filled($item->catatan_verifikasi))
+                                            <p class="rk-note"><strong>Catatan Verifikasi:</strong> {{ $item->catatan_verifikasi }}</p>
+                                        @endif
                                     </div>
-                                    {{-- Title: Jenis Izin + Tanggal --}}
-                                    <div class="flex-1 min-w-0">
-                                        <span class="font-semibold text-gray-900 dark:text-white text-base leading-relaxed block truncate">
-                                            {{ $jenisIzinLabels[$item->jenis_izin] ?? ucfirst($item->jenis_izin) }}
-                                        </span>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 block">
-                                            {{ $item->tanggal_mulai->translatedFormat('d F Y') }} - {{ $item->tanggal_selesai->translatedFormat('d F Y') }}
-                                        </span>
-                                    </div>
-                                    {{-- Status Badge --}}
-                                    <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap {{ $config['badge'] }} shadow-sm">
-                                        {{ $durasi }} hari
-                                    </span>
+                                </details>
+                            @endforeach
+                        </div>
+
+                        @if($paginatedRiwayat->hasPages())
+                            <div class="rk-pagination">
+                                <div class="rk-field-value" style="margin: 0; font-size: 0.84rem; font-weight: 500; color: #475569;">
+                                    Menampilkan {{ $paginatedRiwayat->firstItem() }} - {{ $paginatedRiwayat->lastItem() }} dari {{ $paginatedRiwayat->total() }} data
                                 </div>
-                                {{-- Chevron --}}
-                                <svg class="w-6 h-6 text-gray-400 dark:text-gray-500 transition-transform duration-300 shrink-0 ml-2"
-                                     :class="openItem === {{ $index }} ? 'rotate-180' : ''"
-                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </button>
 
-                            {{-- Accordion Content --}}
-                            <div x-show="openItem === {{ $index }}"
-                                 x-collapse>
-                                <div class="p-6 bg-gray-50 dark:bg-gray-900">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {{-- Left Column --}}
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal Mulai</p>
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $item->tanggal_mulai->translatedFormat('d F Y') }}</span>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal Selesai</p>
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $item->tanggal_selesai->translatedFormat('d F Y') }}</span>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $item->status === 'aktif' ? 'bg-green-500 text-white' : 'bg-gray-500 text-white' }}">
-                                                    {{ ucfirst($item->status) }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {{-- Right Column --}}
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Keterangan</p>
-                                                <div class="flex items-start gap-2">
-                                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                                    <span class="text-sm text-gray-900 dark:text-white">{{ $item->keterangan ?? '-' }}</span>
-                                                </div>
-                                            </div>
-                                            @if($item->nama_piket)
-                                            <div>
-                                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Petugas Piket</p>
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $item->nama_piket }}</span>
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </div>
+                                <div class="rk-page-btns">
+                                    <button wire:click="previousPage" class="rk-page-btn" @if($paginatedRiwayat->onFirstPage()) disabled @endif>&lsaquo;</button>
+                                    @foreach(range(1, $paginatedRiwayat->lastPage()) as $pageNum)
+                                        <button wire:click="gotoPage({{ $pageNum }})" class="rk-page-btn {{ $paginatedRiwayat->currentPage() == $pageNum ? 'is-active' : '' }}">{{ $pageNum }}</button>
+                                    @endforeach
+                                    <button wire:click="nextPage" class="rk-page-btn" @if(! $paginatedRiwayat->hasMorePages()) disabled @endif>&rsaquo;</button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    @endforeach
+                        @endif
+                    @endif
                 </div>
-
-                {{-- Pagination --}}
-                @if($paginatedRiwayat->hasPages())
-                <div class="mt-6 pt-6">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        {{-- Info Text --}}
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                            Menampilkan <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedRiwayat->firstItem() }}</span>
-                            - <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedRiwayat->lastItem() }}</span>
-                            dari <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedRiwayat->total() }}</span> data izin
-                        </div>
-
-                        {{-- Pagination Buttons --}}
-                        <div class="flex items-center gap-2">
-                            {{-- Previous Button --}}
-                            <button wire:click="previousPage" 
-                                    @if($paginatedRiwayat->onFirstPage()) disabled @endif
-                                    class="px-3 py-2 text-sm font-medium rounded-lg transition-colors {{ $paginatedRiwayat->onFirstPage() ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600' }}">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                            </button>
-
-                            {{-- Page Numbers --}}
-                            @foreach(range(1, $paginatedRiwayat->lastPage()) as $pageNum)
-                                <button wire:click="gotoPage({{ $pageNum }})"
-                                        class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors {{ $paginatedRiwayat->currentPage() == $pageNum ? 'bg-primary-600 text-white dark:bg-primary-500' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600' }}">
-                                    {{ $pageNum }}
-                                </button>
-                            @endforeach
-
-                            {{-- Next Button --}}
-                            <button wire:click="nextPage"
-                                    @if(!$paginatedRiwayat->hasMorePages()) disabled @endif
-                                    class="px-3 py-2 text-sm font-medium rounded-lg transition-colors {{ !$paginatedRiwayat->hasMorePages() ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600' }}">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                @endif
-            @endif
+            </section>
         </div>
     </div>
 </x-filament-panels::page>

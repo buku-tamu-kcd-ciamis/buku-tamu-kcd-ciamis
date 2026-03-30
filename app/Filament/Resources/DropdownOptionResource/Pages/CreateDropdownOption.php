@@ -9,6 +9,8 @@ class CreateDropdownOption extends CreateRecord
 {
   protected static string $resource = DropdownOptionResource::class;
 
+  protected string $view = 'filament.resources.dropdown-option-resource.pages.create-dropdown-option';
+
   protected function getRedirectUrl(): string
   {
     return $this->getResource()::getUrl('index');

@@ -172,8 +172,11 @@ class DropdownOptionResource extends Resource
   {
     return $schema->components([
       Section::make('Informasi Opsi')
+        ->icon('heroicon-o-adjustments-horizontal')
+        ->description('Ringkasan data opsi dropdown yang digunakan pada form Buku Tamu.')
         ->components([
           Infolists\Components\TextEntry::make('category')
+            ->label('Kategori')
             ->badge()
             ->color(fn(string $state): string => match ($state) {
               'jenis_id' => 'info',
@@ -184,27 +187,54 @@ class DropdownOptionResource extends Resource
               default => 'gray',
             })
             ->formatStateUsing(fn(string $state) => DropdownOption::CATEGORY_LABELS[$state] ?? $state),
-          Infolists\Components\TextEntry::make('value'),
-          Infolists\Components\TextEntry::make('label'),
-          Infolists\Components\TextEntry::make('sort_order'),
-          Infolists\Components\IconEntry::make('is_active')
-            ->boolean(),
+          Infolists\Components\TextEntry::make('label')
+            ->label('Label Tampilan')
+            ->weight('bold'),
+          Infolists\Components\TextEntry::make('value')
+            ->label('Nilai Tersimpan')
+            ->copyable(),
+          Infolists\Components\TextEntry::make('sort_order')
+            ->label('Urutan')
+            ->badge()
+            ->color('gray')
+            ->formatStateUsing(fn($state) => '#'. $state),
+          Infolists\Components\TextEntry::make('is_active')
+            ->label('Status')
+            ->badge()
+            ->formatStateUsing(fn(bool $state): string => $state ? 'Aktif' : 'Nonaktif')
+            ->color(fn(bool $state): string => $state ? 'success' : 'gray'),
           Infolists\Components\TextEntry::make('created_at')
+            ->label('Dibuat')
             ->dateTime('d/m/Y H:i'),
           Infolists\Components\TextEntry::make('updated_at')
+            ->label('Terakhir Diubah')
             ->dateTime('d/m/Y H:i'),
         ])
         ->columns(2),
 
       Section::make('Konfigurasi Jenis ID')
+        ->icon('heroicon-o-identification')
+        ->description('Pengaturan validasi tambahan untuk opsi kategori Jenis ID.')
+        ->visible(fn(DropdownOption $record): bool => $record->category === DropdownOption::CATEGORY_JENIS_ID)
         ->components([
-          Infolists\Components\TextEntry::make('metadata.id_label'),
-          Infolists\Components\TextEntry::make('metadata.placeholder'),
-          Infolists\Components\TextEntry::make('metadata.digits'),
-          Infolists\Components\TextEntry::make('metadata.max_repeated_digits'),
-          Infolists\Components\TextEntry::make('metadata.max_sequential_digits'),
+          Infolists\Components\TextEntry::make('metadata.id_label')
+            ->label('Label ID')
+            ->placeholder('-'),
+          Infolists\Components\TextEntry::make('metadata.placeholder')
+            ->label('Placeholder Input')
+            ->placeholder('-'),
+          Infolists\Components\TextEntry::make('metadata.digits')
+            ->label('Jumlah Digit Wajib')
+            ->placeholder('-'),
+          Infolists\Components\TextEntry::make('metadata.max_repeated_digits')
+            ->label('Maks. Digit Berulang')
+            ->placeholder('-'),
+          Infolists\Components\TextEntry::make('metadata.max_sequential_digits')
+            ->label('Maks. Digit Berurutan')
+            ->placeholder('-'),
         ])
-        ->columns(2),
+        ->columns(2)
+        ->collapsible(),
     ]);
   }
 

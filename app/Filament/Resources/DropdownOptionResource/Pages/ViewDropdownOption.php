@@ -10,11 +10,17 @@ class ViewDropdownOption extends ViewRecord
 {
   protected static string $resource = DropdownOptionResource::class;
 
+  protected string $view = 'filament.resources.dropdown-option-resource.pages.view-dropdown-option';
+
   protected function getHeaderActions(): array
   {
     return [
       Actions\EditAction::make()
-        ->label('Edit'),
+        ->label('Edit')
+        ->color('primary')
+        ->extraAttributes([
+          'class' => 'do-edit-theme-btn',
+        ]),
       Actions\DeleteAction::make()
         ->label('Hapus')
         ->requiresConfirmation()

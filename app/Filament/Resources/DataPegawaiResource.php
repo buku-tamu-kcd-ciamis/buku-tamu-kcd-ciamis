@@ -116,7 +116,24 @@ class DataPegawaiResource extends Resource
           ->label('No. HP')
           ->formatStateUsing(function ($state) {
             if (!$state) return '-';
-            return '+62' . $state;
+
+            $cleaned = preg_replace('/[^0-9]/', '', (string) $state);
+
+            if (!$cleaned) return '-';
+
+            if (str_starts_with($cleaned, '62')) {
+              return '0' . substr($cleaned, 2);
+            }
+
+            if (str_starts_with($cleaned, '8')) {
+              return '0' . $cleaned;
+            }
+
+            if (str_starts_with($cleaned, '0')) {
+              return $cleaned;
+            }
+
+            return '0' . $cleaned;
           })
           ->toggleable(),
         Tables\Columns\IconColumn::make('is_active')

@@ -71,6 +71,7 @@ class PengaturanAkses extends Page implements HasForms
         ->description('Atur menu dan aksi yang dapat diakses oleh role Kepala Cabang Dinas.')
         ->schema([
           Forms\Components\CheckboxList::make('kepalaCabdin')
+            ->hiddenLabel()
             ->options($resourcePermissionLabels + $actionPermissionLabels)
             ->columns(2)
             ->bulkToggleable()

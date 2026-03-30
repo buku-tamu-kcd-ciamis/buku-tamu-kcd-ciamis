@@ -138,6 +138,7 @@ class RiwayatTamu extends Page implements HasTable
               ->when($data['sampai'] ?? null, fn(Builder $builder, $date): Builder => $builder->whereDate('created_at', '<=', $date));
           }),
       ])
+      ->recordUrl(fn(BukuTamu $record): string => ViewRiwayatTamu::getUrl(['nik' => $record->nik]))
       ->recordActions([
         ActionGroup::make([
           Action::make('view')

@@ -65,7 +65,7 @@ class PegawaiIzinResource extends Resource
 
         return $schema
             ->components([
-                Forms\Components\Section::make('Informasi Pegawai')
+                \Filament\Schemas\Components\Section::make('Informasi Pegawai')
                     ->description('Data identitas dikunci dari akun login Anda')
                     ->icon('heroicon-o-user')
                     ->schema([
@@ -102,7 +102,7 @@ class PegawaiIzinResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Detail Izin')
+                \Filament\Schemas\Components\Section::make('Detail Izin')
                     ->icon('heroicon-o-calendar')
                     ->schema([
                         Forms\Components\Select::make('jenis_izin')

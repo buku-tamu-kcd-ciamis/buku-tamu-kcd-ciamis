@@ -64,11 +64,18 @@ class BookingChat extends Model
 
     public function canBeAccessedBy(User $user): bool
     {
+        // Staff directly assigned to this chat
         if ($user->id === $this->staff_user_id) {
             return true;
         }
 
-        return $user->hasAnyRole(['Piket', 'Super Admin']) && ($user->role_user?->hasPermission('buku_tamu') ?? false);
+        // Super Admin always has full access
+        if ($user->hasRole('Super Admin')) {
+            return true;
+        }
+
+        // Piket with buku_tamu permission
+        return $user->hasRole('Piket') && ($user->role_user?->hasPermission('buku_tamu') ?? false);
     }
 
     public function unreadCountFor(User $user): int

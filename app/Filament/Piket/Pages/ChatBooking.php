@@ -60,7 +60,13 @@ class ChatBooking extends Page
             ->where(function (Builder $query) use ($user) {
                 $query->whereNull('sender_user_id')->orWhere('sender_user_id', '!=', $user->id);
             })
-            ->whereHas('chat')
+            ->whereHas('chat', function (Builder $query) use ($user) {
+                // Only count messages in chats that the piket user has access to
+                $query->where(function (Builder $q) use ($user) {
+                    $q->where('piket_user_id', $user->id)
+                      ->orWhereNull('piket_user_id'); // Also show unassigned chats
+                });
+            })
             ->count();
 
         return $count > 0 ? (string) $count : null;

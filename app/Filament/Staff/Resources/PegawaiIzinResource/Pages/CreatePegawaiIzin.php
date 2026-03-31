@@ -6,11 +6,17 @@ use App\Filament\Staff\Resources\PegawaiIzinResource;
 use App\Models\PegawaiIzin;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Enums\Width;
 use Illuminate\Validation\ValidationException;
 
 class CreatePegawaiIzin extends CreateRecord
 {
     protected static string $resource = PegawaiIzinResource::class;
+
+    public function getMaxContentWidth(): Width | string | null
+    {
+        return Width::Full;
+    }
 
     protected function getRedirectUrl(): string
     {

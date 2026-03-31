@@ -37,12 +37,14 @@ class ChatBooking extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return static::hasStaffPermission('riwayat_tamu');
+        return static::hasStaffPermission('chat_booking')
+            || static::hasStaffPermission('riwayat_tamu');
     }
 
     public static function canAccess(): bool
     {
-        return static::hasStaffPermission('riwayat_tamu');
+        return static::hasStaffPermission('chat_booking')
+            || static::hasStaffPermission('riwayat_tamu');
     }
 
     public static function getNavigationBadge(): ?string
@@ -69,6 +71,45 @@ class ChatBooking extends Page
     public static function getNavigationBadgeColor(): ?string
     {
         return 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if (!$user) {
+            return null;
+        }
+
+        $latestUnread = BookingChatMessage::query()
+            ->whereNull('read_at')
+            ->where('is_system', false)
+            ->where(function (Builder $query) use ($user) {
+                $query->whereNull('sender_user_id')->orWhere('sender_user_id', '!=', $user->id);
+            })
+            ->whereHas('chat', fn(Builder $query) => $query->where('staff_user_id', $user->id))
+            ->with([
+                'sender:id,name',
+                'chat.bukuTamu:id,nama_lengkap',
+            ])
+            ->latest('created_at')
+            ->first();
+
+        if (!$latestUnread) {
+            return null;
+        }
+
+        $jam = $latestUnread->created_at?->format('H:i') ?? '--:--';
+        $pengirim = $latestUnread->sender?->name ?? 'Pengguna';
+        $tamu = $latestUnread->chat?->bukuTamu?->nama_lengkap;
+        $infoPesan = Str::limit($latestUnread->message ?? '', 45);
+
+        if ($tamu) {
+            return "{$jam} • {$pengirim} • {$tamu} • {$infoPesan}";
+        }
+
+        return "{$jam} • {$pengirim} • {$infoPesan}";
     }
 
     public function mount(): void

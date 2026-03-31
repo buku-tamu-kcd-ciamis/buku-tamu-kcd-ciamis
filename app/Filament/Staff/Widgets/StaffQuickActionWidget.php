@@ -2,15 +2,17 @@
 
 namespace App\Filament\Staff\Widgets;
 
-use App\Filament\Staff\Pages\NotifikasiTamu;
+use App\Filament\Staff\Pages\ChatBooking;
 use App\Filament\Staff\Pages\RiwayatKunjungan;
 use App\Filament\Staff\Resources\PegawaiIzinResource;
+use App\Models\BookingChatMessage;
 use App\Models\BukuTamu;
 use App\Models\PegawaiIzin;
-use App\Models\StaffNotification;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class StaffQuickActionWidget extends BaseWidget
 {
@@ -22,9 +24,28 @@ class StaffQuickActionWidget extends BaseWidget
         $user = Auth::user();
         $pegawaiNama = $user?->pegawai?->nama ?? $user?->name;
 
-        $notifikasiBelumDibaca = StaffNotification::where('user_id', $user?->id)
-            ->where('is_read', false)
-            ->count();
+        $chatBelumDibacaQuery = BookingChatMessage::query()
+            ->whereNull('read_at')
+            ->where('is_system', false)
+            ->where(function (Builder $query) use ($user) {
+                $query->whereNull('sender_user_id')->orWhere('sender_user_id', '!=', $user?->id);
+            })
+            ->whereHas('chat', fn(Builder $query) => $query->where('staff_user_id', $user?->id));
+
+        $notifikasiBelumDibaca = (clone $chatBelumDibacaQuery)->count();
+
+        $chatTerbaru = (clone $chatBelumDibacaQuery)
+            ->with(['sender:id,name'])
+            ->latest('created_at')
+            ->first();
+
+        $deskripsiChat = $chatTerbaru
+            ? sprintf(
+                '%s • %s',
+                $chatTerbaru->created_at?->format('H:i') ?? '--:--',
+                Str::limit($chatTerbaru->message ?? 'Pesan baru masuk', 38)
+            )
+            : 'belum ada chat baru';
 
         $izinMenunggu = PegawaiIzin::where('nama_pegawai', $pegawaiNama)
             ->where('status', PegawaiIzin::STATUS_MENUNGGU)
@@ -36,9 +57,9 @@ class StaffQuickActionWidget extends BaseWidget
             ->count();
 
         return [
-            Stat::make('Aksi Cepat: Notifikasi', $notifikasiBelumDibaca)
-                ->description('buka notifikasi tamu')
-                ->url(NotifikasiTamu::getUrl())
+            Stat::make('Aksi Cepat: Chat Booking', $notifikasiBelumDibaca)
+                ->description($deskripsiChat)
+                ->url(ChatBooking::getUrl())
                 ->openUrlInNewTab(false)
                 ->extraAttributes(['class' => 'staff-quick-action'])
                 ->color($notifikasiBelumDibaca > 0 ? 'danger' : 'primary'),

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\PegawaiIzin;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -59,51 +60,11 @@ class PegawaiIzinResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $identityData = static::resolveIdentityData($user);
-
         return $schema
             ->components([
-                Forms\Components\Section::make('Informasi Pegawai')
-                    ->description('Data identitas dikunci dari akun login Anda')
-                    ->icon('heroicon-o-user')
-                    ->schema([
-                        Forms\Components\TextInput::make('nama_pegawai')
-                            ->label('Nama Pegawai')
-                            ->default($identityData['nama_pegawai'])
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('nip')
-                            ->label('NIP')
-                            ->default($identityData['nip'])
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->maxLength(18),
-                        Forms\Components\TextInput::make('jabatan')
-                            ->label('Jabatan')
-                            ->default($identityData['jabatan'])
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('unit_kerja')
-                            ->label('Unit Kerja')
-                            ->default($identityData['unit_kerja'])
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('nomor_hp')
-                            ->label('Nomor HP')
-                            ->default($identityData['nomor_hp'])
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->maxLength(20),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Detail Izin')
+                Section::make('Detail Izin')
                     ->icon('heroicon-o-calendar')
+                    ->columnSpanFull()
                     ->schema([
                         Forms\Components\Select::make('jenis_izin')
                             ->label('Jenis Izin')

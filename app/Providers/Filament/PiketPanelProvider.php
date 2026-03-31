@@ -39,6 +39,9 @@ class PiketPanelProvider extends PanelProvider
         'success' => Color::Green,
       ])
       ->discoverResources(in: app_path('Filament/Piket/Resources'), for: 'App\\Filament\\Piket\\Resources')
+      ->resources([
+        \App\Filament\Piket\Resources\KunjunganResource::class,
+      ])
       ->discoverPages(in: app_path('Filament/Piket/Pages'), for: 'App\\Filament\\Piket\\Pages')
       ->pages([
         \App\Filament\Piket\Pages\Dashboard::class,

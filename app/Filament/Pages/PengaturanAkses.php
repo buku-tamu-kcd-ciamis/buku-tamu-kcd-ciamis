@@ -27,6 +27,7 @@ class PengaturanAkses extends Page implements HasForms
 
   public ?array $kepalaCabdin = [];
   public ?array $piket = [];
+  public ?array $staff = [];
   public ?string $paperSize = 'a4';
 
   public static function shouldRegisterNavigation(): bool
@@ -46,14 +47,17 @@ class PengaturanAkses extends Page implements HasForms
 
     $kepalaCabdinRole = RoleUser::where('name', 'Kepala Cabang Dinas')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
+    $staffRole = RoleUser::where('name', 'Staff')->first();
 
     $kepalaCabdinPermissions = array_merge(RoleUser::getDefaultPermissions(), $kepalaCabdinRole?->permissions ?? []);
     $piketPermissions = array_merge(RoleUser::getDefaultPermissions(), $piketRole?->permissions ?? []);
+    $staffPermissions = array_merge(RoleUser::getDefaultPermissions(), $staffRole?->permissions ?? []);
     $settings = \App\Models\PengaturanKcd::getSettings();
 
     $this->form->fill([
       'kepalaCabdin' => $this->getSelectedPermissions($kepalaCabdinPermissions),
       'piket' => $this->getSelectedPermissions($piketPermissions),
+      'staff' => $this->getSelectedPermissions($staffPermissions),
       'paperSize' => $settings->paper_size ?? 'a4',
     ]);
   }
@@ -86,6 +90,22 @@ class PengaturanAkses extends Page implements HasForms
         ->description('Atur menu dan aksi yang dapat diakses oleh role Piket.')
         ->schema([
           Forms\Components\CheckboxList::make('piket')
+            ->hiddenLabel()
+            ->options($resourcePermissionLabels + $actionPermissionLabels)
+            ->columns(2)
+            ->bulkToggleable()
+            ->descriptions([
+              'can_print' => 'Mengizinkan akses tombol cetak pada halaman terkait.',
+              'can_change_status' => 'Mengizinkan perubahan status data yang memerlukan otorisasi.',
+            ]),
+        ])
+        ->collapsible(),
+
+      Section::make('Akses Staff')
+        ->description('Atur menu dan aksi yang dapat diakses oleh role Staff.')
+        ->schema([
+          Forms\Components\CheckboxList::make('staff')
+            ->hiddenLabel()
             ->options($resourcePermissionLabels + $actionPermissionLabels)
             ->columns(2)
             ->bulkToggleable()
@@ -113,9 +133,11 @@ class PengaturanAkses extends Page implements HasForms
     $data = $this->form->getState();
     $kepalaCabdinPermissions = $this->toPermissionMap($data['kepalaCabdin'] ?? []);
     $piketPermissions = $this->toPermissionMap($data['piket'] ?? []);
+    $staffPermissions = $this->toPermissionMap($data['staff'] ?? []);
 
     $kepalaCabdinRole = RoleUser::where('name', 'Kepala Cabang Dinas')->first();
     $piketRole = RoleUser::where('name', 'Piket')->first();
+    $staffRole = RoleUser::where('name', 'Staff')->first();
 
     if ($kepalaCabdinRole) {
       $kepalaCabdinRole->update(['permissions' => $kepalaCabdinPermissions]);
@@ -123,6 +145,10 @@ class PengaturanAkses extends Page implements HasForms
 
     if ($piketRole) {
       $piketRole->update(['permissions' => $piketPermissions]);
+    }
+
+    if ($staffRole) {
+      $staffRole->update(['permissions' => $staffPermissions]);
     }
 
     \App\Models\PengaturanKcd::getSettings()->update([

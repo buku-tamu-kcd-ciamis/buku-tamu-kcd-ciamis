@@ -10,8 +10,8 @@
         : 'Tanggal booking belum tersedia';
 @endphp
 
-<div class="booking-chat-page" wire:poll.4s="refreshChatList">
-    <div class="booking-chat-shell">
+<div class="booking-chat-page" wire:poll.4s="refreshChatList" x-data="{ mobileThreadOpen: false }">
+    <div class="booking-chat-shell" :class="{ 'is-room-open': mobileThreadOpen }">
         <aside class="booking-chat-sidebar">
             <div class="booking-chat-sidebar-head">
                 <h2 class="booking-chat-sidebar-title">Daftar Booking</h2>
@@ -33,6 +33,7 @@
                         $isActive = $selectedChat?->id === $chat->id;
                         $latestMessage = $chat->latestMessage;
                         $threadTimeSource = $chat->last_message_at ?? $chat->bukuTamu?->created_at ?? $chat->created_at;
+                        $activityAt = $latestMessage?->created_at ?? $threadTimeSource;
                         $threadSeparatorKey = $threadTimeSource?->format('Y-m-d') ?? 'no-date';
                         $threadSeparatorLabel = match (true) {
                             !$threadTimeSource => 'Tanpa tanggal',
@@ -40,15 +41,14 @@
                             $threadTimeSource->isYesterday() => 'Kemarin',
                             default => $threadTimeSource->locale('id')->isoFormat('dddd, D MMMM YYYY'),
                         };
-                        $bookingAt = $chat->bukuTamu?->created_at;
-                        $bookingDateText = match (true) {
-                            !$bookingAt => 'Tanggal tidak tersedia',
-                            $bookingAt->isToday() => 'Hari ini',
-                            $bookingAt->isYesterday() => 'Kemarin',
-                            default => $bookingAt->locale('id')->isoFormat('ddd, D MMM'),
+                        $activityTimeText = match (true) {
+                            !$activityAt => '--:--',
+                            $activityAt->isToday() => $activityAt->format('H:i'),
+                            $activityAt->isYesterday() => 'Kemarin',
+                            default => $activityAt->locale('id')->isoFormat('D MMM'),
                         };
-                        $bookingDateFull = $bookingAt
-                            ? $bookingAt->locale('id')->isoFormat('dddd, D MMMM YYYY [pukul] HH:mm')
+                        $activityDateFull = $activityAt
+                            ? $activityAt->locale('id')->isoFormat('dddd, D MMMM YYYY [pukul] HH:mm')
                             : 'Tanggal booking belum tersedia';
                         $statusValue = $chat->bukuTamu?->status ?? 'menunggu';
                         $statusLabel = \App\Models\BukuTamu::STATUS_LABELS[$statusValue] ?? ucfirst((string) $statusValue);
@@ -65,8 +65,9 @@
                     <button
                         type="button"
                         wire:click="selectChat('{{ $chat->id }}')"
+                        x-on:click="mobileThreadOpen = true"
                         class="booking-chat-thread-item {{ $isActive ? 'is-active' : '' }}"
-                        title="{{ $bookingDateFull }}"
+                        title="{{ $activityDateFull }}"
                     >
                         <div class="booking-chat-thread-main">
                             <img src="{{ $counterpartAvatar }}" alt="Avatar" class="booking-chat-avatar" loading="lazy" />
@@ -74,7 +75,7 @@
                             <div class="booking-chat-thread-body">
                                 <div class="booking-chat-thread-title-row">
                                     <span class="booking-chat-thread-name">{{ $chat->bukuTamu?->nama_lengkap ?? 'Booking Tidak Ditemukan' }}</span>
-                                    <span class="booking-chat-thread-date">{{ $bookingDateText }}</span>
+                                    <span class="booking-chat-thread-date">{{ $activityTimeText }}</span>
                                 </div>
 
                                 <div class="booking-chat-thread-booking-row">
@@ -86,7 +87,7 @@
                                     <p class="booking-chat-thread-preview">
                                         @if($latestMessage)
                                             @if(!$latestMessage->is_system && $latestMessage->sender_user_id === auth()->id())
-                                                <span class="booking-chat-thread-check {{ $latestMessage->read_at ? 'is-read' : '' }}">{{ $latestMessage->read_at ? '✓✓' : '✓' }}</span>
+                                                <span class="booking-chat-thread-check {{ $latestMessage->read_at ? 'is-read' : '' }}"><span class="booking-chat-check-mark">✓</span><span class="booking-chat-check-mark">✓</span></span>
                                             @endif
                                             {{ $latestMessage->is_system ? '[Sistem] ' : '' }}{{ \Illuminate\Support\Str::limit($latestMessage->message, 60) }}
                                         @else
@@ -126,6 +127,15 @@
         >
             @if ($selectedChat)
                 <header class="booking-chat-room-head">
+                    <button
+                        type="button"
+                        class="booking-chat-back-btn"
+                        x-on:click="mobileThreadOpen = false"
+                        aria-label="Kembali ke daftar chat"
+                    >
+                        ←
+                    </button>
+
                     <div class="booking-chat-peer">
                         <img src="{{ $counterpartState['avatarUrl'] }}" alt="Avatar" class="booking-chat-peer-avatar" loading="lazy" />
                         <div>
@@ -187,9 +197,9 @@
 
                                 <p class="booking-chat-message-text">{{ $message->message }}</p>
                                 <p class="booking-chat-message-time">
-                                    {{ $message->created_at?->format('d/m/Y H:i') }}
+                                    {{ $message->created_at?->format('H:i') }}
                                     @if(!$isSystem && $isMine)
-                                        <span class="booking-chat-message-check {{ $message->read_at ? 'is-read' : '' }}">{{ $message->read_at ? '✓✓' : '✓' }}</span>
+                                        <span class="booking-chat-message-check {{ $message->read_at ? 'is-read' : '' }}"><span class="booking-chat-check-mark">✓</span><span class="booking-chat-check-mark">✓</span></span>
                                     @endif
                                 </p>
                             </div>

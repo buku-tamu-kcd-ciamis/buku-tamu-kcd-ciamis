@@ -58,6 +58,8 @@ class RoleUser extends Model
     {
         return [
             'buku_tamu' => false,
+            'chat_booking' => false,
+            'notifikasi_tamu' => false,
             'activity_log' => false,
             'pegawai_izin' => false,
             'rekap_izin' => false,
@@ -80,6 +82,8 @@ class RoleUser extends Model
     {
         return [
             'buku_tamu' => 'Buku Tamu',
+            'chat_booking' => 'Chat Booking',
+            'notifikasi_tamu' => 'Notifikasi Tamu',
             'activity_log' => 'Log Aktivitas',
             'pegawai_izin' => 'Izin Pegawai',
             'rekap_izin' => 'Rekap Izin Pegawai',
@@ -140,6 +144,8 @@ class RoleUser extends Model
             ]),
             'Staff' => array_replace($defaults, [
                 'buku_tamu' => true,
+                'chat_booking' => true,
+                'notifikasi_tamu' => true,
                 'pegawai_izin' => true,
                 'data_pegawai' => true,
                 'riwayat_tamu' => true,

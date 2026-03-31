@@ -2,39 +2,43 @@
 
 namespace App\Filament\Piket\Resources;
 
+use App\Filament\Piket\Concerns\ChecksPiketPermission;
 use App\Filament\Piket\Resources\KunjunganResource\Pages;
 use App\Filament\Piket\Pages\ChatBooking;
 use App\Models\BukuTamu;
-use App\Models\DropdownOption;
 use App\Services\BookingChatManager;
-use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class KunjunganResource extends Resource
 {
+  use ChecksPiketPermission;
+
   protected static ?string $model = BukuTamu::class;
 
-  protected static ?string $slug = 'kunjungan';
-  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
-  protected static ?string $navigationLabel = 'Kunjungan Tamu';
+  protected static ?string $slug = 'buku-tamu';
+  protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
+  protected static ?string $navigationLabel = 'Buku Tamu';
   protected static string|\UnitEnum|null $navigationGroup = 'Layanan Tamu';
-  protected static ?string $modelLabel = 'Kunjungan';
-  protected static ?string $pluralModelLabel = 'Kunjungan Tamu';
+  protected static ?string $modelLabel = 'Buku Tamu';
+  protected static ?string $pluralModelLabel = 'Data Buku Tamu';
   protected static ?int $navigationSort = 1;
 
   public static function shouldRegisterNavigation(): bool
   {
-    /** @var User $user */
-    $user = Auth::user();
-    return $user && $user->role_user && $user->role_user->hasPermission('buku_tamu');
+    return true; // Temporarily always show for debugging
+    // return static::hasPiketPermission('buku_tamu');
+  }
+
+  public static function canViewAny(): bool
+  {
+    return true; // Temporarily always allow for debugging
+    // return static::hasPiketPermission('buku_tamu');
   }
 
   public static function form(Schema $schema): Schema

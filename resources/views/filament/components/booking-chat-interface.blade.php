@@ -15,7 +15,33 @@
     $counterpartLabel = ($panelLabel === 'Piket') ? 'Staff' : 'Piket';
 @endphp
 
-<div class="booking-chat-page" wire:poll.4s="refreshChatList" x-data="{ mobileThreadOpen: false }">
+<div
+    class="booking-chat-page"
+    x-data="{
+        mobileThreadOpen: false,
+        pausePolling: false,
+        pollingTimer: null,
+        startPolling() {
+            if (this.pollingTimer) {
+                clearInterval(this.pollingTimer);
+            }
+
+            this.pollingTimer = setInterval(() => {
+                if (!this.pausePolling) {
+                    this.$wire.refreshChatList();
+                }
+            }, 4000);
+        },
+        stopPolling() {
+            if (this.pollingTimer) {
+                clearInterval(this.pollingTimer);
+                this.pollingTimer = null;
+            }
+        }
+    }"
+    x-init="startPolling()"
+    x-on:booking-chat-pause-polling.window="pausePolling = !!($event.detail && $event.detail.paused)"
+>
     <div class="booking-chat-shell" :class="{ 'is-room-open': mobileThreadOpen }">
         <aside class="booking-chat-sidebar">
             <div class="booking-chat-sidebar-head">
@@ -36,8 +62,8 @@
                 @forelse ($chats as $chat)
                     @php
                         $isActive = $selectedChat?->id === $chat->id;
-                        $latestMessage = $chat->latestMessage;
-                        $threadTimeSource = $chat->last_message_at ?? $chat->bukuTamu?->created_at ?? $chat->created_at;
+                        $latestMessage = $chat->previewMessage ?? $chat->latestMessage;
+                        $threadTimeSource = $latestMessage?->created_at ?? $chat->last_message_at ?? $chat->bukuTamu?->created_at ?? $chat->created_at;
                         $activityAt = $latestMessage?->created_at ?? $threadTimeSource;
                         $threadSeparatorKey = $threadTimeSource?->format('Y-m-d') ?? 'no-date';
                         $threadSeparatorLabel = match (true) {
@@ -94,7 +120,9 @@
                                             @if(!$latestMessage->is_system && $latestMessage->sender_user_id === auth()->id())
                                                 <span class="booking-chat-thread-check {{ $latestMessage->read_at ? 'is-read' : '' }}"><span class="booking-chat-check-mark">✓</span><span class="booking-chat-check-mark">✓</span></span>
                                             @endif
-                                            @if($latestMessage->hasAttachment() && $latestMessage->message === '[Lampiran]')
+                                            @if($latestMessage->isDeletedForEveryone())
+                                                Pesan telah dihapus.
+                                            @elseif($latestMessage->hasAttachment() && $latestMessage->message === '[Lampiran]')
                                                 📎 {{ $latestMessage->attachment_name ?? 'Lampiran' }}
                                             @else
                                                 {{ $latestMessage->is_system ? '[Sistem] ' : '' }}{{ \Illuminate\Support\Str::limit(trim((string) preg_replace('/\s+/u', ' ', (string) $latestMessage->message)), 90) }}
@@ -128,6 +156,15 @@
                 cameraOpen: false,
                 cameraError: '',
                 cameraStream: null,
+                cameraNeedsFlip: false,
+                cameraManualFlip: null,
+                cameraFlipStorageKey: 'booking-chat-camera-unmirror',
+                imagePreviewOpen: false,
+                imagePreviewUrl: '',
+                imagePreviewName: '',
+                deleteConfirmOpen: false,
+                deleteConfirmMode: 'me',
+                deleteConfirmMessageId: null,
                 resizeComposer(el) {
                     const min = 40;
                     const max = Math.min(Math.round(window.innerHeight * 0.42), 260);
@@ -136,15 +173,123 @@
                     el.style.height = next + 'px';
                     el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
                 },
+                openDeleteConfirm(mode, messageId) {
+                    this.deleteConfirmMode = mode;
+                    this.deleteConfirmMessageId = messageId;
+                    this.deleteConfirmOpen = true;
+                },
+                closeDeleteConfirm() {
+                    this.deleteConfirmOpen = false;
+                    this.deleteConfirmMode = 'me';
+                    this.deleteConfirmMessageId = null;
+                },
+                runDeleteConfirmed() {
+                    if (!this.deleteConfirmMessageId) {
+                        this.closeDeleteConfirm();
+                        return;
+                    }
+
+                    if (this.deleteConfirmMode === 'everyone') {
+                        this.$wire.deleteMessageForEveryone(this.deleteConfirmMessageId);
+                    } else {
+                        this.$wire.deleteMessageForMe(this.deleteConfirmMessageId);
+                    }
+
+                    this.closeDeleteConfirm();
+                },
+                openImagePreview(url, name = 'Preview gambar') {
+                    if (!url) {
+                        return;
+                    }
+
+                    this.imagePreviewUrl = url;
+                    this.imagePreviewName = name || 'Preview gambar';
+                    this.imagePreviewOpen = true;
+                    this.$dispatch('booking-chat-pause-polling', { paused: true });
+                },
+                closeImagePreview() {
+                    this.imagePreviewOpen = false;
+                    this.imagePreviewUrl = '';
+                    this.imagePreviewName = '';
+                    this.$dispatch('booking-chat-pause-polling', { paused: false });
+                },
                 stopCameraStream() {
                     if (this.cameraStream) {
                         this.cameraStream.getTracks().forEach((track) => track.stop());
                         this.cameraStream = null;
                     }
+
+                    this.cameraNeedsFlip = false;
+                    this.cameraManualFlip = null;
+                },
+                loadCameraFlipPreference() {
+                    try {
+                        const saved = localStorage.getItem(this.cameraFlipStorageKey);
+                        if (saved === '1') {
+                            this.cameraManualFlip = true;
+                        } else if (saved === '0') {
+                            this.cameraManualFlip = false;
+                        }
+                    } catch (error) {
+                        this.cameraManualFlip = null;
+                    }
+                },
+                saveCameraFlipPreference(value) {
+                    try {
+                        localStorage.setItem(this.cameraFlipStorageKey, value ? '1' : '0');
+                    } catch (error) {
+                        // Ignore storage errors in restricted browser contexts.
+                    }
+                },
+                shouldUnmirrorFrontCamera(stream) {
+                    const track = stream?.getVideoTracks?.()[0];
+
+                    if (!track || !track.getSettings) {
+                        return true;
+                    }
+
+                    const settings = track.getSettings();
+                    const label = String(track.label || '').toLowerCase();
+
+                    if (label.includes('front') || label.includes('facetime') || label.includes('user')) {
+                        return true;
+                    }
+
+                    if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                        return false;
+                    }
+
+                    if (settings.facingMode) {
+                        return settings.facingMode === 'user';
+                    }
+
+                    // Desktop webcam umumnya front-facing dan sering tampil mirror.
+                    return true;
+                },
+                getEffectiveCameraFlip() {
+                    return this.cameraManualFlip === null ? this.cameraNeedsFlip : this.cameraManualFlip;
+                },
+                applyCameraMirrorFix() {
+                    if (!this.$refs.cameraVideo) {
+                        return;
+                    }
+
+                    const transformValue = this.getEffectiveCameraFlip() ? 'scaleX(-1)' : 'scaleX(1)';
+                    this.$refs.cameraVideo.style.setProperty('transform', transformValue, 'important');
+                    this.$refs.cameraVideo.style.webkitTransform = transformValue;
+                    this.$refs.cameraVideo.style.transformOrigin = 'center center';
+                },
+                toggleCameraFlip() {
+                    this.cameraManualFlip = !this.getEffectiveCameraFlip();
+                    this.saveCameraFlipPreference(this.cameraManualFlip);
+                    this.applyCameraMirrorFix();
                 },
                 async openCamera() {
                     this.cameraOpen = true;
                     this.cameraError = '';
+                    this.closeImagePreview();
+                    this.$dispatch('booking-chat-pause-polling', { paused: true });
+                    this.loadCameraFlipPreference();
 
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                         this.cameraError = 'Browser tidak mendukung akses kamera.';
@@ -154,7 +299,7 @@
                     try {
                         const stream = await navigator.mediaDevices.getUserMedia({
                             video: {
-                                facingMode: { ideal: 'environment' },
+                                facingMode: { ideal: 'user' },
                                 width: { ideal: 1280 },
                                 height: { ideal: 720 },
                             },
@@ -162,12 +307,21 @@
                         });
 
                         this.cameraStream = stream;
+                        this.cameraNeedsFlip = this.shouldUnmirrorFrontCamera(stream);
+                        if (this.cameraManualFlip === null) {
+                            this.cameraManualFlip = this.cameraNeedsFlip;
+                            this.saveCameraFlipPreference(this.cameraManualFlip);
+                        }
 
                         await this.$nextTick();
 
                         if (this.$refs.cameraVideo) {
                             this.$refs.cameraVideo.srcObject = stream;
+                            this.$refs.cameraVideo.onloadedmetadata = () => this.applyCameraMirrorFix();
+                            this.$refs.cameraVideo.onresize = () => this.applyCameraMirrorFix();
                             await this.$refs.cameraVideo.play();
+                            this.applyCameraMirrorFix();
+                            setTimeout(() => this.applyCameraMirrorFix(), 120);
                         }
                     } catch (error) {
                         this.cameraError = 'Kamera tidak dapat diakses. Cek izin kamera di browser.';
@@ -178,6 +332,7 @@
                     this.stopCameraStream();
                     this.cameraOpen = false;
                     this.cameraError = '';
+                    this.$dispatch('booking-chat-pause-polling', { paused: false });
                 },
                 assignAttachmentFile(file) {
                     if (!this.$refs.attachInput || !window.DataTransfer) {
@@ -211,7 +366,15 @@
                         return;
                     }
 
+                    context.save();
+
+                    if (this.getEffectiveCameraFlip()) {
+                        context.translate(width, 0);
+                        context.scale(-1, 1);
+                    }
+
                     context.drawImage(video, 0, 0, width, height);
+                    context.restore();
 
                     canvas.toBlob((blob) => {
                         if (!blob) {
@@ -228,7 +391,7 @@
                 }
             }"
             x-on:booking-chat-scroll-bottom.window="$nextTick(() => { if ($refs.viewport) { $refs.viewport.scrollTop = $refs.viewport.scrollHeight } })"
-            x-on:keydown.escape.window="if (cameraOpen) closeCamera()"
+            x-on:keydown.escape.window="if (deleteConfirmOpen) closeDeleteConfirm(); if (imagePreviewOpen) closeImagePreview(); if (cameraOpen) closeCamera()"
         >
             @if ($selectedChat)
                 <header class="booking-chat-room-head">
@@ -251,9 +414,31 @@
                             </p>
                         </div>
                     </div>
-                    <span class="booking-chat-status status-{{ $selectedChat->bukuTamu?->status }}">
-                        {{ \App\Models\BukuTamu::STATUS_LABELS[$selectedChat->bukuTamu?->status] ?? ucfirst((string) $selectedChat->bukuTamu?->status) }}
-                    </span>
+
+                    <div class="booking-chat-room-head-right">
+                        <span class="booking-chat-status status-{{ $selectedChat->bukuTamu?->status }}">
+                            {{ \App\Models\BukuTamu::STATUS_LABELS[$selectedChat->bukuTamu?->status] ?? ucfirst((string) $selectedChat->bukuTamu?->status) }}
+                        </span>
+
+                        <div class="booking-chat-room-actions" x-data="{ open: false }" x-on:click.outside="open = false">
+                            <button
+                                type="button"
+                                class="booking-chat-room-actions-toggle"
+                                x-on:click="open = !open"
+                                x-bind:aria-expanded="open ? 'true' : 'false'"
+                                aria-label="Aksi chat"
+                                title="Aksi chat"
+                            >⋮</button>
+
+                            <div class="booking-chat-room-actions-menu" x-show="open" x-cloak>
+                                <button
+                                    type="button"
+                                    class="booking-chat-room-action-btn"
+                                    x-on:click="$wire.exportSelectedChat(); open = false"
+                                >Export Chat (.txt)</button>
+                            </div>
+                        </div>
+                    </div>
                 </header>
 
                 <div class="booking-chat-booking-meta">
@@ -283,6 +468,7 @@
                             $isImage = $message->isImageAttachment();
                             $attachmentUrl = $message->attachmentUrl();
                             $repliedToMessage = $message->repliedTo;
+                            $deletedForEveryone = $message->isDeletedForEveryone();
                         @endphp
 
                         @if ($messageDay !== $lastMessageDay)
@@ -293,9 +479,9 @@
                         @endif
 
                         <article
-                            class="booking-chat-message {{ $isMine ? 'is-mine' : '' }} {{ $isSystem ? 'is-system' : '' }} {{ !$isSystem ? 'is-swipe-reply' : '' }}"
+                            class="booking-chat-message {{ $isMine ? 'is-mine' : '' }} {{ $isSystem ? 'is-system' : '' }} {{ !$isSystem && !$deletedForEveryone ? 'is-swipe-reply' : '' }}"
                             @if (!$isSystem)
-                                x-data="{ startX: 0, startY: 0, dragX: 0, isTracking: false, isMine: @js($isMine) }"
+                                x-data="{ startX: 0, startY: 0, dragX: 0, isTracking: false, isMine: @js($isMine), canReply: @js(!$deletedForEveryone) }"
                                 x-on:touchstart.passive="
                                     if (window.innerWidth > 820) return;
                                     isTracking = true;
@@ -324,7 +510,7 @@
                                 x-on:touchend="
                                     if (!isTracking) return;
 
-                                    if (window.innerWidth <= 820 && Math.abs(dragX) >= 44) {
+                                    if (canReply && window.innerWidth <= 820 && Math.abs(dragX) >= 44) {
                                         $wire.setReplyTo('{{ $message->id }}');
                                         if (navigator.vibrate) {
                                             navigator.vibrate(10);
@@ -351,9 +537,11 @@
 
                                 @if (!$isSystem && $repliedToMessage)
                                     @php
-                                        $replyPreviewText = $repliedToMessage->message === '[Lampiran]'
+                                        $replyPreviewText = $repliedToMessage->deleted_for_everyone_at
+                                            ? 'Pesan telah dihapus'
+                                            : ($repliedToMessage->message === '[Lampiran]'
                                             ? '📎 ' . ($repliedToMessage->attachment_name ?: 'Lampiran')
-                                            : \Illuminate\Support\Str::limit((string) $repliedToMessage->message, 95);
+                                            : \Illuminate\Support\Str::limit((string) $repliedToMessage->message, 95));
                                         $replySenderName = $repliedToMessage->sender?->name ?: 'Pengguna';
                                     @endphp
 
@@ -363,31 +551,43 @@
                                     </div>
                                 @endif
 
-                                @if ($hasAttachment && $attachmentUrl)
-                                    @if ($isImage)
-                                        <a href="{{ $attachmentUrl }}" target="_blank" class="booking-chat-attachment-image-wrap">
-                                            <img
-                                                src="{{ $attachmentUrl }}"
-                                                alt="{{ $message->attachment_name ?? 'Gambar' }}"
-                                                class="booking-chat-attachment-image"
-                                                loading="lazy"
-                                            />
-                                        </a>
-                                    @else
-                                        <a href="{{ $attachmentUrl }}" target="_blank" download="{{ $message->attachment_name }}" class="booking-chat-attachment-file">
-                                            <span class="booking-chat-attachment-icon">📎</span>
-                                            <span class="booking-chat-attachment-name">{{ $message->attachment_name ?? 'Unduh Lampiran' }}</span>
-                                            @if ($message->attachment_size)
-                                                <span class="booking-chat-attachment-size">
-                                                    {{ number_format($message->attachment_size / 1024, 1) }} KB
-                                                </span>
-                                            @endif
-                                        </a>
+                                @if ($deletedForEveryone)
+                                    <p class="booking-chat-message-deleted">
+                                        {{ $isMine ? 'Anda menghapus pesan ini.' : 'Pesan ini telah dihapus.' }}
+                                    </p>
+                                @else
+                                    @if ($hasAttachment && $attachmentUrl)
+                                        @if ($isImage)
+                                            <button
+                                                type="button"
+                                                class="booking-chat-attachment-image-wrap"
+                                                x-on:click="openImagePreview(@js($attachmentUrl), @js($message->attachment_name ?? 'Preview gambar'))"
+                                                title="Lihat gambar"
+                                                aria-label="Lihat gambar"
+                                            >
+                                                <img
+                                                    src="{{ $attachmentUrl }}"
+                                                    alt="{{ $message->attachment_name ?? 'Gambar' }}"
+                                                    class="booking-chat-attachment-image"
+                                                    loading="lazy"
+                                                />
+                                            </button>
+                                        @else
+                                            <a href="{{ $attachmentUrl }}" target="_blank" download="{{ $message->attachment_name }}" class="booking-chat-attachment-file">
+                                                <span class="booking-chat-attachment-icon">📎</span>
+                                                <span class="booking-chat-attachment-name">{{ $message->attachment_name ?? 'Unduh Lampiran' }}</span>
+                                                @if ($message->attachment_size)
+                                                    <span class="booking-chat-attachment-size">
+                                                        {{ number_format($message->attachment_size / 1024, 1) }} KB
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        @endif
                                     @endif
-                                @endif
 
-                                @if ($message->message && $message->message !== '[Lampiran]')
-                                    <p class="booking-chat-message-text">{{ $message->message }}</p>
+                                    @if ($message->message && $message->message !== '[Lampiran]')
+                                        <p class="booking-chat-message-text">{{ $message->message }}</p>
+                                    @endif
                                 @endif
 
                                 <div class="booking-chat-message-meta">
@@ -400,13 +600,40 @@
                                 </div>
 
                                 @if (!$isSystem)
-                                    <button
-                                        type="button"
-                                        class="booking-chat-reply-btn"
-                                        wire:click="setReplyTo('{{ $message->id }}')"
-                                        title="Balas pesan ini"
-                                        aria-label="Balas pesan ini"
-                                    >↩</button>
+                                    <div class="booking-chat-message-actions" x-data="{ open: false }" x-on:click.outside="open = false">
+                                        <button
+                                            type="button"
+                                            class="booking-chat-message-actions-toggle"
+                                            x-on:click="open = !open"
+                                            x-bind:aria-expanded="open ? 'true' : 'false'"
+                                            title="Aksi pesan"
+                                            aria-label="Aksi pesan"
+                                        >⋮</button>
+
+                                        <div class="booking-chat-message-actions-menu" x-show="open" x-cloak>
+                                            @if (!$deletedForEveryone)
+                                                <button
+                                                    type="button"
+                                                    class="booking-chat-message-action-btn"
+                                                    x-on:click="$wire.setReplyTo('{{ $message->id }}'); open = false"
+                                                >Balas</button>
+                                            @endif
+
+                                            <button
+                                                type="button"
+                                                class="booking-chat-message-action-btn"
+                                                x-on:click="openDeleteConfirm('me', '{{ $message->id }}'); open = false"
+                                            >Hapus untuk Saya</button>
+
+                                            @if ($isMine && !$deletedForEveryone)
+                                                <button
+                                                    type="button"
+                                                    class="booking-chat-message-action-btn is-danger"
+                                                    x-on:click="openDeleteConfirm('everyone', '{{ $message->id }}'); open = false"
+                                                >Hapus untuk Semua</button>
+                                            @endif
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         </article>
@@ -490,6 +717,57 @@
 
                 <div
                     x-cloak
+                    x-show="deleteConfirmOpen"
+                    x-transition.opacity
+                    class="booking-chat-delete-modal"
+                    x-on:click.self="closeDeleteConfirm()"
+                    aria-modal="true"
+                    role="dialog"
+                >
+                    <div class="booking-chat-delete-dialog">
+                        <h4 class="booking-chat-delete-title" x-text="deleteConfirmMode === 'everyone' ? 'Hapus untuk Semua?' : 'Hapus untuk Saya?'"></h4>
+                        <p class="booking-chat-delete-text" x-text="deleteConfirmMode === 'everyone' ? 'Pesan akan diganti menjadi teks "pesan dihapus" untuk semua orang.' : 'Pesan ini hanya akan disembunyikan dari tampilan Anda.'"></p>
+
+                        <div class="booking-chat-delete-actions">
+                            <button type="button" class="booking-chat-delete-cancel" x-on:click="closeDeleteConfirm()">Batal</button>
+                            <button type="button" class="booking-chat-delete-submit" x-on:click="runDeleteConfirmed()">Hapus</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    x-cloak
+                    x-show="imagePreviewOpen"
+                    x-transition.opacity
+                    class="booking-chat-image-modal"
+                    x-on:click.self="closeImagePreview()"
+                    aria-modal="true"
+                    role="dialog"
+                >
+                    <div class="booking-chat-image-dialog">
+                        <div class="booking-chat-image-head">
+                            <p class="booking-chat-image-title" x-text="imagePreviewName"></p>
+                            <button
+                                type="button"
+                                class="booking-chat-image-close"
+                                x-on:click="closeImagePreview()"
+                                aria-label="Tutup preview gambar"
+                                title="Tutup"
+                            >✕</button>
+                        </div>
+
+                        <div class="booking-chat-image-viewport">
+                            <img
+                                x-bind:src="imagePreviewUrl"
+                                x-bind:alt="imagePreviewName"
+                                class="booking-chat-image-full"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    x-cloak
                     x-show="cameraOpen"
                     x-transition.opacity
                     class="booking-chat-camera-modal"
@@ -507,10 +785,25 @@
                                 title="Tutup"
                             >✕</button>
                             <p class="booking-chat-camera-title">Ambil foto</p>
+                            <button
+                                type="button"
+                                class="booking-chat-camera-flip-preview"
+                                x-on:click="toggleCameraFlip()"
+                                :class="{ 'is-active': getEffectiveCameraFlip() }"
+                                aria-label="Balikkan tampilan kamera"
+                                title="Balikkan tampilan"
+                            >↔</button>
                         </div>
 
                         <div class="booking-chat-camera-viewport">
-                            <video x-ref="cameraVideo" class="booking-chat-camera-video" autoplay playsinline muted></video>
+                            <video
+                                x-ref="cameraVideo"
+                                class="booking-chat-camera-video"
+                                x-bind:class="{ 'is-force-unmirror': getEffectiveCameraFlip() }"
+                                autoplay
+                                playsinline
+                                muted
+                            ></video>
 
                             <p x-show="cameraError" class="booking-chat-camera-error" x-text="cameraError"></p>
                         </div>

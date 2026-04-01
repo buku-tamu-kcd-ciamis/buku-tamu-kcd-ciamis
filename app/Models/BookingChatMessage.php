@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Traits\UuidTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -21,6 +23,8 @@ class BookingChatMessage extends Model
         'attachment_name',
         'attachment_mime',
         'attachment_size',
+        'deleted_for_everyone_at',
+        'deleted_for_everyone_by',
         'is_system',
         'read_at',
     ];
@@ -28,6 +32,7 @@ class BookingChatMessage extends Model
     protected $casts = [
         'is_system' => 'boolean',
         'attachment_size' => 'integer',
+        'deleted_for_everyone_at' => 'datetime',
         'read_at' => 'datetime',
     ];
 
@@ -46,8 +51,34 @@ class BookingChatMessage extends Model
         return $this->belongsTo(self::class, 'reply_to_message_id');
     }
 
+    public function deletedForEveryoneBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_for_everyone_by');
+    }
+
+    public function userDeletions(): HasMany
+    {
+        return $this->hasMany(BookingChatMessageDeletion::class, 'booking_chat_message_id');
+    }
+
+    public function scopeVisibleForUser(Builder $query, User $user): Builder
+    {
+        return $query->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
+            $deletionQuery->where('user_id', $user->id);
+        });
+    }
+
+    public function scopeNotDeletedForEveryone(Builder $query): Builder
+    {
+        return $query->whereNull('deleted_for_everyone_at');
+    }
+
     public function hasAttachment(): bool
     {
+        if ($this->isDeletedForEveryone()) {
+            return false;
+        }
+
         return is_string($this->attachment_path) && $this->attachment_path !== '';
     }
 
@@ -69,5 +100,10 @@ class BookingChatMessage extends Model
         }
 
         return Storage::url($this->attachment_path);
+    }
+
+    public function isDeletedForEveryone(): bool
+    {
+        return $this->deleted_for_everyone_at !== null;
     }
 }

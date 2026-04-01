@@ -13,9 +13,11 @@ use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ChatBooking extends Page
 {
@@ -56,6 +58,10 @@ class ChatBooking extends Page
         }
 
         $count = BookingChatMessage::query()
+            ->whereNull('deleted_for_everyone_at')
+            ->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
+                $deletionQuery->where('user_id', $user->id);
+            })
             ->whereNull('read_at')
             ->where('is_system', false)
             ->where(function (Builder $query) use ($user) {
@@ -142,12 +148,16 @@ class ChatBooking extends Page
     public function setReplyTo(string $messageId): void
     {
         $chat = $this->getSelectedChat();
+        /** @var User $authUser */
+        $authUser = Auth::user();
 
         if (!$chat) {
             return;
         }
 
         $targetMessage = $chat->messages()
+            ->visibleForUser($authUser)
+            ->whereNull('deleted_for_everyone_at')
             ->where('is_system', false)
             ->whereKey($messageId)
             ->first();
@@ -162,6 +172,109 @@ class ChatBooking extends Page
     public function clearReplyTarget(): void
     {
         $this->replyToMessageId = null;
+    }
+
+    public function deleteMessageForMe(string $messageId): void
+    {
+        $chat = $this->getSelectedChat();
+
+        if (!$chat) {
+            return;
+        }
+
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
+        $message = $chat->messages()
+            ->where('is_system', false)
+            ->whereKey($messageId)
+            ->first();
+
+        if (!$message) {
+            return;
+        }
+
+        $message->userDeletions()->firstOrCreate([
+            'user_id' => $authUser->id,
+        ]);
+
+        if ($this->replyToMessageId === $message->id) {
+            $this->replyToMessageId = null;
+        }
+
+        Notification::make()
+            ->title('Pesan dihapus untuk Anda')
+            ->success()
+            ->send();
+    }
+
+    public function deleteMessageForEveryone(string $messageId): void
+    {
+        $chat = $this->getSelectedChat();
+
+        if (!$chat) {
+            return;
+        }
+
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
+        $message = $chat->messages()
+            ->where('is_system', false)
+            ->whereKey($messageId)
+            ->first();
+
+        if (!$message) {
+            return;
+        }
+
+        if ($message->sender_user_id !== $authUser->id) {
+            Notification::make()
+                ->title('Aksi ditolak')
+                ->body('Anda hanya bisa menghapus pesan milik sendiri untuk semua pengguna.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        if ($message->isDeletedForEveryone()) {
+            Notification::make()
+                ->title('Pesan sudah dihapus')
+                ->body('Pesan ini sudah dihapus untuk semua pengguna.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        DB::transaction(function () use ($message, $authUser): void {
+            $attachmentPath = $message->attachment_path;
+
+            $message->forceFill([
+                'message' => '[Pesan dihapus]',
+                'attachment_path' => null,
+                'attachment_name' => null,
+                'attachment_mime' => null,
+                'attachment_size' => null,
+                'reply_to_message_id' => null,
+                'deleted_for_everyone_at' => now(),
+                'deleted_for_everyone_by' => $authUser->id,
+            ])->save();
+
+            if ($attachmentPath && Storage::disk('public')->exists($attachmentPath)) {
+                Storage::disk('public')->delete($attachmentPath);
+            }
+        });
+
+        if ($this->replyToMessageId === $message->id) {
+            $this->replyToMessageId = null;
+        }
+
+        Notification::make()
+            ->title('Pesan dihapus untuk semua')
+            ->success()
+            ->send();
     }
 
     public function markTyping(): void
@@ -258,6 +371,65 @@ class ChatBooking extends Page
         $this->messageDraft = $message;
     }
 
+    public function exportSelectedChat(): ?StreamedResponse
+    {
+        $chat = $this->getSelectedChat();
+
+        if (!$chat) {
+            Notification::make()
+                ->title('Thread chat tidak ditemukan')
+                ->warning()
+                ->send();
+
+            return null;
+        }
+
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
+        $messages = $chat->messages()
+            ->visibleForUser($authUser)
+            ->with('sender:id,name,email')
+            ->oldest('created_at')
+            ->get();
+
+        $guestName = trim((string) ($chat->bukuTamu?->nama_lengkap ?? 'tamu'));
+        $safeGuestName = Str::slug($guestName !== '' ? $guestName : 'tamu');
+        $fileName = 'chat-' . $safeGuestName . '-' . now()->format('Ymd-His') . '.txt';
+
+        return response()->streamDownload(function () use ($chat, $messages): void {
+            $output = fopen('php://output', 'w');
+
+            if ($output === false) {
+                return;
+            }
+
+            fwrite($output, "Export Chat Booking" . PHP_EOL);
+            fwrite($output, "Tamu: " . ($chat->bukuTamu?->nama_lengkap ?? '-') . PHP_EOL);
+            fwrite($output, "Instansi: " . ($chat->bukuTamu?->instansi ?? '-') . PHP_EOL);
+            fwrite($output, str_repeat('=', 72) . PHP_EOL);
+
+            foreach ($messages as $message) {
+                $timestamp = $message->created_at?->format('d/m/Y H:i') ?? '--/--/---- --:--';
+                $sender = $message->is_system ? 'Sistem' : ($message->sender?->name ?? 'Pengguna');
+
+                if ($message->isDeletedForEveryone()) {
+                    $body = '[Pesan telah dihapus]';
+                } elseif ($message->hasAttachment() && $message->message === '[Lampiran]') {
+                    $body = '[Lampiran] ' . ($message->attachment_name ?? 'Lampiran');
+                } else {
+                    $body = trim((string) $message->message);
+                }
+
+                fwrite($output, "[{$timestamp}] {$sender}: {$body}" . PHP_EOL);
+            }
+
+            fclose($output);
+        }, $fileName, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
     public function shareGuestContact(BookingChatManager $chatManager): void
     {
         $chat = $this->getSelectedChat();
@@ -321,17 +493,30 @@ class ChatBooking extends Page
     {
         /** @var User $user */
         $user = Auth::user();
+        $searchKeyword = trim($this->search);
+        $searchTerm = $searchKeyword !== '' ? '%' . $searchKeyword . '%' : null;
 
         $query = BookingChat::query()
             ->with([
                 'bukuTamu:id,nama_lengkap,instansi,staff_dituju,status,created_at,foto_selfie',
                 'staffUser:id,name,email',
                 'piketUser:id,name,email',
-                'latestMessage.sender:id,name,email',
+                'latestMessage' => function ($messageQuery) use ($user) {
+                    $messageQuery
+                        ->whereNull('deleted_for_everyone_at')
+                        ->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
+                            $deletionQuery->where('user_id', $user->id);
+                        })
+                        ->with('sender:id,name,email');
+                },
             ])
             ->withCount([
                 'messages as unread_count' => function (Builder $messageQuery) use ($user) {
                     $messageQuery
+                        ->whereNull('deleted_for_everyone_at')
+                        ->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
+                            $deletionQuery->where('user_id', $user->id);
+                        })
                         ->where('is_system', false)
                         ->whereNull('read_at')
                         ->where(function (Builder $query) use ($user) {
@@ -341,10 +526,9 @@ class ChatBooking extends Page
             ])
             ->orderByRaw('COALESCE(last_message_at, created_at) DESC');
 
-        if ($this->search !== '') {
-            $searchTerm = '%' . $this->search . '%';
+        if ($searchTerm !== null) {
 
-            $query->where(function (Builder $searchQuery) use ($searchTerm) {
+            $query->where(function (Builder $searchQuery) use ($searchTerm, $user) {
                 $searchQuery
                     ->whereHas('bukuTamu', function (Builder $bookingQuery) use ($searchTerm) {
                         $bookingQuery
@@ -352,11 +536,54 @@ class ChatBooking extends Page
                             ->orWhere('instansi', 'like', $searchTerm)
                             ->orWhere('staff_dituju', 'like', $searchTerm);
                     })
-                    ->orWhereHas('staffUser', fn(Builder $staffQuery) => $staffQuery->where('name', 'like', $searchTerm));
+                    ->orWhereHas('staffUser', fn(Builder $staffQuery) => $staffQuery->where('name', 'like', $searchTerm))
+                    ->orWhereHas('messages', function (Builder $messageQuery) use ($searchTerm, $user) {
+                        $messageQuery
+                            ->visibleForUser($user)
+                            ->whereNull('deleted_for_everyone_at')
+                            ->where(function (Builder $messageSearchQuery) use ($searchTerm) {
+                                $messageSearchQuery
+                                    ->where('message', 'like', $searchTerm)
+                                    ->orWhere('attachment_name', 'like', $searchTerm);
+                            });
+                    });
             });
         }
 
-        return $query->get();
+        $chats = $query->get();
+
+        $chats->each(function (BookingChat $chat) use ($user, $searchTerm): void {
+            if ($searchTerm !== null) {
+                $latestMatchingMessage = $chat->messages()
+                    ->visibleForUser($user)
+                    ->whereNull('deleted_for_everyone_at')
+                    ->where(function (Builder $messageSearchQuery) use ($searchTerm) {
+                        $messageSearchQuery
+                            ->where('message', 'like', $searchTerm)
+                            ->orWhere('attachment_name', 'like', $searchTerm);
+                    })
+                    ->with('sender:id,name,email')
+                    ->latest('created_at')
+                    ->first();
+
+                if ($latestMatchingMessage) {
+                    $chat->setRelation('previewMessage', $latestMatchingMessage);
+
+                    return;
+                }
+            }
+
+            $latestVisibleMessage = $chat->messages()
+                ->visibleForUser($user)
+                ->whereNull('deleted_for_everyone_at')
+                ->with('sender:id,name,email')
+                ->latest('created_at')
+                ->first();
+
+            $chat->setRelation('previewMessage', $latestVisibleMessage);
+        });
+
+        return $chats;
     }
 
     public function getSelectedChat(): ?BookingChat
@@ -377,15 +604,19 @@ class ChatBooking extends Page
     public function getSelectedMessages(): Collection
     {
         $chat = $this->getSelectedChat();
+        /** @var User $authUser */
+        $authUser = Auth::user();
 
         if (!$chat) {
             return collect();
         }
 
         return $chat->messages()
+            ->visibleForUser($authUser)
             ->with([
                 'sender:id,name,email',
-                'repliedTo:id,sender_user_id,message,attachment_name,is_system',
+                'deletedForEveryoneBy:id,name',
+                'repliedTo:id,sender_user_id,message,attachment_name,is_system,deleted_for_everyone_at',
                 'repliedTo.sender:id,name,email',
             ])
             ->oldest('created_at')
@@ -399,6 +630,9 @@ class ChatBooking extends Page
             return null;
         }
 
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
         $chat ??= $this->getSelectedChat();
 
         if (!$chat) {
@@ -406,6 +640,8 @@ class ChatBooking extends Page
         }
 
         $replyMessage = $chat->messages()
+            ->visibleForUser($authUser)
+            ->whereNull('deleted_for_everyone_at')
             ->with('sender:id,name,email')
             ->where('is_system', false)
             ->whereKey($this->replyToMessageId)

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\UuidTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -81,6 +82,10 @@ class BookingChat extends Model
     public function unreadCountFor(User $user): int
     {
         return $this->messages()
+            ->whereNull('deleted_for_everyone_at')
+            ->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
+                $deletionQuery->where('user_id', $user->id);
+            })
             ->where('is_system', false)
             ->whereNull('read_at')
             ->where(function ($query) use ($user) {
@@ -92,6 +97,10 @@ class BookingChat extends Model
     public function markMessagesAsReadFor(User $user): void
     {
         $this->messages()
+            ->whereNull('deleted_for_everyone_at')
+            ->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
+                $deletionQuery->where('user_id', $user->id);
+            })
             ->where('is_system', false)
             ->whereNull('read_at')
             ->where(function ($query) use ($user) {

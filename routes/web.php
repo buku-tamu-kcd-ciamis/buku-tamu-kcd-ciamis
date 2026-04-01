@@ -102,9 +102,35 @@ Route::get('/tentang-developer', function () {
         }
     }
 
-    return view('public.developer', [
+    $viewData = [
         'teamMembers' => $teamMembers,
-    ]);
+    ];
+
+    foreach (['developer-about', 'public.developer'] as $viewName) {
+        if (!view()->exists($viewName)) {
+            continue;
+        }
+
+        try {
+            return response(view($viewName, $viewData)->render());
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    $memberItemsHtml = collect($teamMembers)
+        ->map(function (array $member): string {
+            $name = e((string) ($member['name'] ?? 'Developer'));
+            $role = e((string) ($member['role'] ?? '-'));
+            $github = e((string) ($member['github_url'] ?? '#'));
+
+            return "<li><strong>{$name}</strong> <span>({$role})</span> - <a href=\"{$github}\" target=\"_blank\" rel=\"noopener\">GitHub</a></li>";
+        })
+        ->implode('');
+
+    return response(
+        '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tentang Developer</title><style>body{font-family:Arial,sans-serif;background:#f6f8f7;color:#13231a;padding:24px}main{max-width:860px;margin:auto;background:#fff;border:1px solid #d6e2da;border-radius:12px;padding:20px}h1{margin-top:0}ul{padding-left:20px}a{color:#0f8a50;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><main><h1>Tentang Developer</h1><p>Mode fallback aktif karena view utama tidak dapat diakses.</p><ul>' . $memberItemsHtml . '</ul><p><a href="/">Kembali ke Beranda</a></p></main></body></html>'
+    );
 })->name('developer.about');
 
 Route::post('/', [BukuTamuController::class, 'store'])->name('buku-tamu.store');

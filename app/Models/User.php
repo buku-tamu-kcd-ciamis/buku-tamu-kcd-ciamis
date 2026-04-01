@@ -49,8 +49,8 @@ class User extends Authenticatable implements FilamentUser, HasEmailAuthenticati
 
         return match ($panel->getId()) {
             'admin' => $this->hasAnyRole(['Super Admin', 'Kepala Cabang Dinas']),
-            'piket' => $this->hasAnyRole(['Piket', 'Super Admin']),
-            'staff' => $this->hasAnyRole(['Staff', 'Super Admin']),
+            'piket' => $this->hasRole('Piket'),
+            'staff' => $this->hasRole('Staff'),
             default => false,
         };
     }

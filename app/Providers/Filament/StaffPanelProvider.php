@@ -59,6 +59,12 @@ class StaffPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::head.end',
                 fn() => '<link rel="stylesheet" href="' . asset('css/filament-custom.css') . '">'
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn() => request()->routeIs('filament.staff.auth.login')
+                    ? view('filament.partials.login-footer')->render()
+                    : ''
             );
     }
 }

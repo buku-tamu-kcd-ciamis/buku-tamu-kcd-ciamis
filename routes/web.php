@@ -125,4 +125,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('admin.pegawai-izin.print');
 });
 
+if (app()->environment('testing')) {
+    Route::get('/__error-preview/{status}', function (int $status) {
+        abort($status);
+    })->whereIn('status', ['500', '501', '503']);
+}
+
 require __DIR__ . '/auth.php';

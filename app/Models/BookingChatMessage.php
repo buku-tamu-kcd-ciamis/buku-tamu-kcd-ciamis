@@ -15,6 +15,7 @@ class BookingChatMessage extends Model
     protected $fillable = [
         'booking_chat_id',
         'sender_user_id',
+        'reply_to_message_id',
         'message',
         'attachment_path',
         'attachment_name',
@@ -38,6 +39,11 @@ class BookingChatMessage extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_user_id');
+    }
+
+    public function repliedTo(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reply_to_message_id');
     }
 
     public function hasAttachment(): bool

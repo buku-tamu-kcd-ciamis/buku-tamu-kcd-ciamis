@@ -27,21 +27,21 @@ body {
 
 .header {
     background: #0f9455;
-    padding: 8px 25px;
+    padding: 14px 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: 18px;
     border-radius: 12px 12px 0 0;
     flex-shrink: 0;
 }
 
 .header img {
-    width: 48px;
-    height: 48px;
+    width: 62px;
+    height: 62px;
     object-fit: contain;
     background: white;
-    padding: 5px;
+    padding: 6px;
     border-radius: 50%;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -52,14 +52,14 @@ body {
 
 .header-text h1 {
     color: white;
-    font-size: 20px;
+    font-size: 28px;
     font-weight: 600;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
 }
 
 .header-text p {
     color: white;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 300;
     opacity: 0.9;
 }
@@ -1034,15 +1034,18 @@ body {
 
 @media (max-height: 850px) {
     .header {
-        padding: 6px 20px;
+        padding: 10px 24px;
     }
     .header img {
-        width: 40px;
-        height: 40px;
-        padding: 4px;
+        width: 52px;
+        height: 52px;
+        padding: 5px;
     }
     .header-text h1 {
-        font-size: 18px;
+        font-size: 22px;
+    }
+    .header-text p {
+        font-size: 13px;
     }
     .form-container {
         padding: 8px 20px 6px;

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Piket\Concerns;
 
-use App\Models\RoleUser;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,19 +12,11 @@ trait ChecksPiketPermission
         /** @var User|null $user */
         $user = Auth::user();
 
-        if (!$user) {
+        if (!$user || !$user->hasRole('Piket')) {
             return false;
         }
 
-        // In Piket panel, check permission from Piket role settings
-        $piketRole = RoleUser::query()->where('name', 'Piket')->first();
-
-        if ($piketRole) {
-            // Use hasPermission method which handles all edge cases and defaults
-            return $piketRole->hasPermission($permission);
-        }
-
-        // Fallback to user's role permission
+        // Permission must come from the authenticated Piket user's own role.
         return (bool) ($user->role_user?->hasPermission($permission));
     }
 }

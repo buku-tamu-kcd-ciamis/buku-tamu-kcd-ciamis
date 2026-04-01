@@ -12,6 +12,10 @@ trait ChecksStaffPermission
         /** @var User|null $user */
         $user = Auth::user();
 
+        if (!$user || !$user->hasRole('Staff')) {
+            return false;
+        }
+
         return (bool) ($user?->role_user?->hasPermission($permission));
     }
 
@@ -23,7 +27,7 @@ trait ChecksStaffPermission
         /** @var User|null $user */
         $user = Auth::user();
 
-        if (!$user || !$user->role_user) {
+        if (!$user || !$user->hasRole('Staff') || !$user->role_user) {
             return false;
         }
 

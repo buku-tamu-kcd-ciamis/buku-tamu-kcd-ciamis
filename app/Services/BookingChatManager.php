@@ -81,7 +81,13 @@ class BookingChatManager
     /**
      * @param array{path:string,name?:string,mime?:string,size?:int}|null $attachment
      */
-    public function sendMessage(BookingChat $chat, User $sender, ?string $message = null, ?array $attachment = null): BookingChatMessage
+    public function sendMessage(
+        BookingChat $chat,
+        User $sender,
+        ?string $message = null,
+        ?array $attachment = null,
+        ?string $replyToMessageId = null,
+    ): BookingChatMessage
     {
         if (!$chat->canBeAccessedBy($sender)) {
             abort(403);
@@ -89,18 +95,30 @@ class BookingChatManager
 
         $sanitizedMessage = trim((string) $message);
         $hasAttachment = is_array($attachment) && filled($attachment['path'] ?? null);
+        $replyToMessage = null;
+
+        if ($replyToMessageId) {
+            $replyToMessage = $chat->messages()
+                ->whereKey($replyToMessageId)
+                ->first();
+
+            if (!$replyToMessage) {
+                throw new \InvalidArgumentException('Reply target is invalid.');
+            }
+        }
 
         if ($sanitizedMessage === '' && !$hasAttachment) {
             throw new \InvalidArgumentException('Message or attachment is required.');
         }
 
-        return DB::transaction(function () use ($chat, $sender, $sanitizedMessage, $attachment, $hasAttachment): BookingChatMessage {
+        return DB::transaction(function () use ($chat, $sender, $sanitizedMessage, $attachment, $hasAttachment, $replyToMessage): BookingChatMessage {
             if ($sender->hasRole('Piket') && !$chat->piket_user_id) {
                 $chat->update(['piket_user_id' => $sender->id]);
             }
 
             $chatMessage = $chat->messages()->create([
                 'sender_user_id' => $sender->id,
+                'reply_to_message_id' => $replyToMessage?->id,
                 'message' => $sanitizedMessage !== '' ? $sanitizedMessage : '[Lampiran]',
                 'attachment_path' => $hasAttachment ? $attachment['path'] : null,
                 'attachment_name' => $hasAttachment ? ($attachment['name'] ?? null) : null,

@@ -1,1 +1,0 @@
-<?php // Temporarily script removed.

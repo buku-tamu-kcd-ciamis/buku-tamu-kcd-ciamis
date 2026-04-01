@@ -30,6 +30,7 @@ class ChatBooking extends Page
     protected string $view = 'filament.piket.pages.chat-booking';
 
     public ?string $selectedChatId = null;
+    public ?string $replyToMessageId = null;
     public string $messageDraft = '';
     public $attachmentDraft = null;
     public int $attachmentInputIteration = 0;
@@ -119,6 +120,8 @@ class ChatBooking extends Page
             $chat->markMessagesAsReadFor(Auth::user());
             $this->touchPresence($chat);
         }
+
+        $this->dispatch('booking-chat-reset-input');
     }
 
     public function selectChat(string $chatId): void
@@ -130,9 +133,35 @@ class ChatBooking extends Page
         }
 
         $this->selectedChatId = $chat->id;
+        $this->replyToMessageId = null;
         $chat->markMessagesAsReadFor(Auth::user());
         $this->touchPresence($chat);
         $this->dispatch('booking-chat-scroll-bottom');
+    }
+
+    public function setReplyTo(string $messageId): void
+    {
+        $chat = $this->getSelectedChat();
+
+        if (!$chat) {
+            return;
+        }
+
+        $targetMessage = $chat->messages()
+            ->where('is_system', false)
+            ->whereKey($messageId)
+            ->first();
+
+        if (!$targetMessage) {
+            return;
+        }
+
+        $this->replyToMessageId = $targetMessage->id;
+    }
+
+    public function clearReplyTarget(): void
+    {
+        $this->replyToMessageId = null;
     }
 
     public function markTyping(): void
@@ -145,6 +174,7 @@ class ChatBooking extends Page
 
         $chat->markTypingFor(Auth::user());
         $this->touchPresence($chat);
+        $this->dispatch('booking-chat-reset-input');
     }
 
     public function sendMessage(BookingChatManager $chatManager): void
@@ -193,8 +223,22 @@ class ChatBooking extends Page
             return;
         }
 
-        $chatManager->sendMessage($chat, Auth::user(), $messageText, $attachmentPayload);
+        try {
+            $chatManager->sendMessage($chat, Auth::user(), $messageText, $attachmentPayload, $this->replyToMessageId);
+        } catch (\InvalidArgumentException $exception) {
+            Notification::make()
+                ->title('Balasan tidak valid')
+                ->body('Pesan yang ingin dibalas sudah tidak tersedia.')
+                ->warning()
+                ->send();
+
+            $this->replyToMessageId = null;
+
+            return;
+        }
+
         $this->messageDraft = '';
+        $this->replyToMessageId = null;
         $this->attachmentDraft = null;
         $this->attachmentInputIteration++;
         $chat->markMessagesAsReadFor(Auth::user());
@@ -212,6 +256,65 @@ class ChatBooking extends Page
     public function useQuickReply(string $message): void
     {
         $this->messageDraft = $message;
+    }
+
+    public function shareGuestContact(BookingChatManager $chatManager): void
+    {
+        $chat = $this->getSelectedChat();
+
+        if (!$chat) {
+            Notification::make()
+                ->title('Thread chat tidak ditemukan')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $booking = $chat->bukuTamu;
+        $guestPhone = trim((string) ($booking?->nomor_hp ?? ''));
+
+        if ($guestPhone === '') {
+            Notification::make()
+                ->title('Nomor tamu belum tersedia')
+                ->body('Data nomor telepon tamu pada booking ini belum diisi.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $guestName = trim((string) ($booking?->nama_lengkap ?? 'Tamu'));
+        $phoneDigits = (string) preg_replace('/\D+/', '', $guestPhone);
+
+        if ($phoneDigits !== '') {
+            if (Str::startsWith($phoneDigits, '0')) {
+                $phoneDigits = '62' . substr($phoneDigits, 1);
+            } elseif (!Str::startsWith($phoneDigits, '62')) {
+                $phoneDigits = '62' . $phoneDigits;
+            }
+        }
+
+        $contactMessage = [
+            '[Kontak Tamu]',
+            'Nama: ' . $guestName,
+            'Nomor: ' . $guestPhone,
+        ];
+
+        if ($phoneDigits !== '') {
+            $contactMessage[] = 'WhatsApp: https://wa.me/' . $phoneDigits;
+        }
+
+        $chatManager->sendMessage($chat, Auth::user(), implode(PHP_EOL, $contactMessage));
+
+        $chat->markMessagesAsReadFor(Auth::user());
+        $this->touchPresence($chat->fresh());
+        $this->dispatch('booking-chat-scroll-bottom');
+
+        Notification::make()
+            ->title('Kontak tamu dibagikan')
+            ->success()
+            ->send();
     }
 
     public function getChats(): Collection
@@ -280,10 +383,39 @@ class ChatBooking extends Page
         }
 
         return $chat->messages()
-            ->with('sender:id,name,email')
+            ->with([
+                'sender:id,name,email',
+                'repliedTo:id,sender_user_id,message,attachment_name,is_system',
+                'repliedTo.sender:id,name,email',
+            ])
             ->oldest('created_at')
             ->limit(200)
             ->get();
+    }
+
+    public function getActiveReplyMessage(?BookingChat $chat = null): ?BookingChatMessage
+    {
+        if (!$this->replyToMessageId) {
+            return null;
+        }
+
+        $chat ??= $this->getSelectedChat();
+
+        if (!$chat) {
+            return null;
+        }
+
+        $replyMessage = $chat->messages()
+            ->with('sender:id,name,email')
+            ->where('is_system', false)
+            ->whereKey($this->replyToMessageId)
+            ->first();
+
+        if (!$replyMessage) {
+            $this->replyToMessageId = null;
+        }
+
+        return $replyMessage;
     }
 
     public function getCounterpartState(?BookingChat $chat): array

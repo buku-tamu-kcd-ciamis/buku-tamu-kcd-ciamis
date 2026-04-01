@@ -83,13 +83,6 @@ class ViewPegawaiIzin extends ViewRecord
                         ->placeholder('-'),
                 ]),
 
-            // === Tanda Tangan Piket ===
-            Section::make('Tanda Tangan Piket')
-                ->icon('heroicon-o-pencil-square')
-                ->components([
-                    Infolists\Components\ImageEntry::make('tanda_tangan_piket'),
-                ]),
-
             // === Informasi Sistem ===
             Section::make('Informasi Sistem')
                 ->icon('heroicon-o-information-circle')

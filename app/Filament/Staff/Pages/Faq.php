@@ -15,7 +15,7 @@ class Faq extends Page
     protected static ?string $title = 'Pertanyaan Umum (FAQ)';
     protected static string|\UnitEnum|null $navigationGroup = 'Bantuan';
     protected static ?int $navigationSort = 99;
-    protected string $view = 'filament.staff.pages.faq';
+    protected string $view = 'filament.pages.faq';
 
     public static function shouldRegisterNavigation(): bool
     {

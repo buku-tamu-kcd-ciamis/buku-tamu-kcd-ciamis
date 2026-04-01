@@ -156,6 +156,8 @@
                 cameraOpen: false,
                 cameraError: '',
                 cameraStream: null,
+                cameraFacingMode: 'user',
+                cameraSwitching: false,
                 cameraNeedsFlip: false,
                 cameraManualFlip: null,
                 cameraFlipStorageKey: 'booking-chat-camera-unmirror',
@@ -213,14 +215,16 @@
                     this.imagePreviewName = '';
                     this.$dispatch('booking-chat-pause-polling', { paused: false });
                 },
-                stopCameraStream() {
+                stopCameraStream(resetFlipState = false) {
                     if (this.cameraStream) {
                         this.cameraStream.getTracks().forEach((track) => track.stop());
                         this.cameraStream = null;
                     }
 
                     this.cameraNeedsFlip = false;
-                    this.cameraManualFlip = null;
+                    if (resetFlipState) {
+                        this.cameraManualFlip = null;
+                    }
                 },
                 loadCameraFlipPreference() {
                     try {
@@ -266,6 +270,32 @@
                     // Desktop webcam umumnya front-facing dan sering tampil mirror.
                     return true;
                 },
+                detectFacingModeFromStream(stream, fallback = 'user') {
+                    const normalizedFallback = fallback === 'environment' ? 'environment' : 'user';
+                    const track = stream?.getVideoTracks?.()[0];
+
+                    if (!track) {
+                        return normalizedFallback;
+                    }
+
+                    const settingsFacingMode = track.getSettings?.()?.facingMode;
+
+                    if (settingsFacingMode === 'environment' || settingsFacingMode === 'user') {
+                        return settingsFacingMode;
+                    }
+
+                    const label = String(track.label || '').toLowerCase();
+
+                    if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                        return 'environment';
+                    }
+
+                    if (label.includes('front') || label.includes('facetime') || label.includes('user')) {
+                        return 'user';
+                    }
+
+                    return normalizedFallback;
+                },
                 getEffectiveCameraFlip() {
                     return this.cameraManualFlip === null ? this.cameraNeedsFlip : this.cameraManualFlip;
                 },
@@ -284,6 +314,73 @@
                     this.saveCameraFlipPreference(this.cameraManualFlip);
                     this.applyCameraMirrorFix();
                 },
+                async startCameraStream(preferredFacingMode = 'user') {
+                    const normalizedPreferredMode = preferredFacingMode === 'environment' ? 'environment' : 'user';
+                    const fallbackMode = normalizedPreferredMode === 'user' ? 'environment' : 'user';
+                    const baseVideoConstraints = {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                    };
+
+                    this.cameraError = '';
+                    this.stopCameraStream();
+
+                    const streamAttempts = [
+                        { ...baseVideoConstraints, facingMode: { exact: normalizedPreferredMode } },
+                        { ...baseVideoConstraints, facingMode: { ideal: normalizedPreferredMode } },
+                        { ...baseVideoConstraints, facingMode: { ideal: fallbackMode } },
+                        baseVideoConstraints,
+                        true,
+                    ];
+
+                    for (const videoConstraints of streamAttempts) {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({
+                                video: videoConstraints,
+                                audio: false,
+                            });
+
+                            this.cameraStream = stream;
+                            this.cameraFacingMode = this.detectFacingModeFromStream(stream, normalizedPreferredMode);
+                            this.cameraNeedsFlip = this.shouldUnmirrorFrontCamera(stream);
+
+                            if (this.cameraManualFlip === null) {
+                                this.cameraManualFlip = this.cameraNeedsFlip;
+                                this.saveCameraFlipPreference(this.cameraManualFlip);
+                            }
+
+                            await this.$nextTick();
+
+                            if (this.$refs.cameraVideo) {
+                                this.$refs.cameraVideo.srcObject = stream;
+                                this.$refs.cameraVideo.onloadedmetadata = () => this.applyCameraMirrorFix();
+                                this.$refs.cameraVideo.onresize = () => this.applyCameraMirrorFix();
+                                await this.$refs.cameraVideo.play();
+                                this.applyCameraMirrorFix();
+                                setTimeout(() => this.applyCameraMirrorFix(), 120);
+                            }
+
+                            return true;
+                        } catch (error) {
+                            // Try the next constraint strategy.
+                        }
+                    }
+
+                    this.cameraError = 'Kamera tidak dapat diakses. Cek izin kamera di browser.';
+                    this.stopCameraStream();
+
+                    return false;
+                },
+                async switchCameraFacing() {
+                    if (!this.cameraOpen || this.cameraSwitching) {
+                        return;
+                    }
+
+                    this.cameraSwitching = true;
+                    const nextMode = this.cameraFacingMode === 'user' ? 'environment' : 'user';
+                    await this.startCameraStream(nextMode);
+                    this.cameraSwitching = false;
+                },
                 async openCamera() {
                     this.cameraOpen = true;
                     this.cameraError = '';
@@ -296,42 +393,13 @@
                         return;
                     }
 
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia({
-                            video: {
-                                facingMode: { ideal: 'user' },
-                                width: { ideal: 1280 },
-                                height: { ideal: 720 },
-                            },
-                            audio: false,
-                        });
-
-                        this.cameraStream = stream;
-                        this.cameraNeedsFlip = this.shouldUnmirrorFrontCamera(stream);
-                        if (this.cameraManualFlip === null) {
-                            this.cameraManualFlip = this.cameraNeedsFlip;
-                            this.saveCameraFlipPreference(this.cameraManualFlip);
-                        }
-
-                        await this.$nextTick();
-
-                        if (this.$refs.cameraVideo) {
-                            this.$refs.cameraVideo.srcObject = stream;
-                            this.$refs.cameraVideo.onloadedmetadata = () => this.applyCameraMirrorFix();
-                            this.$refs.cameraVideo.onresize = () => this.applyCameraMirrorFix();
-                            await this.$refs.cameraVideo.play();
-                            this.applyCameraMirrorFix();
-                            setTimeout(() => this.applyCameraMirrorFix(), 120);
-                        }
-                    } catch (error) {
-                        this.cameraError = 'Kamera tidak dapat diakses. Cek izin kamera di browser.';
-                        this.stopCameraStream();
-                    }
+                    await this.startCameraStream(this.cameraFacingMode);
                 },
                 closeCamera() {
-                    this.stopCameraStream();
+                    this.stopCameraStream(true);
                     this.cameraOpen = false;
                     this.cameraError = '';
+                    this.cameraSwitching = false;
                     this.$dispatch('booking-chat-pause-polling', { paused: false });
                 },
                 assignAttachmentFile(file) {
@@ -785,6 +853,15 @@
                                 title="Tutup"
                             >✕</button>
                             <p class="booking-chat-camera-title">Ambil foto</p>
+                            <button
+                                type="button"
+                                class="booking-chat-camera-flip-preview"
+                                x-on:click="switchCameraFacing()"
+                                :class="{ 'is-active': cameraFacingMode === 'environment' }"
+                                :disabled="cameraSwitching || cameraError !== ''"
+                                aria-label="Ganti kamera depan belakang"
+                                title="Ganti kamera depan/belakang"
+                            >⟳</button>
                             <button
                                 type="button"
                                 class="booking-chat-camera-flip-preview"

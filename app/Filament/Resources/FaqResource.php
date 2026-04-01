@@ -32,6 +32,29 @@ class FaqResource extends Resource
     return $user && $user->hasRole('Super Admin');
   }
 
+  public static function canViewAny(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+
+    return $user && $user->hasRole('Super Admin');
+  }
+
+  public static function canCreate(): bool
+  {
+    return static::canViewAny();
+  }
+
+  public static function canEdit($record): bool
+  {
+    return static::canViewAny();
+  }
+
+  public static function canDelete($record): bool
+  {
+    return static::canViewAny();
+  }
+
   public static function form(Schema $schema): Schema
   {
     return $schema->components([
@@ -122,8 +145,15 @@ class FaqResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->recordActions([])
-      ->toolbarActions([]);
+      ->recordActions([
+        Tables\Actions\EditAction::make(),
+        Tables\Actions\DeleteAction::make(),
+      ])
+      ->toolbarActions([
+        Tables\Actions\BulkActionGroup::make([
+          Tables\Actions\DeleteBulkAction::make(),
+        ]),
+      ]);
   }
 
   public static function getRelations(): array

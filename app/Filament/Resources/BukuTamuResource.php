@@ -193,7 +193,7 @@ class BukuTamuResource extends Resource
                     Action::make('set_diproses')
                         ->label('Tandai Diproses')
                         ->icon('heroicon-o-arrow-path')
-                        ->color('info')
+                        ->color('gray')
                         ->requiresConfirmation()
                         ->visible(fn(BukuTamu $record): bool => static::canChangeStatus() && !static::isSuperAdmin() && $record->status === BukuTamu::STATUS_MENUNGGU)
                         ->action(function (BukuTamu $record): void {
@@ -208,7 +208,7 @@ class BukuTamuResource extends Resource
                     Action::make('set_selesai')
                         ->label('Tandai Selesai')
                         ->icon('heroicon-o-check-circle')
-                        ->color('success')
+                        ->color('gray')
                         ->requiresConfirmation()
                         ->visible(fn(BukuTamu $record): bool => static::canChangeStatus() && !static::isSuperAdmin() && $record->status !== BukuTamu::STATUS_SELESAI)
                         ->action(function (BukuTamu $record): void {
@@ -223,7 +223,7 @@ class BukuTamuResource extends Resource
                     Action::make('set_ditolak')
                         ->label('Tandai Ditolak')
                         ->icon('heroicon-o-x-circle')
-                        ->color('danger')
+                        ->color('gray')
                         ->requiresConfirmation()
                         ->visible(fn(BukuTamu $record): bool => static::canChangeStatus() && !static::isSuperAdmin() && $record->status !== BukuTamu::STATUS_DITOLAK)
                         ->action(function (BukuTamu $record): void {
@@ -294,7 +294,7 @@ class BukuTamuResource extends Resource
                     BulkAction::make('bulk_set_diproses')
                         ->label('Tandai Diproses')
                         ->icon('heroicon-o-arrow-path')
-                        ->color('info')
+                        ->color('gray')
                         ->requiresConfirmation()
                         ->visible(fn(): bool => static::canChangeStatus() && !static::isSuperAdmin())
                         ->action(function ($records): void {
@@ -317,7 +317,7 @@ class BukuTamuResource extends Resource
                     BulkAction::make('bulk_set_selesai')
                         ->label('Tandai Selesai')
                         ->icon('heroicon-o-check-circle')
-                        ->color('success')
+                        ->color('gray')
                         ->requiresConfirmation()
                         ->visible(fn(): bool => static::canChangeStatus() && !static::isSuperAdmin())
                         ->action(function ($records): void {
@@ -340,7 +340,7 @@ class BukuTamuResource extends Resource
                     BulkAction::make('bulk_set_ditolak')
                         ->label('Tandai Ditolak')
                         ->icon('heroicon-o-x-circle')
-                        ->color('danger')
+                        ->color('gray')
                         ->requiresConfirmation()
                         ->visible(fn(): bool => static::canChangeStatus() && !static::isSuperAdmin())
                         ->action(function ($records): void {

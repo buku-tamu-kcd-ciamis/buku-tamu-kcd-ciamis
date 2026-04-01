@@ -149,6 +149,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/piket/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('piket.pegawai-izin.print');
     Route::get('/admin/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('admin.pegawai-izin.print');
+    Route::get('/staff/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('staff.pegawai-izin.print');
 });
 
 if (app()->environment('testing')) {

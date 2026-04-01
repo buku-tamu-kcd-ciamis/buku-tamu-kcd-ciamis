@@ -64,13 +64,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 'panels::head.end',
-                fn() => '<link rel="stylesheet" href="' . asset('css/filament-custom.css') . '">'
+                fn() => view('filament.partials.panel-head-assets')->render()
             )
             ->renderHook(
                 'panels::body.end',
-                fn() => request()->routeIs('filament.admin.auth.login')
-                    ? view('filament.partials.login-footer')->render()
-                    : ''
+                fn() => view('filament.partials.panel-body-end', [
+                    'showLoginFooter' => request()->routeIs('filament.admin.auth.login'),
+                ])->render()
             );
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 class CreatePegawaiIzin extends CreateRecord
 {
     protected static string $resource = PegawaiIzinResource::class;
+    protected static bool $canCreateAnother = false;
 
     public function getMaxContentWidth(): Width | string | null
     {

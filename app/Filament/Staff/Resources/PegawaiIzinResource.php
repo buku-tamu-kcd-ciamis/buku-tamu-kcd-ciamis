@@ -4,8 +4,13 @@ namespace App\Filament\Staff\Resources;
 
 use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Filament\Staff\Resources\PegawaiIzinResource\Pages;
+use App\Models\DropdownOption;
 use App\Models\User;
 use App\Models\PegawaiIzin;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
@@ -41,6 +46,20 @@ class PegawaiIzinResource extends Resource
     public static function canCreate(): bool
     {
         return static::hasStaffPermission('pegawai_izin');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::hasStaffPermission('pegawai_izin')
+            && $record instanceof PegawaiIzin
+            && $record->status === PegawaiIzin::STATUS_MENUNGGU;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::hasStaffPermission('pegawai_izin')
+            && $record instanceof PegawaiIzin
+            && $record->status === PegawaiIzin::STATUS_MENUNGGU;
     }
 
     public static function resolveIdentityData(?User $user = null): array
@@ -130,6 +149,15 @@ class PegawaiIzinResource extends Resource
                             ->label('Keterangan')
                             ->rows(3)
                             ->maxLength(500),
+                        Forms\Components\Select::make('nama_piket')
+                            ->label('Nama Piket')
+                            ->options(DropdownOption::getOptions(DropdownOption::CATEGORY_PEGAWAI_PIKET))
+                            ->searchable()
+                            ->position('bottom')
+                            ->preload()
+                            ->native(false)
+                            ->placeholder('Pilih nama petugas piket')
+                            ->required(),
                     ])
                     ->columns(2),
             ]);
@@ -196,8 +224,34 @@ class PegawaiIzinResource extends Resource
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->recordActionsColumnLabel('')
             ->recordActions([
-                ViewAction::make(),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->label('Lihat')
+                        ->icon('heroicon-o-eye')
+                        ->color('gray'),
+                    EditAction::make()
+                        ->label('Edit')
+                        ->icon('heroicon-o-pencil-square')
+                        ->color('warning')
+                        ->visible(fn(PegawaiIzin $record): bool => $record->status === PegawaiIzin::STATUS_MENUNGGU),
+                    DeleteAction::make()
+                        ->label('Hapus')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->visible(fn(PegawaiIzin $record): bool => $record->status === PegawaiIzin::STATUS_MENUNGGU),
+                    Action::make('print')
+                        ->label('Print')
+                        ->icon('heroicon-o-printer')
+                        ->color('gray')
+                        ->visible(fn(PegawaiIzin $record): bool => filled($record->diverifikasi_pada))
+                        ->url(fn(PegawaiIzin $record): string => route('staff.pegawai-izin.print', ['id' => $record->id]))
+                        ->openUrlInNewTab(),
+                ])
+                    ->label(false)
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->color('gray'),
             ]);
     }
 
@@ -211,6 +265,7 @@ class PegawaiIzinResource extends Resource
         return [
             'index' => Pages\ListPegawaiIzin::route('/'),
             'create' => Pages\CreatePegawaiIzin::route('/create'),
+            'edit' => Pages\EditPegawaiIzin::route('/{record}/edit'),
         ];
     }
 }

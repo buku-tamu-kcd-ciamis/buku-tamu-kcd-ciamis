@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use App\Models\Faq as FaqModel;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Auth;
 
 class Faq extends Page
 {

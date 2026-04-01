@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>403 - Akses Ditolak</title>
-    <link rel="stylesheet" href="/system-errors/error.css?v=20260401b">
+    <link rel="stylesheet" href="/system-errors/error.css?v=20260402a">
 </head>
 <body>
     <main class="error-shell" role="main">
@@ -28,6 +28,15 @@
             <h1 class="error-title">Akses Ditolak</h1>
             <p class="error-message">Kamu tidak memiliki izin untuk mengakses halaman ini.</p>
             <p class="error-hint">Hubungi admin jika kamu merasa ini seharusnya dapat diakses.</p>
+            <div class="error-connection" id="connectionStatusPanel" aria-live="polite">
+                <p class="error-connection-title">Diagnostik Koneksi</p>
+                <div class="error-connection-grid">
+                    <span class="error-connection-chip" id="networkState">Perangkat: Memeriksa...</span>
+                    <span class="error-connection-chip" id="serverState">Server: Memeriksa...</span>
+                </div>
+                <p class="error-connection-hint" id="connectionHint">Sedang memeriksa status koneksi perangkat dan server.</p>
+                <button type="button" class="btn btn-ghost error-connection-btn" id="connectionRetry">Coba cek koneksi lagi</button>
+            </div>
 
             <div class="error-actions">
                 <a class="btn btn-primary" href="/">
@@ -63,26 +72,6 @@
         </footer>
     </main>
 
-    <script>
-        (function () {
-            var timeBadge = document.getElementById('timeBadge');
-            var yearValue = document.getElementById('yearValue');
-
-            if (timeBadge) {
-                var now = new Date();
-                timeBadge.textContent = now.toLocaleString('id-ID', { hour12: false }) + ' WIB';
-            }
-
-            if (yearValue) {
-                yearValue.textContent = String(new Date().getFullYear());
-            }
-
-
-        })();
-    </script>
+        <script src="/system-errors/error.js?v=20260402b" defer></script>
 </body>
 </html>
-
-
-
-

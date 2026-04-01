@@ -161,6 +161,76 @@ body {
     max-width: 50ch;
 }
 
+.error-connection {
+    margin: 0.95rem auto 0;
+    max-width: 50ch;
+    border: 1px solid #b9d9c8;
+    background: #f6fcf8;
+    border-radius: 0.85rem;
+    padding: 0.72rem 0.8rem;
+    text-align: left;
+}
+
+.error-connection-title {
+    margin: 0;
+    color: #134e36;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.error-connection-grid {
+    margin-top: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.error-connection-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1f5f3d;
+    border: 1px solid #cfe7da;
+    background: #ffffff;
+    border-radius: 0.7rem;
+    padding: 0.35rem 0.5rem;
+    text-align: center;
+}
+
+.error-connection-chip.is-ok {
+    color: #0b7a46;
+    border-color: #bde3cb;
+    background: #f0fbf4;
+}
+
+.error-connection-chip.is-warning {
+    color: #8a6300;
+    border-color: #eed597;
+    background: #fff9e8;
+}
+
+.error-connection-chip.is-danger {
+    color: #9f1239;
+    border-color: #f4bfd0;
+    background: #fff1f5;
+}
+
+.error-connection-hint {
+    margin: 0.62rem 0 0;
+    color: #21573c;
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.error-connection-btn {
+    margin-top: 0.7rem;
+    min-height: 2.3rem;
+    width: 100%;
+}
+
 .error-actions {
     margin-top: 1.4rem;
     display: flex;
@@ -298,5 +368,9 @@ body {
         width: 40px;
         height: 40px;
         padding: 3px;
+    }
+
+    .error-connection-grid {
+        grid-template-columns: 1fr;
     }
 }

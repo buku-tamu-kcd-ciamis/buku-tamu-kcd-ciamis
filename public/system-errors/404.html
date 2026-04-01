@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>404 - Halaman Tidak Ditemukan</title>
-    <link rel="stylesheet" href="/system-errors/error.css?v=20260401b">
+    <link rel="stylesheet" href="/system-errors/error.css?v=20260402a">
 </head>
-<body>
+<body data-auto-back-seconds="30">
     <main class="error-shell" role="main">
         <section class="error-card" aria-live="polite">
             <header class="error-header">
@@ -28,6 +28,15 @@
             <h1 class="error-title">Halaman Tidak Ditemukan</h1>
             <p class="error-message">Halaman yang kamu cari tidak ada, dipindahkan, atau tautannya salah.</p>
             <p class="error-hint">Periksa URL atau kembali ke beranda untuk lanjut.</p>
+            <div class="error-connection" id="connectionStatusPanel" aria-live="polite">
+                <p class="error-connection-title">Diagnostik Koneksi</p>
+                <div class="error-connection-grid">
+                    <span class="error-connection-chip" id="networkState">Perangkat: Memeriksa...</span>
+                    <span class="error-connection-chip" id="serverState">Server: Memeriksa...</span>
+                </div>
+                <p class="error-connection-hint" id="connectionHint">Sedang memeriksa status koneksi perangkat dan server.</p>
+                <button type="button" class="btn btn-ghost error-connection-btn" id="connectionRetry">Coba cek koneksi lagi</button>
+            </div>
 
             <div class="error-actions">
                 <a class="btn btn-primary" href="/">
@@ -69,70 +78,6 @@
         </footer>
     </main>
 
-    <script>
-        (function () {
-            var timeBadge = document.getElementById('timeBadge');
-            var yearValue = document.getElementById('yearValue');
-
-            if (timeBadge) {
-                var now = new Date();
-                timeBadge.textContent = now.toLocaleString('id-ID', { hour12: false }) + ' WIB';
-            }
-
-            if (yearValue) {
-                yearValue.textContent = String(new Date().getFullYear());
-            }
-
-            var autoBackLabel = document.getElementById('autoBackLabel');
-            var countdownStorageKey = 'error404_deadline_' + window.location.pathname;
-            var countdownSeconds = 30;
-            var nowMs = Date.now();
-            var defaultDeadline = nowMs + (countdownSeconds * 1000);
-            var deadlineMs = defaultDeadline;
-
-            try {
-                var savedDeadline = Number(window.sessionStorage.getItem(countdownStorageKey));
-                if (Number.isFinite(savedDeadline) && savedDeadline > nowMs) {
-                    deadlineMs = savedDeadline;
-                }
-                window.sessionStorage.setItem(countdownStorageKey, String(deadlineMs));
-            } catch (error) {
-                // Ignore sessionStorage failures.
-            }
-
-            function navigateHome() {
-                try {
-                    window.sessionStorage.removeItem(countdownStorageKey);
-                } catch (error) {
-                    // Ignore sessionStorage failures.
-                }
-                window.location.href = '/';
-            }
-
-            function updateCountdownLabel() {
-                if (!autoBackLabel) {
-                    return;
-                }
-
-                var remainingSeconds = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000));
-                autoBackLabel.textContent = 'Otomatis kembali ke beranda dalam ' + remainingSeconds + ' detik.';
-
-                if (remainingSeconds <= 0) {
-                    window.clearInterval(intervalId);
-                    navigateHome();
-                }
-            }
-
-            updateCountdownLabel();
-
-            var intervalId = window.setInterval(function () {
-                updateCountdownLabel();
-            }, 500);
-        })();
-    </script>
+        <script src="/system-errors/error.js?v=20260402b" defer></script>
 </body>
 </html>
-
-
-
-

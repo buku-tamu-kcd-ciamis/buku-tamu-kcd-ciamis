@@ -123,7 +123,7 @@
                                             @if($latestMessage->isDeletedForEveryone())
                                                 Pesan telah dihapus.
                                             @elseif($latestMessage->hasAttachment() && $latestMessage->message === '[Lampiran]')
-                                                📎 {{ $latestMessage->attachment_name ?? 'Lampiran' }}
+                                                <x-heroicon-m-paper-clip class="inline-block w-4 h-4 mr-0.5" /> {{ $latestMessage->attachment_name ?? 'Lampiran' }}
                                             @else
                                                 {{ $latestMessage->is_system ? '[Sistem] ' : '' }}{{ \Illuminate\Support\Str::limit(trim((string) preg_replace('/\s+/u', ' ', (string) $latestMessage->message)), 90) }}
                                             @endif
@@ -141,7 +141,9 @@
                     </button>
                 @empty
                     <div class="booking-chat-empty-list">
-                        <div class="booking-chat-empty-icon">💬</div>
+                        <div class="booking-chat-empty-icon">
+                            <x-heroicon-o-chat-bubble-left-right class="w-12 h-12 mx-auto text-gray-300" />
+                        </div>
                         <p>Belum ada thread chat.</p>
                         <p class="booking-chat-empty-hint">Thread akan otomatis muncul saat booking tamu masuk dan diteruskan ke {{ $counterpartLabel }}.</p>
                     </div>
@@ -540,7 +542,7 @@
                                         $replyPreviewText = $repliedToMessage->deleted_for_everyone_at
                                             ? 'Pesan telah dihapus'
                                             : ($repliedToMessage->message === '[Lampiran]'
-                                            ? '📎 ' . ($repliedToMessage->attachment_name ?: 'Lampiran')
+                                            ? '<x-heroicon-m-paper-clip class="inline-block w-3.5 h-3.5 mr-0.5" /> ' . ($repliedToMessage->attachment_name ?: 'Lampiran')
                                             : \Illuminate\Support\Str::limit((string) $repliedToMessage->message, 95));
                                         $replySenderName = $repliedToMessage->sender?->name ?: 'Pengguna';
                                     @endphp
@@ -574,7 +576,9 @@
                                             </button>
                                         @else
                                             <a href="{{ $attachmentUrl }}" target="_blank" download="{{ $message->attachment_name }}" class="booking-chat-attachment-file">
-                                                <span class="booking-chat-attachment-icon">📎</span>
+                                                <span class="booking-chat-attachment-icon">
+                                                    <x-heroicon-o-paper-clip class="w-5 h-5" />
+                                                </span>
                                                 <span class="booking-chat-attachment-name">{{ $message->attachment_name ?? 'Unduh Lampiran' }}</span>
                                                 @if ($message->attachment_size)
                                                     <span class="booking-chat-attachment-size">
@@ -652,7 +656,7 @@
                 @if ($activeReplyMessage)
                     @php
                         $activeReplyPreviewText = $activeReplyMessage->message === '[Lampiran]'
-                            ? '📎 ' . ($activeReplyMessage->attachment_name ?: 'Lampiran')
+                            ? '<x-heroicon-m-paper-clip class="inline-block w-4 h-4 mr-0.5" /> ' . ($activeReplyMessage->attachment_name ?: 'Lampiran')
                             : \Illuminate\Support\Str::limit((string) $activeReplyMessage->message, 130);
                     @endphp
 
@@ -703,7 +707,9 @@
                                 loading="lazy"
                             />
                         @else
-                            <span class="booking-chat-attachment-preview-icon">📎</span>
+                            <span class="booking-chat-attachment-preview-icon">
+                                <x-heroicon-o-paper-clip class="w-6 h-6 text-gray-500" />
+                            </span>
                         @endif
 
                         <div class="booking-chat-attachment-preview-texts">
@@ -829,7 +835,7 @@
                     <div class="booking-chat-composer-tools">
                         {{-- Attachment button --}}
                         <label class="booking-chat-attach-btn" title="Lampirkan berkas">
-                            📎
+                            <x-heroicon-o-paper-clip class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                             <input
                                 type="file"
                                 wire:model="attachmentDraft"
@@ -846,7 +852,7 @@
                             x-on:click="openCamera()"
                             title="Ambil foto dari kamera"
                             aria-label="Ambil foto dari kamera"
-                        ><span class="booking-chat-camera-icon" aria-hidden="true">📷</span></button>
+                        ><x-heroicon-o-camera class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
 
                         @if ($panelLabel === 'Piket')
                             <button
@@ -857,7 +863,7 @@
                                 wire:target="shareGuestContact"
                                 title="Bagikan kontak tamu"
                                 aria-label="Bagikan kontak tamu"
-                            >👤</button>
+                            ><x-heroicon-o-user-circle class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
                         @endif
 
                         {{-- Quick replies toggle --}}
@@ -868,7 +874,7 @@
                                 class="booking-chat-quick-reply-toggle"
                                 title="Balasan cepat"
                                 :class="{ 'is-active': showQuickReplies }"
-                            >⚡</button>
+                            ><x-heroicon-o-bolt class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
                         @endif
                     </div>
 
@@ -895,13 +901,15 @@
                             aria-label="Kirim pesan"
                             title="Kirim"
                         >
-                            <span class="booking-chat-send-icon">➤</span>
+                            <x-heroicon-s-paper-airplane class="w-5 h-5 text-white" />
                         </button>
                     </div>
                 </form>
             @else
                 <div class="booking-chat-room-empty">
-                    <div class="booking-chat-room-empty-icon">💬</div>
+                    <div class="booking-chat-room-empty-icon">
+                        <x-heroicon-o-chat-bubble-left-right class="w-16 h-16 mx-auto text-gray-200" />
+                    </div>
                     <h3>Pilih Thread Booking</h3>
                     <p>Pilih salah satu booking di panel kiri untuk mulai koordinasi chat dengan tim {{ $counterpartLabel }}.</p>
                     @if ($chats->isEmpty())

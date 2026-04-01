@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
 
 /* Custom Styling untuk Filament Action Group Dropdown - Lebih Simetris */
 
@@ -2283,10 +2283,12 @@ a.fi-color-success:hover {
     box-shadow: none;
 }
 
-.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-send-icon {
-    font-size: 0.95rem;
-    line-height: 1;
-    transform: translateX(0.03rem);
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-send-btn svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    color: #ffffff;
+    display: block;
+    /* Heroicon paper-airplane is naturally centered and points top-right */
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-send-btn:disabled {
@@ -2395,6 +2397,35 @@ a.fi-color-success:hover {
     .booking-chat-thread-item.is-active {
     background: #1b2a34;
     border-color: #3b5568;
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-btn:hover,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn:hover,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn:hover,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle:hover {
+    background: #1f2c34;
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-btn svg,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn svg,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn svg,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle svg {
+    color: #9ca3af;
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-btn:hover svg,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn:hover svg,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn:hover svg,
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle:hover svg {
+    color: #e5e7eb;
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle.is-active {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle.is-active svg {
+    color: #fbbf24;
 }
 
 .dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-avatar {
@@ -2632,65 +2663,78 @@ a.fi-color-success:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 999px;
-    border: 1px solid #d0d5dd;
-    background: #f9fafb;
+    border: none;
+    background: transparent;
+    color: #667085;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0;
     line-height: 1;
     border-radius: 999px;
-    border: 1px solid #d0d5dd;
-    background: #f9fafb;
+    border: none;
+    background: transparent;
+    color: #667085;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 999px;
-    border: 1px solid #d0d5dd;
-    background: #f9fafb;
+    border: none;
+    background: transparent;
+    color: #667085;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-icon {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
-    transform: translateY(-0.06rem);
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-btn svg,
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn svg,
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    color: #6b7280;
+    transition: color 0.15s ease;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-btn:hover {
-    background: #f0f2f5;
-    border-color: #98a2b3;
+    background: #f2f4f7;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn:hover {
-    background: #f0f2f5;
-    border-color: #98a2b3;
+    background: #f2f4f7;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn:hover {
-    background: #f0f2f5;
-    border-color: #98a2b3;
+    background: #f2f4f7;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-btn:hover svg,
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-camera-btn:hover svg,
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-contact-btn:hover svg {
+    color: #374151;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-attach-input {
@@ -2702,20 +2746,36 @@ a.fi-color-success:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 999px;
-    border: 1px solid #d0d5dd;
-    background: #f9fafb;
+    border: none;
+    background: transparent;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
-.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle:hover,
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    color: #6b7280;
+    transition: color 0.15s ease;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle:hover {
+    background: #f2f4f7;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle:hover svg {
+    color: #374151;
+}
+
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle.is-active {
-    background: #fefce8;
-    border-color: #facc15;
+    background: #fffbeb;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket) .booking-chat-quick-reply-toggle.is-active svg {
+    color: #d97706;
 }
 
 /* Quick replies container */

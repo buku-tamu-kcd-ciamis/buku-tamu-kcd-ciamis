@@ -5,6 +5,14 @@
         $totalKunjungan = $allKunjungan->count();
         $lastVisitAt = $allKunjungan->first()?->created_at;
         $lastTarget = $tamu->staff_dituju ?? $tamu->bagian_dituju ?? '-';
+        $identityType = strtoupper(trim((string) ($tamu->jenis_id ?? 'KTP')));
+        $identityNumberLabel = match (true) {
+            str_contains($identityType, 'SIM') => 'No. SIM',
+            str_contains($identityType, 'PASPOR'), str_contains($identityType, 'PASSPORT') => 'No. Paspor',
+            $identityType === 'KTP' => 'NIK',
+            default => 'No. Identitas',
+        };
+        $identityNumberValue = filled($tamu->nik) ? $tamu->nik : '-';
 
         $phone = (string) ($tamu->nomor_hp ?? '');
         $formattedPhone = '-';
@@ -341,6 +349,14 @@
             margin-top: 0.25rem;
         }
 
+        .rt-pagination-right {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+
         .rt-pagination-meta {
             margin: 0;
             color: #64748b;
@@ -351,6 +367,36 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.35rem;
+        }
+
+        .rt-page-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-left: 0.6rem;
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+
+        .rt-page-size-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 999px;
+            border: 1px solid #d4dde4;
+            background: #ffffff;
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 0 0.45rem;
+        }
+
+        .rt-page-size-link.is-active {
+            border-color: #111827;
+            background: #111827;
+            color: #ffffff;
         }
 
         .rt-page-btn,
@@ -481,10 +527,138 @@
             color: #6b7280;
         }
 
+        .dark .rt-page-size {
+            color: #9ca3af;
+        }
+
+        .dark .rt-page-size-link {
+            border-color: #4b5563;
+            background: #111827;
+            color: #e5e7eb;
+        }
+
+        .dark .rt-page-size-link.is-active {
+            border-color: #e5e7eb;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
         .dark .rt-empty {
             background: #111827;
             border-color: #374151;
             color: #9ca3af;
+        }
+
+        /* Monochrome override: remove navy/green accents on this page */
+        .rt-shell .rt-hero {
+            border-color: #d1d5db !important;
+            background: linear-gradient(135deg, #f7f7f7 0%, #f1f1f1 100%) !important;
+        }
+
+        .rt-shell .rt-hero-title,
+        .rt-shell .rt-hero-subtitle,
+        .rt-shell .rt-hero-pill,
+        .rt-shell .rt-kicker,
+        .rt-shell .rt-title,
+        .rt-shell .rt-primary-name,
+        .rt-shell .rt-item-title,
+        .rt-shell .rt-field-value,
+        .rt-shell .rt-stat-value {
+            color: #111827 !important;
+        }
+
+        .rt-shell .rt-hero-pill {
+            border-color: #d1d5db !important;
+            background: #ffffff !important;
+        }
+
+        .rt-shell .rt-card-header,
+        .rt-shell .rt-item-body {
+            background: #f5f5f5 !important;
+            border-color: #e5e7eb !important;
+        }
+
+        .rt-shell .rt-muted,
+        .rt-shell .rt-field-label,
+        .rt-shell .rt-item-date,
+        .rt-shell .rt-stat-label,
+        .rt-shell .rt-pagination-meta {
+            color: #4b5563 !important;
+        }
+
+        .rt-shell .rt-page-btn-current {
+            border-color: #111827 !important;
+            background: #111827 !important;
+            color: #ffffff !important;
+        }
+
+        .rt-shell .rt-badge,
+        .rt-shell .rt-badge.is-menunggu,
+        .rt-shell .rt-badge.is-diproses,
+        .rt-shell .rt-badge.is-selesai,
+        .rt-shell .rt-badge.is-ditolak,
+        .rt-shell .rt-badge.is-dibatalkan,
+        .rt-shell .rt-badge.is-default {
+            color: #111827 !important;
+            background: #f3f4f6 !important;
+            border-color: #d1d5db !important;
+        }
+
+        .dark .rt-shell .rt-hero {
+            border-color: #3f3f46 !important;
+            background: linear-gradient(135deg, #0b0b0d 0%, #111113 100%) !important;
+        }
+
+        .dark .rt-shell .rt-hero-title,
+        .dark .rt-shell .rt-hero-subtitle,
+        .dark .rt-shell .rt-hero-pill,
+        .dark .rt-shell .rt-title,
+        .dark .rt-shell .rt-primary-name,
+        .dark .rt-shell .rt-item-title,
+        .dark .rt-shell .rt-field-value,
+        .dark .rt-shell .rt-stat-value {
+            color: #f3f4f6 !important;
+        }
+
+        .dark .rt-shell .rt-hero-pill {
+            border-color: #3f3f46 !important;
+            background: #18181b !important;
+        }
+
+        .dark .rt-shell .rt-card,
+        .dark .rt-shell .rt-stat,
+        .dark .rt-shell .rt-item,
+        .dark .rt-shell .rt-note,
+        .dark .rt-shell .rt-field {
+            background: #111113 !important;
+            border-color: #3f3f46 !important;
+        }
+
+        .dark .rt-shell .rt-card-header,
+        .dark .rt-shell .rt-item-body {
+            background: #0b0b0d !important;
+            border-color: #3f3f46 !important;
+        }
+
+        .dark .rt-shell .rt-muted,
+        .dark .rt-shell .rt-field-label,
+        .dark .rt-shell .rt-item-date,
+        .dark .rt-shell .rt-stat-label,
+        .dark .rt-shell .rt-pagination-meta,
+        .dark .rt-shell .rt-kicker {
+            color: #a1a1aa !important;
+        }
+
+        .dark .rt-shell .rt-badge,
+        .dark .rt-shell .rt-badge.is-menunggu,
+        .dark .rt-shell .rt-badge.is-diproses,
+        .dark .rt-shell .rt-badge.is-selesai,
+        .dark .rt-shell .rt-badge.is-ditolak,
+        .dark .rt-shell .rt-badge.is-dibatalkan,
+        .dark .rt-shell .rt-badge.is-default {
+            color: #f3f4f6 !important;
+            background: #18181b !important;
+            border-color: #3f3f46 !important;
         }
     </style>
 
@@ -493,7 +667,6 @@
             <h2 class="rt-hero-title">Detail Riwayat Pengunjung</h2>
             <p class="rt-hero-subtitle">Ringkasan kunjungan pengunjung untuk membantu pelacakan layanan.</p>
             <div class="rt-hero-meta">
-                <span class="rt-hero-pill">NIK: {{ $tamu->nik }}</span>
                 <span class="rt-hero-pill">Total: {{ $totalKunjungan }} kunjungan</span>
                 <span class="rt-hero-pill">Terakhir: {{ $lastVisitAt?->translatedFormat('d M Y H:i') ?? '-' }}</span>
             </div>
@@ -508,13 +681,16 @@
             <div class="rt-card-body">
                 <div>
                     <p class="rt-primary-name">{{ $tamu->nama_lengkap }}</p>
-                    <p class="rt-muted">NIK: {{ $tamu->nik }}</p>
                 </div>
 
                 <div class="rt-profile-grid">
                     <div class="rt-field">
                         <p class="rt-field-label">Jenis Identitas</p>
                         <p class="rt-field-value">{{ $tamu->jenis_id ?? 'KTP' }}</p>
+                    </div>
+                    <div class="rt-field">
+                        <p class="rt-field-label">{{ $identityNumberLabel }}</p>
+                        <p class="rt-field-value">{{ $identityNumberValue }}</p>
                     </div>
                     <div class="rt-field">
                         <p class="rt-field-label">Jabatan</p>
@@ -621,34 +797,44 @@
                     </div>
                 @endif
 
-                @if($paginatedKunjungan->hasPages())
-                    <div class="rt-pagination">
+                <div class="rt-pagination">
+                    @if($paginatedKunjungan->total() > 0)
                         <p class="rt-pagination-meta">
                             Menampilkan {{ $paginatedKunjungan->firstItem() }} - {{ $paginatedKunjungan->lastItem() }} dari {{ $paginatedKunjungan->total() }} kunjungan
                         </p>
-                        <div class="rt-pagination-controls">
-                            @if($paginatedKunjungan->onFirstPage())
-                                <span class="rt-page-btn-disabled">Prev</span>
-                            @else
-                                <button type="button" wire:click="previousPage" class="rt-page-btn">Prev</button>
-                            @endif
-
-                            @foreach($paginatedKunjungan->getUrlRange(1, $paginatedKunjungan->lastPage()) as $pageNum => $url)
-                                @if($pageNum == $paginatedKunjungan->currentPage())
-                                    <span class="rt-page-btn-current">{{ $pageNum }}</span>
-                                @else
-                                    <button type="button" wire:click="gotoPage({{ $pageNum }})" class="rt-page-btn">{{ $pageNum }}</button>
-                                @endif
+                    @endif
+                    <div class="rt-pagination-right">
+                        <div class="rt-page-size">
+                            <span>Per halaman:</span>
+                            @foreach([3, 5, 10] as $size)
+                                <a href="{{ request()->fullUrlWithQuery(['per_page' => $size, 'page' => 1]) }}" class="rt-page-size-link {{ $this->kunjunganPerPage === $size ? 'is-active' : '' }}">{{ $size }}</a>
                             @endforeach
+                        </div>
+                        <div class="rt-pagination-controls">
+                            @if($paginatedKunjungan->hasPages())
+                                @if($paginatedKunjungan->onFirstPage())
+                                    <span class="rt-page-btn-disabled">Prev</span>
+                                @else
+                                    <button type="button" wire:click="previousPage" class="rt-page-btn">Prev</button>
+                                @endif
 
-                            @if($paginatedKunjungan->hasMorePages())
-                                <button type="button" wire:click="nextPage" class="rt-page-btn">Next</button>
-                            @else
-                                <span class="rt-page-btn-disabled">Next</span>
+                                @foreach($paginatedKunjungan->getUrlRange(1, $paginatedKunjungan->lastPage()) as $pageNum => $url)
+                                    @if($pageNum == $paginatedKunjungan->currentPage())
+                                        <span class="rt-page-btn-current">{{ $pageNum }}</span>
+                                    @else
+                                        <button type="button" wire:click="gotoPage({{ $pageNum }})" class="rt-page-btn">{{ $pageNum }}</button>
+                                    @endif
+                                @endforeach
+
+                                @if($paginatedKunjungan->hasMorePages())
+                                    <button type="button" wire:click="nextPage" class="rt-page-btn">Next</button>
+                                @else
+                                    <span class="rt-page-btn-disabled">Next</span>
+                                @endif
                             @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </section>
         </div>

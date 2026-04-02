@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\NomorSuratResource\Pages;
 use App\Models\NomorSuratSetting;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -41,6 +42,8 @@ class NomorSuratResource extends Resource
           Forms\Components\Select::make('jenis_surat')
             ->required()
             ->searchable()
+            ->noOptionsMessage('Belum ada opsi tersedia.')
+            ->noSearchResultsMessage('Data tidak ditemukan.')
             ->options([
               'buku_tamu' => 'buku_tamu - Bukti Kunjungan Tamu',
               'surat_izin' => 'surat_izin - Surat Izin Pegawai',
@@ -65,7 +68,11 @@ class NomorSuratResource extends Resource
             ->createOptionUsing(function (array $data) {
               return $data['custom_jenis'];
             })
-            ->helperText('Pilih dari daftar atau ketik untuk mencari. Klik "Create" untuk menambah kode baru.')
+            ->createOptionAction(fn(Action $action): Action => $action
+              ->label('Tambah Kode Baru')
+              ->modalHeading('Tambah Kode Jenis Surat')
+              ->modalSubmitActionLabel('Tambah'))
+            ->helperText('Pilih dari daftar atau ketik untuk mencari. Klik "Tambah" untuk menambah kode baru.')
             ->unique(ignoreRecord: true),
           Forms\Components\TextInput::make('nama_jenis')
             ->required()
@@ -79,6 +86,8 @@ class NomorSuratResource extends Resource
           Forms\Components\Select::make('template')
             ->required()
             ->searchable()
+            ->noOptionsMessage('Belum ada template tersedia.')
+            ->noSearchResultsMessage('Template tidak ditemukan.')
             ->options([
               // Format dengan slash (/)
               '{NOMOR}/{KODE}/{BULAN}/{TAHUN}' => '{NOMOR}/{KODE}/{BULAN}/{TAHUN} - contoh: 000001/BT/02/2026',
@@ -133,10 +142,16 @@ class NomorSuratResource extends Resource
             ->createOptionUsing(function (array $data) {
               return $data['custom_template'];
             })
-            ->helperText('Pilih format template atau ketik untuk mencari. Klik "Create" untuk template custom.'),
+            ->createOptionAction(fn(Action $action): Action => $action
+              ->label('Tambah Template')
+              ->modalHeading('Tambah Template Custom')
+              ->modalSubmitActionLabel('Tambah'))
+            ->helperText('Pilih format template atau ketik untuk mencari. Klik "Tambah" untuk template custom.'),
           Forms\Components\Select::make('kode_surat')
             ->required()
             ->searchable()
+            ->noOptionsMessage('Belum ada kode surat tersedia.')
+            ->noSearchResultsMessage('Kode surat tidak ditemukan.')
             ->options([
               'BT' => 'BT - Buku Tamu',
               'SI' => 'SI - Surat Izin',
@@ -163,8 +178,13 @@ class NomorSuratResource extends Resource
             ->createOptionUsing(function (array $data) {
               return strtoupper($data['custom_kode']);
             })
-            ->helperText('Pilih atau ketik kode singkatan surat. Klik "Create" untuk menambah kode baru.'),
+            ->createOptionAction(fn(Action $action): Action => $action
+              ->label('Tambah Kode Surat')
+              ->modalHeading('Tambah Kode Surat Baru')
+              ->modalSubmitActionLabel('Tambah'))
+            ->helperText('Pilih atau ketik kode singkatan surat. Klik "Tambah" untuk menambah kode baru.'),
           Forms\Components\TextInput::make('padding_length')
+            ->label('Panjang Padding')
             ->numeric()
             ->required()
             ->minValue(1)
@@ -179,6 +199,7 @@ class NomorSuratResource extends Resource
             ->rows(3)
             ->placeholder('Informasi tambahan tentang format nomor surat...'),
           Forms\Components\Toggle::make('is_active')
+            ->label('Status Aktif')
             ->helperText('Hanya template aktif yang akan digunakan.')
             ->inline(false),
         ]),

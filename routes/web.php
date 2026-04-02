@@ -147,6 +147,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/export/pegawai-excel', [UserManagementController::class, 'exportPegawaiExcel'])->name('pegawai.export-excel');
 
+    Route::get('/print/pegawai-izin-bulk', [PegawaiIzinController::class, 'printBulk'])->name('admin.pegawai-izin.print-bulk');
     Route::get('/piket/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('piket.pegawai-izin.print');
     Route::get('/admin/pegawai-izin/{id}/print', [PegawaiIzinController::class, 'print'])->name('admin.pegawai-izin.print');
 });

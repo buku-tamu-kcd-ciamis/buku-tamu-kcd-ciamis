@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages;
 use Filament\Forms;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -214,11 +215,17 @@ class ActivityLogResource extends Resource
                     }),
             ])
             ->filtersFormColumns(2)
+            ->recordActionsColumnLabel('')
             ->recordActions([
-                ViewAction::make()
-                    ->label('Detail')
-                    ->icon('heroicon-o-eye')
-                    ->color('primary'),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->label('Detail')
+                        ->icon('heroicon-o-eye')
+                        ->color('primary'),
+                ])
+                    ->label(false)
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->color('gray'),
             ]);
     }
 

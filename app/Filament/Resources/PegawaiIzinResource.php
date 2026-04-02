@@ -9,6 +9,8 @@ use App\Models\PegawaiIzin;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\Textarea;
@@ -399,6 +401,7 @@ class PegawaiIzinResource extends Resource
             ->label('Cetak')
             ->icon('heroicon-o-printer')
             ->color('gray')
+            ->visible(fn(PegawaiIzin $record): bool => $record->isVerifiedByKcd())
             ->url(fn(PegawaiIzin $record): string => route('admin.pegawai-izin.print', ['id' => $record->id]))
             ->openUrlInNewTab(),
         ])
@@ -406,7 +409,48 @@ class PegawaiIzinResource extends Resource
           ->icon('heroicon-m-ellipsis-vertical')
           ->color('gray'),
       ])
-      ->toolbarActions([]);
+      ->toolbarActions([
+        BulkActionGroup::make([
+          BulkAction::make('bulk_print')
+            ->label('Print PDF Terpilih')
+            ->icon('heroicon-o-printer')
+            ->color('gray')
+            ->url(route('admin.pegawai-izin.print-bulk'))
+            ->livewireClickHandlerEnabled(false)
+            ->accessSelectedRecords(false)
+            ->openUrlInNewTab(true)
+            ->extraAttributes([
+              'x-bind:href' => '`${window.location.origin}/print/pegawai-izin-bulk?ids=${[...selectedRecords].join(",")}`',
+            ])
+            ->visible(fn(): bool => static::canVerifyByCurrentUser())
+            ->deselectRecordsAfterCompletion(),
+          BulkAction::make('bulk_delete')
+            ->label('Hapus Terpilih')
+            ->icon('heroicon-o-trash')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Hapus Data Izin Terpilih')
+            ->modalDescription('Data yang dipilih akan dihapus permanen.')
+            ->modalSubmitActionLabel('Hapus Semua')
+            ->visible(fn(): bool => static::canVerifyByCurrentUser())
+            ->action(function ($records): void {
+              $deleted = 0;
+
+              $records->each(function (PegawaiIzin $record) use (&$deleted): void {
+                if ($record->delete()) {
+                  $deleted++;
+                }
+              });
+
+              Notification::make()
+                ->title('Bulk hapus selesai')
+                ->body($deleted . ' data izin berhasil dihapus.')
+                ->success()
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+        ]),
+      ]);
   }
 
   public static function getRelations(): array

@@ -38,8 +38,12 @@ class ViewBukuTamu extends ViewRecord
                                 Grid::make(2)
                                     ->components([
                                         Infolists\Components\TextEntry::make('jenis_id')
-                                            ->icon('heroicon-o-identification'),
+                                            ->label('Jenis ID')
+                                            ->icon('heroicon-o-identification')
+                                            ->formatStateUsing(fn($state): string => filled($state) ? strtoupper((string) $state) : '-')
+                                            ->placeholder('-'),
                                         Infolists\Components\TextEntry::make('nik')
+                                            ->label('NIK')
                                             ->icon('heroicon-o-finger-print')
                                             ->copyable(),
                                         Infolists\Components\TextEntry::make('instansi')
@@ -122,10 +126,23 @@ class ViewBukuTamu extends ViewRecord
                 ->components([
                     Infolists\Components\ImageEntry::make('foto_penerimaan')
                         ->label('Foto penerimaan')
-                        ->disk('public'),
+                        ->disk('public')
+                        ->visible(fn(?BukuTamu $record): bool => filled($record?->foto_penerimaan)),
+                    Infolists\Components\TextEntry::make('foto_penerimaan_info')
+                        ->label('Foto penerimaan')
+                        ->state('Tidak ada berkas yang dikirim.')
+                        ->visible(fn(?BukuTamu $record): bool => blank($record?->foto_penerimaan))
+                        ->badge()
+                        ->color('gray')
+                        ->extraAttributes([
+                            'class' => 'bt-berkas-empty-note',
+                        ]),
                     Infolists\Components\ImageEntry::make('tanda_tangan')
                         ->label('Tanda tangan')
-                        ->disk('public'),
+                        ->disk('public')
+                        ->extraAttributes([
+                            'class' => 'bt-signature-entry',
+                        ]),
                 ]),
         ]);
     }

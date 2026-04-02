@@ -23,10 +23,14 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
   public string $nip = '';
   public $rekap = null;
   public $allRiwayat = null;
+  public int $riwayatPerPage = 3;
 
   public function mount(string $record): void
   {
     $this->nip = $record;
+
+    $perPage = (int) request()->query('per_page', 3);
+    $this->riwayatPerPage = in_array($perPage, [3, 5, 10], true) ? $perPage : 3;
 
     // Ambil data rekap aggregate
     $this->rekap = PegawaiIzin::query()
@@ -44,7 +48,7 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
         DB::raw("SUM(CASE WHEN jenis_izin = 'lainnya' THEN 1 ELSE 0 END) as total_lainnya"),
         DB::raw("SUM(DATEDIFF(tanggal_selesai, tanggal_mulai) + 1) as total_hari"),
         DB::raw("MAX(tanggal_mulai) as terakhir_izin"),
-        DB::raw("SUM(CASE WHEN status = 'aktif' THEN 1 ELSE 0 END) as sedang_izin"),
+        DB::raw("SUM(CASE WHEN status = 'aktif' AND tanggal_selesai >= CURDATE() THEN 1 ELSE 0 END) as sedang_izin"),
       )
       ->where('nip', $this->nip)
       ->groupBy('nip', 'nama_pegawai', 'jabatan', 'unit_kerja', 'nomor_hp')
@@ -64,7 +68,7 @@ class ViewRekapIzinPegawai extends Page implements HasInfolists
   {
     return PegawaiIzin::where('nip', $this->nip)
       ->orderBy('tanggal_mulai', 'desc')
-      ->paginate(5);
+      ->paginate($this->riwayatPerPage);
   }
 
   public function rekapInfolist(Schema $schema): Schema

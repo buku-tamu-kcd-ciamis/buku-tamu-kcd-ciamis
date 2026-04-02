@@ -11,7 +11,7 @@
 .fi-body.fi-panel-admin .fi-section,
 .fi-body.fi-panel-admin .fi-ta,
 .fi-body.fi-panel-admin .fi-in {
-    font-family: "Poppins", sans-serif;
+    font-family: inherit;
 }
 
 /* Membuat dropdown menu lebih simetris dan rapi */
@@ -277,6 +277,75 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     box-shadow: 0 14px 22px -12px rgba(8, 112, 63, 0.95);
 }
 
+/* Staff and admin login page: solid black background and neutral text colors */
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg) {
+    background: #000000;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-simple-header
+    .fi-logo {
+    color: #111827;
+    border-color: #d1d5db;
+    background: #ffffff;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-simple-header-heading {
+    color: #111827;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    label,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-fo-field-label,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-fo-field-label
+    span,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-fo-field-wrp-label,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-fo-field-wrp-label
+    span,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-fo-checkbox
+    .fi-fo-field-wrp-label,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-fo-checkbox
+    .fi-fo-field-wrp-label
+    span {
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-link,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    a {
+    color: #111827;
+}
+
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    .fi-link:hover,
+.fi-body:is(.fi-panel-staff, .fi-panel-admin)
+    .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
+    a:hover {
+    color: #000000;
+}
+
 @media (max-width: 640px) {
     .fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
         .fi-simple-layout {
@@ -400,6 +469,51 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
 .fi-body.fi-panel-admin .fi-simple-page .fi-link:hover,
 .fi-body.fi-panel-admin .fi-simple-page a:hover {
     color: #0b7a46;
+}
+
+/* Admin Buku Tamu detail: keep signature readable and show clear empty attachment note */
+.fi-body.fi-panel-admin .bt-berkas-empty-note {
+    color: #4b5563;
+    min-height: 210px;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff) .bt-signature-entry {
+    background: #0b0b0d;
+    border: 1px solid #2a2a31;
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    min-height: 210px;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+}
+
+.dark .fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff) .bt-signature-entry img {
+    filter: invert(1) brightness(1.18) !important;
+    mix-blend-mode: normal !important;
+    width: auto !important;
+    max-width: min(100%, 420px) !important;
+    max-height: 180px !important;
+    object-fit: contain;
+    margin-inline: auto;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff) .bt-signature-entry img {
+    filter: invert(1) brightness(1.18) !important;
+    width: auto !important;
+    max-width: min(100%, 420px) !important;
+    max-height: 180px !important;
+    object-fit: contain;
+    margin-inline: auto;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-piket, .fi-panel-staff) .bt-signature-entry {
+    background: #0b0b0d;
+    border: 1px solid #2a2a31;
 }
 
 /* Make active admin sidebar item clearly visible on detail routes */
@@ -4682,58 +4796,58 @@ a.fi-color-success:hover {
 }
 
 /* Staff FAQ stable styling */
-.fi-body.fi-panel-staff .staff-faq-page {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-page {
     width: min(100%, 64rem);
     display: grid;
     gap: 0.9rem;
     padding-bottom: 1.2rem;
 }
 
-.fi-body.fi-panel-staff .staff-faq-search {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-search {
     display: grid;
     gap: 0.4rem;
 }
 
-.fi-body.fi-panel-staff .staff-faq-search-label {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-search-label {
     font-size: 0.74rem;
     font-weight: 700;
-    color: #98a2b3;
+    color: #a1a1aa;
 }
 
-.fi-body.fi-panel-staff .staff-faq-search-input-wrap {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-search-input-wrap {
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    border: 1px solid #2a3942;
+    border: 1px solid #3f3f46;
     border-radius: 0.8rem;
-    background: #202c33;
+    background: #0b0b0d;
     padding: 0.58rem 0.72rem;
-    color: #9fb2be;
+    color: #a1a1aa;
 }
 
-.fi-body.fi-panel-staff .staff-faq-search-input-wrap input {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-search-input-wrap input {
     width: 100%;
     border: none;
     background: transparent;
-    color: #e9edef;
+    color: #f4f4f5;
     outline: none;
     font-size: 0.84rem;
     line-height: 1.3;
 }
 
-.fi-body.fi-panel-staff .staff-faq-search-input-wrap input::placeholder {
-    color: #8fa0aa;
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-search-input-wrap input::placeholder {
+    color: #a1a1aa;
 }
 
-.fi-body.fi-panel-staff .staff-faq-list {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-list {
     display: grid;
     gap: 0.7rem;
 }
 
-.fi-body.fi-panel-staff .staff-faq-item {
-    border: 1px solid #2a3942;
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-item {
+    border: 1px solid #3f3f46;
     border-radius: 0.95rem;
-    background: #111b21;
+    background: #111113;
     overflow: hidden;
     box-shadow: 0 12px 22px -22px rgba(0, 0, 0, 0.7);
     transition:
@@ -4742,13 +4856,13 @@ a.fi-color-success:hover {
         background 0.15s ease;
 }
 
-.fi-body.fi-panel-staff .staff-faq-item.is-open {
-    border-color: #2e576e;
-    background: #16232b;
-    box-shadow: 0 16px 26px -22px rgba(34, 197, 94, 0.22);
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-item.is-open {
+    border-color: #71717a;
+    background: #18181b;
+    box-shadow: 0 16px 26px -22px rgba(0, 0, 0, 0.95);
 }
 
-.fi-body.fi-panel-staff .staff-faq-question {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-question {
     width: 100%;
     border: none;
     background: transparent;
@@ -4762,13 +4876,13 @@ a.fi-color-success:hover {
     cursor: pointer;
 }
 
-.fi-body.fi-panel-staff .staff-faq-number {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-number {
     width: 1.7rem;
     height: 1.7rem;
     border-radius: 0.52rem;
-    background: #223747;
-    border: 1px solid #2f4f64;
-    color: #dbe8ef;
+    background: #27272a;
+    border: 1px solid #52525b;
+    color: #f4f4f5;
     font-size: 0.75rem;
     font-weight: 700;
     display: inline-flex;
@@ -4777,26 +4891,26 @@ a.fi-color-success:hover {
     line-height: 1;
 }
 
-.fi-body.fi-panel-staff .staff-faq-item.is-open .staff-faq-number {
-    background: #0ea5a3;
-    border-color: #22c5c2;
-    color: #f8fffe;
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-item.is-open .staff-faq-number {
+    background: #f4f4f5;
+    border-color: #d4d4d8;
+    color: #111113;
 }
 
-.fi-body.fi-panel-staff .staff-faq-question-text {
-    color: #e9edef;
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-question-text {
+    color: #f4f4f5;
     font-size: 0.97rem;
     font-weight: 600;
     line-height: 1.38;
 }
 
-.fi-body.fi-panel-staff .staff-faq-chevron {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-chevron {
     width: 1.95rem;
     height: 1.95rem;
     border-radius: 0.58rem;
-    border: 1px solid #2a3f4f;
-    background: #14232d;
-    color: #8ea5b3;
+    border: 1px solid #3f3f46;
+    background: #18181b;
+    color: #a1a1aa;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -4806,47 +4920,47 @@ a.fi-color-success:hover {
         border-color 0.15s ease;
 }
 
-.fi-body.fi-panel-staff .staff-faq-chevron svg {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-chevron svg {
     width: 1.05rem;
     height: 1.05rem;
 }
 
-.fi-body.fi-panel-staff .staff-faq-chevron.is-open {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-chevron.is-open {
     transform: rotate(180deg);
-    color: #55d8d5;
-    border-color: #2e6f85;
+    color: #f4f4f5;
+    border-color: #71717a;
 }
 
-.fi-body.fi-panel-staff .staff-faq-answer-wrap {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-answer-wrap {
     padding: 0 0.84rem 0.84rem;
 }
 
-.fi-body.fi-panel-staff .staff-faq-answer {
-    border-inline-start: 3px solid #2f8cc4;
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-answer {
+    border-inline-start: 3px solid #71717a;
     border-radius: 0.72rem;
-    background: #0f1920;
+    background: #0f0f11;
     padding: 0.72rem 0.86rem;
-    color: #d1dbe2;
+    color: #e4e4e7;
     font-size: 0.84rem;
     line-height: 1.55;
 }
 
-.fi-body.fi-panel-staff .staff-faq-empty {
-    border: 1px dashed #2a3c48;
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-empty {
+    border: 1px dashed #52525b;
     border-radius: 0.8rem;
-    background: #121c22;
+    background: #111113;
     padding: 1rem;
     text-align: center;
 }
 
-.fi-body.fi-panel-staff .staff-faq-empty p {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-empty p {
     margin: 0;
-    color: #d1dbe2;
+    color: #e4e4e7;
 }
 
-.fi-body.fi-panel-staff .staff-faq-empty-hint {
+.fi-body:is(.fi-panel-staff, .fi-panel-admin) .staff-faq-empty-hint {
     margin-top: 0.3rem !important;
-    color: #8ea0ad !important;
+    color: #a1a1aa !important;
     font-size: 0.75rem;
 }
 

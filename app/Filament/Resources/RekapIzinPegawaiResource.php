@@ -54,7 +54,7 @@ class RekapIzinPegawaiResource extends Resource
             DB::raw("SUM(CASE WHEN jenis_izin = 'lainnya' THEN 1 ELSE 0 END) as total_lainnya"),
             DB::raw("SUM(DATEDIFF(tanggal_selesai, tanggal_mulai) + 1) as total_hari"),
             DB::raw("MAX(tanggal_mulai) as terakhir_izin"),
-            DB::raw("SUM(CASE WHEN status = 'aktif' THEN 1 ELSE 0 END) as sedang_izin"),
+            DB::raw("SUM(CASE WHEN status = 'aktif' AND tanggal_selesai >= CURDATE() THEN 1 ELSE 0 END) as sedang_izin"),
           )
           ->groupBy('nip', 'nama_pegawai', 'jabatan', 'unit_kerja')
       )
@@ -90,11 +90,7 @@ class RekapIzinPegawaiResource extends Resource
           ->sortable()
           ->alignCenter()
           ->suffix(' hari')
-          ->color(fn($state): string => match (true) {
-            $state >= 10 => 'danger',
-            $state >= 5 => 'warning',
-            default => 'gray',
-          }),
+          ->color('gray'),
         Tables\Columns\TextColumn::make('total_sakit')
           ->label('Sakit')
           ->alignCenter()
@@ -129,6 +125,7 @@ class RekapIzinPegawaiResource extends Resource
         Tables\Columns\TextColumn::make('terakhir_izin')
           ->label('Terakhir Izin')
           ->date('d/m/Y')
+          ->color('gray')
           ->sortable(),
       ])
       ->defaultSort('total_izin', 'desc')

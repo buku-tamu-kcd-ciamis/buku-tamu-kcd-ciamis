@@ -6,9 +6,12 @@ use App\Filament\Resources\PegawaiPiketResource\Pages;
 use App\Models\DropdownOption;
 use App\Models\User;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -123,7 +126,79 @@ class PegawaiPiketResource extends Resource
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->color('gray'),
             ])
-            ->toolbarActions([]);
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('bulk_activate')
+                        ->label('Aktifkan Terpilih')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Aktifkan Pegawai Terpilih')
+                        ->modalDescription('Semua pegawai piket yang dipilih akan diaktifkan.')
+                        ->modalSubmitActionLabel('Aktifkan')
+                        ->action(function ($records): void {
+                            $count = 0;
+
+                            $records->each(function (DropdownOption $record) use (&$count): void {
+                                if (! $record->is_active) {
+                                    $record->update(['is_active' => true]);
+                                    $count++;
+                                }
+                            });
+
+                            Notification::make()
+                                ->success()
+                                ->title('Bulk update selesai')
+                                ->body($count . ' data pegawai piket berhasil diaktifkan.')
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    BulkAction::make('bulk_deactivate')
+                        ->label('Nonaktifkan Terpilih')
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Nonaktifkan Pegawai Terpilih')
+                        ->modalDescription('Semua pegawai piket yang dipilih akan dinonaktifkan.')
+                        ->modalSubmitActionLabel('Nonaktifkan')
+                        ->action(function ($records): void {
+                            $count = 0;
+
+                            $records->each(function (DropdownOption $record) use (&$count): void {
+                                if ($record->is_active) {
+                                    $record->update(['is_active' => false]);
+                                    $count++;
+                                }
+                            });
+
+                            Notification::make()
+                                ->warning()
+                                ->title('Bulk update selesai')
+                                ->body($count . ' data pegawai piket berhasil dinonaktifkan.')
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    BulkAction::make('bulk_delete')
+                        ->label('Hapus Terpilih')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus Pegawai Terpilih')
+                        ->modalDescription('Semua data pegawai piket yang dipilih akan dihapus permanen.')
+                        ->modalSubmitActionLabel('Hapus')
+                        ->action(function ($records): void {
+                            $count = $records->count();
+                            $records->each->delete();
+
+                            Notification::make()
+                                ->success()
+                                ->title('Bulk hapus selesai')
+                                ->body($count . ' data pegawai piket berhasil dihapus.')
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                ]),
+            ]);
     }
 
     public static function getPages(): array

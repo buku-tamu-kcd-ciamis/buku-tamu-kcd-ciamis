@@ -311,14 +311,24 @@
             @endforeach
 
             {{-- Pagination --}}
-            @if($paginatedKunjungan->hasPages())
             <div class="pt-4">
-                <div class="flex items-center justify-between">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        Menampilkan <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedKunjungan->firstItem() }}</span>
-                        - <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedKunjungan->lastItem() }}</span>
-                        dari <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedKunjungan->total() }}</span> kunjungan
-                    </p>
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        @if($paginatedKunjungan->total() > 0)
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Menampilkan <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedKunjungan->firstItem() }}</span>
+                            - <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedKunjungan->lastItem() }}</span>
+                            dari <span class="font-semibold text-gray-900 dark:text-white">{{ $paginatedKunjungan->total() }}</span> kunjungan
+                        </p>
+                        @endif
+                        <div class="inline-flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span>Per halaman:</span>
+                            @foreach([3, 5, 10] as $size)
+                                <a href="{{ request()->fullUrlWithQuery(['per_page' => $size, 'page' => 1]) }}" class="inline-flex items-center justify-center min-w-[30px] h-8 px-2 rounded-full border text-xs font-bold transition-colors {{ $this->kunjunganPerPage === $size ? 'bg-gray-900 border-gray-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">{{ $size }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+                    @if($paginatedKunjungan->hasPages())
                     <div class="flex items-center gap-2">
                         {{-- Previous --}}
                         @if($paginatedKunjungan->onFirstPage())
@@ -349,9 +359,9 @@
                         </span>
                         @endif
                     </div>
+                    @endif
                 </div>
             </div>
-            @endif
         </div>
 
     </div>

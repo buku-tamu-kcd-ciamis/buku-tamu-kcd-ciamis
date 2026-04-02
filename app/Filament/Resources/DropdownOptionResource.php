@@ -6,12 +6,15 @@ use App\Filament\Resources\DropdownOptionResource\Pages;
 use App\Models\DropdownOption;
 use App\Models\User;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Infolists;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -44,14 +47,17 @@ class DropdownOptionResource extends Resource
         ->description('Atur data opsi dropdown yang akan ditampilkan di form buku tamu.')
         ->schema([
           Forms\Components\Select::make('category')
+            ->label('Kategori')
             ->options(DropdownOption::CATEGORY_LABELS)
             ->required()
             ->native(false),
           Forms\Components\TextInput::make('label')
+            ->label('Label Tampilan')
             ->required()
             ->maxLength(255)
             ->helperText('Label yang ditampilkan ke pengguna (contoh: KTP, Kartu Pegawai / ASN).'),
           Forms\Components\TextInput::make('value')
+            ->label('Nilai Tersimpan')
             ->required()
             ->maxLength(255)
             ->placeholder('Otomatis terisi dari label...')
@@ -61,10 +67,12 @@ class DropdownOptionResource extends Resource
               'unique' => 'Nilai ini sudah ada di kategori yang sama. Gunakan nilai yang berbeda.',
             ]),
           Forms\Components\TextInput::make('sort_order')
+            ->label('Urutan Tampil')
             ->numeric()
             ->placeholder('Otomatis diurutkan...')
             ->helperText('Urutan tampil dalam dropdown (kecil = lebih atas). Otomatis terisi dengan urutan berikutnya.'),
           Forms\Components\Toggle::make('is_active')
+            ->label('Status Aktif')
             ->helperText('Nonaktifkan untuk menyembunyikan opsi tanpa menghapusnya.'),
         ])
         ->columns(2),
@@ -73,21 +81,26 @@ class DropdownOptionResource extends Resource
         ->description('Pengaturan tambahan khusus untuk opsi Jenis ID.')
         ->schema([
           Forms\Components\TextInput::make('metadata.id_label')
+            ->label('Label Identitas')
             ->placeholder('Contoh: NIK, No. SIM, No. Passport')
             ->helperText('Label yang tampil di field nomor ID (contoh: NIK, No. SIM).'),
           Forms\Components\TextInput::make('metadata.placeholder')
+            ->label('Placeholder Input')
             ->placeholder('Contoh: Masukkan 16 digit NIK')
             ->helperText('Teks placeholder di field nomor ID.'),
           Forms\Components\TextInput::make('metadata.digits')
+            ->label('Jumlah Digit Wajib')
             ->numeric()
             ->nullable()
             ->placeholder('Contoh: 16 (untuk KTP/NIK)')
             ->helperText('Jumlah digit wajib (kosongkan jika bebas).'),
           Forms\Components\TextInput::make('metadata.max_repeated_digits')
+            ->label('Maksimal Digit Berulang')
             ->numeric()
             ->minValue(1)
             ->helperText('Jumlah maksimal angka sama berturut-turut yang diizinkan (misal: 3 berarti 000 boleh, 0000 tidak).'),
           Forms\Components\TextInput::make('metadata.max_sequential_digits')
+            ->label('Maksimal Digit Berurutan')
             ->numeric()
             ->minValue(1)
             ->helperText('Jumlah maksimal angka berurutan yang diizinkan (misal: 2 berarti 12 boleh, 123 tidak).'),
@@ -165,7 +178,79 @@ class DropdownOptionResource extends Resource
           ->icon('heroicon-m-ellipsis-vertical')
           ->color('gray'),
       ])
-      ->toolbarActions([]);
+      ->toolbarActions([
+        BulkActionGroup::make([
+          BulkAction::make('bulk_activate')
+            ->label('Aktifkan Terpilih')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->requiresConfirmation()
+            ->modalHeading('Aktifkan Opsi Terpilih')
+            ->modalDescription('Semua opsi dropdown yang dipilih akan diaktifkan.')
+            ->modalSubmitActionLabel('Aktifkan')
+            ->action(function ($records): void {
+              $count = 0;
+
+              $records->each(function (DropdownOption $record) use (&$count): void {
+                if (! $record->is_active) {
+                  $record->update(['is_active' => true]);
+                  $count++;
+                }
+              });
+
+              Notification::make()
+                ->success()
+                ->title('Bulk update selesai')
+                ->body($count . ' opsi berhasil diaktifkan.')
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+          BulkAction::make('bulk_deactivate')
+            ->label('Nonaktifkan Terpilih')
+            ->icon('heroicon-o-no-symbol')
+            ->color('info')
+            ->requiresConfirmation()
+            ->modalHeading('Nonaktifkan Opsi Terpilih')
+            ->modalDescription('Semua opsi dropdown yang dipilih akan dinonaktifkan.')
+            ->modalSubmitActionLabel('Nonaktifkan')
+            ->action(function ($records): void {
+              $count = 0;
+
+              $records->each(function (DropdownOption $record) use (&$count): void {
+                if ($record->is_active) {
+                  $record->update(['is_active' => false]);
+                  $count++;
+                }
+              });
+
+              Notification::make()
+                ->warning()
+                ->title('Bulk update selesai')
+                ->body($count . ' opsi berhasil dinonaktifkan.')
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+          BulkAction::make('bulk_delete')
+            ->label('Hapus Terpilih')
+            ->icon('heroicon-o-trash')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Hapus Opsi Terpilih')
+            ->modalDescription('Semua opsi dropdown yang dipilih akan dihapus permanen.')
+            ->modalSubmitActionLabel('Hapus')
+            ->action(function ($records): void {
+              $count = $records->count();
+              $records->each->delete();
+
+              Notification::make()
+                ->success()
+                ->title('Bulk hapus selesai')
+                ->body($count . ' opsi berhasil dihapus.')
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+        ]),
+      ]);
   }
 
   public static function infolist(Schema $schema): Schema

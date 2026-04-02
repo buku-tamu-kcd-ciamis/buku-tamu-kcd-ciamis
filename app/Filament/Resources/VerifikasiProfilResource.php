@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VerifikasiProfilResource\Pages;
 use App\Models\ProfileChangeRequest;
 use App\Models\User;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -78,21 +79,28 @@ class VerifikasiProfilResource extends Resource
           ->icon('heroicon-o-shield-check'),
         Tables\Columns\TextColumn::make('created_at')
           ->label('Tanggal Pengajuan')
-          ->dateTime('d/m/Y H:i')
+          ->date('d/m/Y')
+          ->tooltip(fn(ProfileChangeRequest $record): string => $record->created_at?->format('H:i') ?? '-')
           ->sortable(),
         Tables\Columns\TextColumn::make('reviewed_at')
           ->label('Tanggal Proses')
-          ->dateTime('d/m/Y H:i')
+          ->date('d/m/Y')
+          ->tooltip(fn(ProfileChangeRequest $record): string => $record->reviewed_at?->format('H:i') ?? '-')
           ->placeholder('-')
           ->sortable(),
       ])
       ->defaultSort('created_at', 'desc')
+      ->recordUrl(fn(ProfileChangeRequest $record): string => static::getUrl('view', ['record' => $record->getKey()]))
       ->filters([
         Tables\Filters\SelectFilter::make('status')
           ->label('Status')
           ->options(ProfileChangeRequest::STATUS_LABELS),
       ])
-      ->recordActions([])
+      ->recordActions([
+        ViewAction::make()
+          ->label('Detail')
+          ->icon('heroicon-o-eye'),
+      ])
       ->toolbarActions([])
       ->emptyStateHeading('Belum Ada Pengajuan')
       ->emptyStateDescription('Pengajuan perubahan profil dari Kepala Cabang Dinas akan muncul di sini.')
@@ -103,6 +111,7 @@ class VerifikasiProfilResource extends Resource
   {
     return [
       'index' => Pages\ListVerifikasiProfil::route('/'),
+      'view' => Pages\ViewVerifikasiProfil::route('/{record}'),
     ];
   }
 }

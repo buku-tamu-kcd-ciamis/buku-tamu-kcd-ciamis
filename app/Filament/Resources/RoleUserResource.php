@@ -58,7 +58,13 @@ class RoleUserResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('need_approval')
-                    ->formatStateUsing(fn(string $state): string => RoleUser::APPROVE_STATUS[$state])
+                    ->formatStateUsing(function (?string $state): string {
+                        if (blank($state)) {
+                            return '-';
+                        }
+
+                        return RoleUser::APPROVE_STATUS[$state] ?? (string) $state;
+                    })
             ])
             ->filters([
                 //

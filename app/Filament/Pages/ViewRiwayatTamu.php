@@ -21,6 +21,7 @@ class ViewRiwayatTamu extends Page
     }
 
     public ?string $nik = null;
+    public int $kunjunganPerPage = 5;
 
     public static function getRoutePath(Panel $panel): string
     {
@@ -40,6 +41,9 @@ class ViewRiwayatTamu extends Page
 
     public function mount(): void
     {
+        $perPage = (int) request()->query('per_page', 5);
+        $this->kunjunganPerPage = in_array($perPage, [3, 5, 10], true) ? $perPage : 5;
+
         $tamu = BukuTamu::where('nik', $this->nik)->first();
 
         if (!$tamu) {
@@ -65,7 +69,7 @@ class ViewRiwayatTamu extends Page
     {
         return BukuTamu::where('nik', $this->nik)
             ->orderBy('created_at', 'desc')
-            ->paginate(5);
+            ->paginate($this->kunjunganPerPage);
     }
 
     protected function getHeaderActions(): array

@@ -12,7 +12,9 @@ class ListBukuTamus extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            BukuTamuResource::makeExportExcelAction(),
+        ];
     }
 
     public function getFooter(): ?View

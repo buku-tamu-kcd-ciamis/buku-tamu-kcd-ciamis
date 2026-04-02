@@ -30,12 +30,12 @@
         $jenisIzinLabels = \App\Models\PegawaiIzin::JENIS_IZIN_LABELS;
 
         $statusClassMap = [
-            'menunggu' => 'rk-badge-warn',
-            'disetujui' => 'rk-badge-info',
-            'aktif' => 'rk-badge-active',
-            'selesai' => 'rk-badge-success',
-            'ditolak' => 'rk-badge-danger',
-            'dibatalkan' => 'rk-badge-muted',
+            'menunggu' => 'rk-badge-neutral',
+            'disetujui' => 'rk-badge-neutral',
+            'aktif' => 'rk-badge-neutral-strong',
+            'selesai' => 'rk-badge-neutral',
+            'ditolak' => 'rk-badge-neutral',
+            'dibatalkan' => 'rk-badge-neutral',
         ];
     @endphp
 
@@ -124,6 +124,45 @@
             font-size: 1rem;
             font-weight: 700;
             color: #0f172a;
+        }
+
+        .rk-card-head-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .rk-page-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .rk-page-size-btn {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #334155;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.22rem 0.52rem;
+            line-height: 1;
+            transition: all 0.15s ease;
+        }
+
+        .rk-page-size-btn:hover {
+            border-color: #9ca3af;
+            background: #f8fafc;
+        }
+
+        .rk-page-size-btn.is-active {
+            background: #111827;
+            border-color: #111827;
+            color: #ffffff;
         }
 
         .rk-card-body {
@@ -244,7 +283,12 @@
         .rk-item-subtitle {
             margin: 0.22rem 0 0;
             font-size: 0.8rem;
-            color: #64748b;
+            color: #6b7280;
+        }
+
+        .rk-time-soft {
+            color: #6b7280 !important;
+            font-weight: 500;
         }
 
         .rk-item-meta {
@@ -343,6 +387,180 @@
             cursor: not-allowed;
         }
 
+        .rk-pagination-meta {
+            margin: 0;
+            font-size: 0.84rem;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        /* Dark mode adjustments for rekap detail page */
+        .dark .rk-hero {
+            border-color: #2f2f35;
+            background: linear-gradient(135deg, #0b0b0d 0%, #111113 100%);
+        }
+
+        .dark .rk-title {
+            color: #f3f4f6;
+        }
+
+        .dark .rk-subtitle {
+            color: #a1a1aa;
+        }
+
+        .dark .rk-pill {
+            border-color: #3f3f46;
+            background: #18181b;
+            color: #f3f4f6;
+        }
+
+        .dark .rk-card {
+            background: #111113;
+            border-color: #3f3f46;
+            box-shadow: none;
+        }
+
+        .dark .rk-card-head {
+            border-bottom-color: #3f3f46;
+            background: linear-gradient(180deg, #141417 0%, #101013 100%);
+        }
+
+        .dark .rk-card-kicker {
+            color: #a1a1aa;
+        }
+
+        .dark .rk-card-title {
+            color: #f3f4f6;
+        }
+
+        .dark .rk-page-size {
+            color: #a1a1aa;
+        }
+
+        .dark .rk-page-size-btn {
+            border-color: #52525b;
+            background: #18181b;
+            color: #e4e4e7;
+        }
+
+        .dark .rk-page-size-btn:hover {
+            border-color: #71717a;
+            background: #27272a;
+        }
+
+        .dark .rk-page-size-btn.is-active {
+            background: #f3f4f6;
+            border-color: #e4e4e7;
+            color: #111113;
+        }
+
+        .dark .rk-field {
+            border-color: #3f3f46;
+            background: #0f0f11;
+        }
+
+        .dark .rk-field-label,
+        .dark .rk-stat-label {
+            color: #a1a1aa;
+        }
+
+        .dark .rk-field-value,
+        .dark .rk-stat-value,
+        .dark .rk-item-title {
+            color: #f3f4f6;
+        }
+
+        .dark .rk-time-soft,
+        .dark .rk-item-subtitle,
+        .dark .rk-pagination-meta {
+            color: #a1a1aa !important;
+        }
+
+        .dark .rk-stat {
+            border-color: #3f3f46;
+            background: #111113;
+        }
+
+        .dark .rk-stat:nth-child(1),
+        .dark .rk-stat:nth-child(2),
+        .dark .rk-stat:nth-child(3),
+        .dark .rk-stat:nth-child(4),
+        .dark .rk-stat:nth-child(5) {
+            background: #111113;
+        }
+
+        .dark .rk-item {
+            border-color: #3f3f46;
+            background: #111113;
+        }
+
+        .dark .rk-item-body {
+            border-top-color: #3f3f46;
+            background: #0f0f11;
+        }
+
+        .dark .rk-note {
+            color: #e4e4e7;
+            background: #111113;
+            border-color: #3f3f46;
+        }
+
+        .dark .rk-page-btn {
+            border-color: #52525b;
+            background: #18181b;
+            color: #e4e4e7;
+        }
+
+        .dark .rk-page-btn:hover {
+            background: #27272a;
+            border-color: #71717a;
+        }
+
+        .dark .rk-page-btn.is-active {
+            background: #f3f4f6;
+            border-color: #d4d4d8;
+            color: #111113;
+        }
+
+        .rk-badge-neutral {
+            color: #111827;
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .rk-badge-neutral-strong {
+            color: #111827;
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
+        .dark .rk-badge-neutral {
+            color: #f4f4f5;
+            background: #18181b;
+            border-color: #52525b;
+        }
+
+        .dark .rk-badge-neutral-strong {
+            color: #ffffff;
+            background: #27272a;
+            border-color: #71717a;
+        }
+
+        .dark .rk-badge-warn,
+        .dark .rk-badge-info,
+        .dark .rk-badge-active,
+        .dark .rk-badge-success,
+        .dark .rk-badge-danger,
+        .dark .rk-badge-muted {
+            color: #f4f4f5;
+            background: #18181b;
+            border-color: #52525b;
+        }
+
+        .dark .rk-pagination {
+            border-top-color: #3f3f46;
+        }
+
         .rk-span-8 { grid-column: span 8 / span 8; }
         .rk-span-4 { grid-column: span 4 / span 4; }
         .rk-span-12 { grid-column: span 12 / span 12; }
@@ -418,7 +636,7 @@
                         </div>
                         <div class="rk-field">
                             <p class="rk-field-label">Izin Terakhir</p>
-                            <p class="rk-field-value">{{ $rekap->terakhir_izin ? \Carbon\Carbon::parse($rekap->terakhir_izin)->translatedFormat('d F Y') : '-' }}</p>
+                            <p class="rk-field-value rk-time-soft">{{ $rekap->terakhir_izin ? \Carbon\Carbon::parse($rekap->terakhir_izin)->translatedFormat('d F Y') : '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -457,8 +675,19 @@
 
             <section class="rk-card rk-span-12">
                 <div class="rk-card-head">
-                    <p class="rk-card-kicker">Riwayat</p>
-                    <h3 class="rk-card-title">Riwayat Izin Pegawai ({{ $totalRiwayat }} data)</h3>
+                    <div class="rk-card-head-row">
+                        <div>
+                            <p class="rk-card-kicker">Riwayat</p>
+                            <h3 class="rk-card-title">Riwayat Izin Pegawai ({{ $totalRiwayat }} data)</h3>
+                        </div>
+
+                        <div class="rk-page-size">
+                            <span>Per halaman:</span>
+                            @foreach([3, 5, 10] as $size)
+                                <a href="{{ request()->fullUrlWithQuery(['per_page' => $size, 'page' => 1]) }}" class="rk-page-size-btn {{ $this->riwayatPerPage === $size ? 'is-active' : '' }}">{{ $size }}</a>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
                 <div class="rk-card-body">
@@ -469,8 +698,13 @@
                             @foreach($paginatedRiwayat as $item)
                                 @php
                                     $durasi = $item->tanggal_mulai->diffInDays($item->tanggal_selesai) + 1;
-                                    $statusLabel = $statusLabels[$item->status] ?? ucfirst((string) $item->status);
-                                    $statusClass = $statusClassMap[$item->status] ?? 'rk-badge-muted';
+                                    $effectiveStatus = $item->status;
+                                    if ($item->status === \App\Models\PegawaiIzin::STATUS_AKTIF && $item->tanggal_selesai->lt(now()->startOfDay())) {
+                                        $effectiveStatus = \App\Models\PegawaiIzin::STATUS_SELESAI;
+                                    }
+
+                                    $statusLabel = $statusLabels[$effectiveStatus] ?? ucfirst((string) $effectiveStatus);
+                                    $statusClass = $statusClassMap[$effectiveStatus] ?? 'rk-badge-neutral';
                                     $jenisLabel = $jenisIzinLabels[$item->jenis_izin] ?? ucfirst((string) $item->jenis_izin);
                                 @endphp
                                 <details class="rk-item" @if($loop->first) open @endif>
@@ -482,7 +716,7 @@
                                             </p>
                                         </div>
                                         <div class="rk-item-meta">
-                                            <span class="rk-badge rk-badge-info">{{ $durasi }} hari</span>
+                                            <span class="rk-badge rk-badge-neutral">{{ $durasi }} hari</span>
                                             <span class="rk-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                                         </div>
                                     </summary>
@@ -491,11 +725,11 @@
                                         <div class="rk-item-grid">
                                             <div class="rk-field">
                                                 <p class="rk-field-label">Tanggal Mulai</p>
-                                                <p class="rk-field-value">{{ $item->tanggal_mulai->translatedFormat('d F Y') }}</p>
+                                                <p class="rk-field-value rk-time-soft">{{ $item->tanggal_mulai->translatedFormat('d F Y') }}</p>
                                             </div>
                                             <div class="rk-field">
                                                 <p class="rk-field-label">Tanggal Selesai</p>
-                                                <p class="rk-field-value">{{ $item->tanggal_selesai->translatedFormat('d F Y') }}</p>
+                                                <p class="rk-field-value rk-time-soft">{{ $item->tanggal_selesai->translatedFormat('d F Y') }}</p>
                                             </div>
                                             <div class="rk-field">
                                                 <p class="rk-field-label">Petugas Piket</p>
@@ -519,7 +753,7 @@
 
                         @if($paginatedRiwayat->hasPages())
                             <div class="rk-pagination">
-                                <div class="rk-field-value" style="margin: 0; font-size: 0.84rem; font-weight: 500; color: #475569;">
+                                <div class="rk-pagination-meta">
                                     Menampilkan {{ $paginatedRiwayat->firstItem() }} - {{ $paginatedRiwayat->lastItem() }} dari {{ $paginatedRiwayat->total() }} data
                                 </div>
 

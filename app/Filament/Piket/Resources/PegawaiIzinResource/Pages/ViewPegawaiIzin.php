@@ -29,12 +29,15 @@ class ViewPegawaiIzin extends ViewRecord
                 ->columns(2)
                 ->components([
                     Infolists\Components\TextEntry::make('nama_pegawai')
+                        ->label('Nama Pegawai')
                         ->size('lg')
                         ->icon('heroicon-o-user'),
                     Infolists\Components\TextEntry::make('nip')
+                        ->label('NIP')
                         ->icon('heroicon-o-identification')
                         ->copyable(),
                     Infolists\Components\TextEntry::make('nomor_hp')
+                        ->label('Nomor HP')
                         ->icon('heroicon-o-phone')
                         ->formatStateUsing(function ($state) {
                             if (!$state) return '-';
@@ -47,9 +50,11 @@ class ViewPegawaiIzin extends ViewRecord
                         ->copyable()
                         ->placeholder('-'),
                     Infolists\Components\TextEntry::make('jabatan')
+                        ->label('Jabatan')
                         ->icon('heroicon-o-briefcase')
                         ->placeholder('-'),
                     Infolists\Components\TextEntry::make('unit_kerja')
+                        ->label('Unit Kerja')
                         ->icon('heroicon-o-building-office')
                         ->placeholder('-'),
                 ]),
@@ -60,25 +65,31 @@ class ViewPegawaiIzin extends ViewRecord
                 ->columns(2)
                 ->components([
                     Infolists\Components\TextEntry::make('jenis_izin')
+                        ->label('Jenis Izin')
                         ->badge()
                         ->color('info')
                         ->formatStateUsing(fn($state) => PegawaiIzin::JENIS_IZIN_LABELS[$state] ?? $state)
                         ->icon('heroicon-o-clipboard-document-list'),
                     Infolists\Components\TextEntry::make('status')
+                        ->label('Status')
                         ->badge()
                         ->color(fn($state) => $state === 'aktif' ? 'success' : 'gray')
                         ->formatStateUsing(fn($state) => ucfirst($state))
                         ->icon('heroicon-o-signal'),
                     Infolists\Components\TextEntry::make('tanggal_mulai')
+                        ->label('Tanggal Mulai')
                         ->date('d F Y')
                         ->icon('heroicon-o-calendar'),
                     Infolists\Components\TextEntry::make('tanggal_selesai')
+                        ->label('Tanggal Selesai')
                         ->date('d F Y')
                         ->icon('heroicon-o-calendar'),
                     Infolists\Components\TextEntry::make('nama_piket')
+                        ->label('Nama Piket')
                         ->icon('heroicon-o-user-circle')
                         ->placeholder('-'),
                     Infolists\Components\TextEntry::make('keterangan')
+                        ->label('Keterangan')
                         ->icon('heroicon-o-document-text')
                         ->placeholder('-'),
                 ]),
@@ -87,7 +98,12 @@ class ViewPegawaiIzin extends ViewRecord
             Section::make('Tanda Tangan Piket')
                 ->icon('heroicon-o-pencil-square')
                 ->components([
-                    Infolists\Components\ImageEntry::make('tanda_tangan_piket'),
+                    Infolists\Components\ImageEntry::make('tanda_tangan_piket')
+                        ->label('Tanda Tangan Piket')
+                        ->disk('public')
+                        ->extraAttributes([
+                            'class' => 'bt-signature-entry',
+                        ]),
                 ]),
 
             // === Informasi Sistem ===
@@ -97,9 +113,11 @@ class ViewPegawaiIzin extends ViewRecord
                 ->collapsed()
                 ->components([
                     Infolists\Components\TextEntry::make('created_at')
+                        ->label('Dibuat Pada')
                         ->dateTime('d F Y, H:i:s')
                         ->icon('heroicon-o-clock'),
                     Infolists\Components\TextEntry::make('updated_at')
+                        ->label('Diperbarui Pada')
                         ->dateTime('d F Y, H:i:s')
                         ->icon('heroicon-o-clock'),
                 ]),

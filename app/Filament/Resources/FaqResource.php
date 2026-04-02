@@ -40,10 +40,12 @@ class FaqResource extends Resource
         ->icon('heroicon-o-chat-bubble-left-right')
         ->schema([
           Forms\Components\TextInput::make('question')
+            ->label('Pertanyaan')
             ->required()
             ->maxLength(500)
             ->placeholder('Contoh: Bagaimana cara login?'),
           Forms\Components\RichEditor::make('answer')
+            ->label('Jawaban')
             ->required()
             ->toolbarButtons([
               'bold',
@@ -61,15 +63,19 @@ class FaqResource extends Resource
         ->columns(3)
         ->schema([
           Forms\Components\Select::make('target')
+            ->label('Target Panel')
             ->options(Faq::TARGET_LABELS)
             ->required()
+            ->placeholder('Pilih opsi')
             ->native(false)
-            ->helperText('Panel mana yang menampilkan FAQ ini.'),
+            ->helperText('Panel tujuan FAQ.'),
           Forms\Components\TextInput::make('sort_order')
+            ->label('Urutan Tampil')
             ->numeric()
-            ->helperText('Urutan tampil FAQ (otomatis untuk FAQ baru).'),
+            ->helperText('Urutan tampil otomatis.'),
           Forms\Components\Toggle::make('is_active')
-            ->helperText('FAQ nonaktif tidak akan tampil.')
+            ->label('Status Aktif')
+            ->helperText('FAQ nonaktif tidak ditampilkan.')
             ->inline(false),
         ]),
     ]);

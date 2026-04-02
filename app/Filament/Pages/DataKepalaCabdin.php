@@ -5,7 +5,6 @@ namespace App\Filament\Pages;
 use App\Models\PengaturanKcd;
 use App\Models\User;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -31,12 +30,14 @@ class DataKepalaCabdin extends Page implements HasForms
     {
         /** @var User $user */
         $user = Auth::user();
+
         return $user?->role_user?->name === 'Super Admin';
     }
 
     public function mount(): void
     {
         $settings = PengaturanKcd::getSettings();
+
         $this->form->fill([
             'nama_kepala' => $settings->nama_kepala,
             'nip_kepala' => $settings->nip_kepala,
@@ -53,46 +54,28 @@ class DataKepalaCabdin extends Page implements HasForms
                     ->icon('heroicon-o-identification')
                     ->schema([
                         TextInput::make('nama_kepala')
+                            ->label('Nama Kepala Cabang Dinas')
                             ->placeholder('Contoh: Drs. H. Ahmad Suryadi, M.Pd.')
                             ->maxLength(255)
                             ->helperText('Nama lengkap beserta gelar depan dan belakang.')
-                            ->required(),
-
+                            ->required()
+                            ->live(),
                         TextInput::make('nip_kepala')
+                            ->label('NIP Kepala Cabang Dinas')
                             ->placeholder('Contoh: 196712051992031005')
                             ->mask('999999999999999999')
                             ->length(18)
                             ->helperText('NIP harus terdiri dari 18 digit.')
-                            ->required(),
-
+                            ->required()
+                            ->live(),
                         TextInput::make('jabatan')
+                            ->label('Jabatan')
                             ->maxLength(255)
                             ->helperText('Jabatan yang ditampilkan di halaman cetak.')
-                            ->required(),
+                            ->required()
+                            ->live(),
                     ])
                     ->columns(1),
-
-                Section::make('Preview Tanda Tangan')
-                    ->description('Tampilan tanda tangan pada halaman cetak.')
-                    ->icon('heroicon-o-eye')
-                    ->schema([
-                        TextEntry::make('preview')
-                            ->state(function ($get) {
-                                $nama = $get('nama_kepala') ?: '(...............................................)';
-                                $nip = $get('nip_kepala') ? 'NIP. ' . $get('nip_kepala') : 'NIP. ..............................';
-                                $jabatan = $get('jabatan') ?: 'Kepala Cabang Dinas Pendidikan Wilayah XIII';
-
-                                return new \Illuminate\Support\HtmlString("
-                                    <div class='rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-6 max-w-sm mx-auto text-center' style='font-family: Times New Roman, serif;'>
-                                        <p class='text-sm text-gray-700 dark:text-gray-200 mb-1'>Ciamis, " . now()->translatedFormat('d F Y') . "</p>
-                                        <p class='text-sm text-gray-700 dark:text-gray-200 mt-2'>{$jabatan},</p>
-                                        <p class='text-sm font-bold text-gray-900 dark:text-white mt-16 pb-1 inline-block' style='border-bottom: 2px solid currentColor;'>{$nama}</p>
-                                        <br><span class='text-xs text-gray-700 dark:text-gray-200 mt-1 inline-block'>{$nip}</span>
-                                    </div>
-                                ");
-                            }),
-                    ])
-                    ->collapsible(),
             ])
             ->statePath('data');
     }

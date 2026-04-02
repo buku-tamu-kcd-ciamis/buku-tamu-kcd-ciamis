@@ -449,10 +449,10 @@
             styles.forEach(function (style) {
                 doc.write(style.innerHTML);
             });
-            // Override @page margin jadi 0 di iframe
+            // Pakai margin print yang lebih rapat agar surat muat 1 halaman
             var pageSize = '{{ $pageSize }}';
-            doc.write('@page { size: ' + pageSize + '; margin: 0; }');
-            doc.write('.page { padding: 15mm 20mm !important; max-width: 100% !important; }');
+            doc.write('@page { size: ' + pageSize + '; margin: 8mm 10mm; }');
+            doc.write('.page { padding: 0 !important; max-width: 100% !important; }');
             doc.write('.no-print { display: none !important; }');
             doc.write('</style>');
             doc.write('</head><body>');

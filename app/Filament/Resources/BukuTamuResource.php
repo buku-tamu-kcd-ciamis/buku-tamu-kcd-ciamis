@@ -17,11 +17,20 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BukuTamuResource extends Resource
 {
@@ -362,6 +371,412 @@ class BukuTamuResource extends Resource
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
+    }
+
+    public static function makeExportExcelAction(): Action
+    {
+        $dateRangeDefaults = static::getExportDateRangeDefaults();
+
+        return Action::make('export_excel')
+            ->label('Export Excel')
+            ->icon('heroicon-o-arrow-down-tray')
+            ->color('success')
+            ->extraAttributes([
+                'style' => 'padding: 10px 16px !important;',
+            ])
+            ->modalHeading('Export Data Buku Tamu (Excel)')
+            ->modalDescription('Pilih filter data. Anda bisa memilih lebih dari satu nama, keperluan, dan staff tujuan.')
+            ->form([
+                Forms\Components\DatePicker::make('tanggal_mulai')
+                    ->label('Tanggal Mulai')
+                    ->default($dateRangeDefaults['mulai'])
+                    ->native(false),
+                Forms\Components\DatePicker::make('tanggal_selesai')
+                    ->label('Tanggal Selesai')
+                    ->default($dateRangeDefaults['selesai'])
+                    ->native(false),
+                Forms\Components\Select::make('nama_tamu')
+                    ->label('Per Orang (Nama Tamu)')
+                    ->options(static::getNamaTamuOptions())
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->noOptionsMessage('Belum ada data tamu yang tersedia.')
+                    ->noSearchResultsMessage('Data tamu tidak ditemukan.')
+                    ->native(false)
+                    ->placeholder('Semua tamu'),
+                Forms\Components\Select::make('keperluan')
+                    ->label('Keperluan')
+                    ->options(static::getKeperluanOptions())
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->noOptionsMessage('Belum ada data keperluan yang tersedia.')
+                    ->noSearchResultsMessage('Data keperluan tidak ditemukan.')
+                    ->native(false)
+                    ->placeholder('Semua keperluan'),
+                Forms\Components\Select::make('staff_dituju')
+                    ->label('Ke Mana / Staff Tujuan')
+                    ->options(static::getStaffDitujuOptions())
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->noOptionsMessage('Belum ada data staff tujuan yang tersedia.')
+                    ->noSearchResultsMessage('Data staff tujuan tidak ditemukan.')
+                    ->native(false)
+                    ->placeholder('Semua staff tujuan'),
+            ])
+            ->action(fn(array $data) => static::exportExcel($data));
+    }
+
+    protected static function exportExcel(array $filters = []): StreamedResponse
+    {
+        $tanggalMulai = !empty($filters['tanggal_mulai']) ? Carbon::parse($filters['tanggal_mulai'])->startOfDay() : null;
+        $tanggalSelesai = !empty($filters['tanggal_selesai']) ? Carbon::parse($filters['tanggal_selesai'])->endOfDay() : null;
+        $namaTamuDipilih = static::normalizeMultiValue($filters['nama_tamu'] ?? []);
+        $keperluanDipilih = static::normalizeMultiValue($filters['keperluan'] ?? []);
+        $staffDitujuDipilih = static::normalizeMultiValue($filters['staff_dituju'] ?? []);
+
+        if ($tanggalMulai && $tanggalSelesai && $tanggalMulai->gt($tanggalSelesai)) {
+            [$tanggalMulai, $tanggalSelesai] = [$tanggalSelesai->copy()->startOfDay(), $tanggalMulai->copy()->endOfDay()];
+        }
+
+        $query = BukuTamu::query()
+            ->where(function (Builder $q): void {
+                $q->whereNull('foto_penerimaan')
+                    ->orWhere('foto_penerimaan', '');
+            })
+            ->latest('created_at');
+
+        if ($tanggalMulai) {
+            $query->where('created_at', '>=', $tanggalMulai);
+        }
+
+        if ($tanggalSelesai) {
+            $query->where('created_at', '<=', $tanggalSelesai);
+        }
+
+        if ($namaTamuDipilih !== []) {
+            $query->whereIn('nama_lengkap', $namaTamuDipilih);
+        }
+
+        if ($keperluanDipilih !== []) {
+            $query->whereIn('keperluan', $keperluanDipilih);
+        }
+
+        if ($staffDitujuDipilih !== []) {
+            $query->whereIn('staff_dituju', $staffDitujuDipilih);
+        }
+
+        $rows = $query->get([
+            'nama_lengkap',
+            'jenis_id',
+            'nik',
+            'instansi',
+            'keperluan',
+            'staff_dituju',
+            'status',
+            'created_at',
+        ]);
+
+        $spreadsheet = new Spreadsheet();
+        $usedTitles = [];
+
+        $mainSheet = $spreadsheet->getActiveSheet();
+        $mainSheet->setTitle('Semua Data');
+        $usedTitles[] = 'Semua Data';
+
+        static::fillExportSheet(
+            $mainSheet,
+            $rows,
+            'Rekap hasil filter export Buku Tamu',
+            [
+                'Tanggal Mulai' => $tanggalMulai?->format('d/m/Y') ?? 'Semua',
+                'Tanggal Selesai' => $tanggalSelesai?->format('d/m/Y') ?? 'Semua',
+                'Nama Tamu' => $namaTamuDipilih !== [] ? implode(', ', $namaTamuDipilih) : 'Semua',
+                'Keperluan' => $keperluanDipilih !== [] ? implode(', ', $keperluanDipilih) : 'Semua',
+                'Staff Tujuan' => $staffDitujuDipilih !== [] ? implode(', ', $staffDitujuDipilih) : 'Semua',
+            ]
+        );
+
+        foreach ($namaTamuDipilih as $nama) {
+            $sheet = $spreadsheet->createSheet();
+            $sheetTitle = static::makeUniqueSheetTitle('Nama - ' . $nama, $usedTitles);
+            $sheet->setTitle($sheetTitle);
+            static::fillExportSheet($sheet, $rows->where('nama_lengkap', $nama)->values(), 'Data untuk nama tamu: ' . $nama);
+        }
+
+        foreach ($keperluanDipilih as $keperluan) {
+            $sheet = $spreadsheet->createSheet();
+            $sheetTitle = static::makeUniqueSheetTitle('Keperluan - ' . $keperluan, $usedTitles);
+            $sheet->setTitle($sheetTitle);
+            static::fillExportSheet($sheet, $rows->where('keperluan', $keperluan)->values(), 'Data untuk keperluan: ' . $keperluan);
+        }
+
+        foreach ($staffDitujuDipilih as $staff) {
+            $sheet = $spreadsheet->createSheet();
+            $sheetTitle = static::makeUniqueSheetTitle('Tujuan - ' . $staff, $usedTitles);
+            $sheet->setTitle($sheetTitle);
+            static::fillExportSheet($sheet, $rows->where('staff_dituju', $staff)->values(), 'Data untuk staff tujuan: ' . $staff);
+        }
+
+        $dateToken = 'semua';
+
+        if ($tanggalMulai && $tanggalSelesai) {
+            $dateToken = $tanggalMulai->format('Ymd') . '-sampai-' . $tanggalSelesai->format('Ymd');
+        } elseif ($tanggalMulai) {
+            $dateToken = 'mulai-' . $tanggalMulai->format('Ymd');
+        } elseif ($tanggalSelesai) {
+            $dateToken = 'sampai-' . $tanggalSelesai->format('Ymd');
+        }
+
+        $fileName = 'buku-tamu-' . $dateToken . '-' . now()->format('His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer): void {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    protected static function normalizeMultiValue(mixed $value): array
+    {
+        if (is_string($value)) {
+            $value = [$value];
+        }
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($value as $item) {
+            $item = trim((string) $item);
+
+            if ($item === '') {
+                continue;
+            }
+
+            $normalized[$item] = $item;
+        }
+
+        return array_values($normalized);
+    }
+
+    protected static function fillExportSheet(Worksheet $sheet, $rows, string $title, array $filters = []): void
+    {
+        $headers = ['No', 'Nama Tamu', 'Jenis ID', 'No. Identitas', 'Instansi', 'Keperluan', 'Staff Tujuan', 'Status', 'Waktu Kunjungan'];
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+
+        $sheet->setCellValue('A1', $title);
+        $sheet->mergeCells('A1:I1');
+
+        $filterSummary = 'Filter: ';
+        $summaryParts = [];
+
+        foreach ($filters as $filterLabel => $filterValue) {
+            $summaryParts[] = $filterLabel . ' = ' . $filterValue;
+        }
+
+        $filterSummary .= $summaryParts !== [] ? implode(' | ', $summaryParts) : 'Semua data';
+        $sheet->setCellValue('A2', $filterSummary);
+        $sheet->mergeCells('A2:I2');
+
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValue($columns[$index] . '4', $header);
+        }
+
+        $sheet->getStyle('A1:I1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 13,
+                'color' => ['rgb' => '111827'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_LEFT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle('A2:I2')->applyFromArray([
+            'font' => [
+                'italic' => true,
+                'size' => 10,
+                'color' => ['rgb' => '4B5563'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_LEFT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle('A4:I4')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '111827'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'D1D5DB'],
+                ],
+            ],
+        ]);
+
+        $rowIndex = 5;
+
+        foreach ($rows as $index => $row) {
+            $sheet->setCellValue("A{$rowIndex}", $index + 1);
+            $sheet->setCellValue("B{$rowIndex}", (string) ($row->nama_lengkap ?? '-'));
+            $sheet->setCellValue("C{$rowIndex}", strtoupper((string) ($row->jenis_id ?? '-')));
+            $sheet->setCellValueExplicit("D{$rowIndex}", (string) ($row->nik ?? '-'), DataType::TYPE_STRING);
+            $sheet->setCellValue("E{$rowIndex}", (string) ($row->instansi ?? '-'));
+            $sheet->setCellValue("F{$rowIndex}", (string) ($row->keperluan ?? '-'));
+            $sheet->setCellValue("G{$rowIndex}", (string) ($row->staff_dituju ?? '-'));
+            $sheet->setCellValue("H{$rowIndex}", (string) (BukuTamu::STATUS_LABELS[$row->status] ?? $row->status ?? '-'));
+            $sheet->setCellValue("I{$rowIndex}", $row->created_at?->format('d/m/Y H:i') ?? '-');
+            $rowIndex++;
+        }
+
+        $lastDataRow = max(5, $rowIndex - 1);
+
+        $sheet->getStyle("A4:I{$lastDataRow}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'D1D5DB'],
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle('A:A')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('H:H')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('I:I')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->getColumnDimension('A')->setWidth(6);
+        $sheet->getColumnDimension('B')->setWidth(30);
+        $sheet->getColumnDimension('C')->setWidth(14);
+        $sheet->getColumnDimension('D')->setWidth(22);
+        $sheet->getColumnDimension('E')->setWidth(28);
+        $sheet->getColumnDimension('F')->setWidth(28);
+        $sheet->getColumnDimension('G')->setWidth(30);
+        $sheet->getColumnDimension('H')->setWidth(16);
+        $sheet->getColumnDimension('I')->setWidth(20);
+
+        $sheet->freezePane('A5');
+    }
+
+    protected static function makeUniqueSheetTitle(string $baseTitle, array &$usedTitles): string
+    {
+        $title = trim(preg_replace('/[\\\\\/?*\[\]:]/', '-', $baseTitle) ?? '');
+
+        if ($title === '') {
+            $title = 'Sheet';
+        }
+
+        $title = mb_substr($title, 0, 31);
+
+        if (! in_array($title, $usedTitles, true)) {
+            $usedTitles[] = $title;
+
+            return $title;
+        }
+
+        $counter = 2;
+
+        do {
+            $suffix = ' (' . $counter . ')';
+            $candidate = mb_substr($title, 0, 31 - mb_strlen($suffix)) . $suffix;
+            $counter++;
+        } while (in_array($candidate, $usedTitles, true));
+
+        $usedTitles[] = $candidate;
+
+        return $candidate;
+    }
+
+    protected static function getExportDateRangeDefaults(): array
+    {
+        $firstVisit = BukuTamu::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('foto_penerimaan')
+                    ->orWhere('foto_penerimaan', '');
+            })
+            ->orderBy('created_at')
+            ->value('created_at');
+
+        $lastVisit = BukuTamu::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('foto_penerimaan')
+                    ->orWhere('foto_penerimaan', '');
+            })
+            ->orderByDesc('created_at')
+            ->value('created_at');
+
+        return [
+            'mulai' => $firstVisit ? Carbon::parse($firstVisit)->toDateString() : null,
+            'selesai' => $lastVisit ? Carbon::parse($lastVisit)->toDateString() : now()->toDateString(),
+        ];
+    }
+
+    protected static function getNamaTamuOptions(): array
+    {
+        return BukuTamu::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('foto_penerimaan')
+                    ->orWhere('foto_penerimaan', '');
+            })
+            ->whereNotNull('nama_lengkap')
+            ->where('nama_lengkap', '!=', '')
+            ->distinct()
+            ->orderBy('nama_lengkap')
+            ->pluck('nama_lengkap', 'nama_lengkap')
+            ->toArray();
+    }
+
+    protected static function getKeperluanOptions(): array
+    {
+        return BukuTamu::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('foto_penerimaan')
+                    ->orWhere('foto_penerimaan', '');
+            })
+            ->whereNotNull('keperluan')
+            ->where('keperluan', '!=', '')
+            ->distinct()
+            ->orderBy('keperluan')
+            ->pluck('keperluan', 'keperluan')
+            ->toArray();
+    }
+
+    protected static function getStaffDitujuOptions(): array
+    {
+        return BukuTamu::query()
+            ->where(function (Builder $query): void {
+                $query->whereNull('foto_penerimaan')
+                    ->orWhere('foto_penerimaan', '');
+            })
+            ->whereNotNull('staff_dituju')
+            ->where('staff_dituju', '!=', '')
+            ->distinct()
+            ->orderBy('staff_dituju')
+            ->pluck('staff_dituju', 'staff_dituju')
+            ->toArray();
     }
 
     protected static function canChangeStatus(): bool

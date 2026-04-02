@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -21,9 +22,12 @@ class PegawaiTemplateExport
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Data Pegawai');
 
+        $roleOptions = ['Staff', 'Piket', 'Kepala Cabang Dinas'];
+        $roleFormula = '"' . implode(',', $roleOptions) . '"';
+
         // ===== HEADER ROW =====
-        $headers = ['No', 'Nama', 'NIP', 'Jabatan', 'Unit Kerja', 'Nomor HP', 'Status'];
-        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        $headers = ['No', 'Nama', 'NIP', 'Jabatan', 'Unit Kerja', 'Nomor HP', 'Status', 'Role User'];
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
         foreach ($headers as $i => $header) {
             $cell = $columns[$i] . '1';
@@ -31,7 +35,7 @@ class PegawaiTemplateExport
         }
 
         // Header styling
-        $headerRange = 'A1:G1';
+        $headerRange = 'A1:H1';
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -57,8 +61,8 @@ class PegawaiTemplateExport
 
         // ===== SAMPLE DATA (2 rows) =====
         $sampleData = [
-            [1, 'Drs. H. Ahmad Suryadi, M.Pd.', '198501012010011001', 'Kepala Cabang Dinas', 'Cadisdik Wilayah XIII', '812-3456-7890', 'Aktif'],
-            [2, 'Siti Nurhaliza, S.Pd.', '199003152015012002', 'Staff Tata Usaha', 'Sub Bagian Tata Usaha', '857-1234-5678', 'Aktif'],
+            [1, 'Drs. H. Ahmad Suryadi, M.Pd.', '198501012010011001', 'Kepala Cabang Dinas', 'Cadisdik Wilayah XIII', '812-3456-7890', 'Aktif', 'Kepala Cabang Dinas'],
+            [2, 'Siti Nurhaliza, S.Pd.', '199003152015012002', 'Staff Tata Usaha', 'Sub Bagian Tata Usaha', '857-1234-5678', 'Aktif', 'Staff'],
         ];
 
         foreach ($sampleData as $rowIndex => $rowData) {
@@ -77,7 +81,7 @@ class PegawaiTemplateExport
         }
 
         // Sample data styling (light blue background)
-        $sampleRange = 'A2:G3';
+        $sampleRange = 'A2:H3';
         $sheet->getStyle($sampleRange)->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -98,10 +102,25 @@ class PegawaiTemplateExport
             ],
         ]);
 
+        for ($row = 2; $row <= 500; $row++) {
+            $validation = $sheet->getCell("H{$row}")->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_STOP);
+            $validation->setAllowBlank(true);
+            $validation->setShowDropDown(true);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setErrorTitle('Role tidak valid');
+            $validation->setError('Pilih role sesuai daftar pada dropdown.');
+            $validation->setPromptTitle('Pilih Role User');
+            $validation->setPrompt('Pilih Staff, Piket, atau Kepala Cabang Dinas.');
+            $validation->setFormula1($roleFormula);
+        }
+
         // ===== INSTRUCTIONS ROW =====
         $sheet->setCellValue('A5', '📌 PETUNJUK PENGISIAN:');
         $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(11);
-        $sheet->mergeCells('A5:G5');
+        $sheet->mergeCells('A5:H5');
 
         $instructions = [
             '1. Hapus baris contoh (baris 2-3) sebelum mengisi data baru.',
@@ -109,14 +128,15 @@ class PegawaiTemplateExport
             '3. NIP harus tepat 18 digit angka.',
             '4. Nomor HP: format 8xx-xxxx-xxxx (tanpa kode +62 atau 0).',
             '5. Status: isi "Aktif" atau "Nonaktif" (default: Aktif jika dikosongkan).',
-            '6. Jika NIP sudah ada di database, data akan diperbarui (update).',
-            '7. Simpan file dalam format .xlsx sebelum mengimpor.',
+            '6. Kolom "Role User": pilih "Staff", "Piket", atau "Kepala Cabang Dinas".',
+            '7. Jika NIP sudah ada di database, data akan diperbarui (update).',
+            '8. Simpan file dalam format .xlsx sebelum mengimpor.',
         ];
 
         foreach ($instructions as $i => $text) {
             $row = 6 + $i;
             $sheet->setCellValue("A{$row}", $text);
-            $sheet->mergeCells("A{$row}:G{$row}");
+            $sheet->mergeCells("A{$row}:H{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setSize(10)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF555555'));
         }
 
@@ -128,6 +148,7 @@ class PegawaiTemplateExport
         $sheet->getColumnDimension('E')->setWidth(30);  // Unit Kerja
         $sheet->getColumnDimension('F')->setWidth(18);  // Nomor HP
         $sheet->getColumnDimension('G')->setWidth(12);  // Status
+        $sheet->getColumnDimension('H')->setWidth(24);  // Role User
 
         // NIP column as text format
         $sheet->getStyle('C:C')->getNumberFormat()
@@ -136,6 +157,7 @@ class PegawaiTemplateExport
         // Center No and Status columns
         $sheet->getStyle('A:A')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('G:G')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('H:H')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Freeze header row
         $sheet->freezePane('A2');

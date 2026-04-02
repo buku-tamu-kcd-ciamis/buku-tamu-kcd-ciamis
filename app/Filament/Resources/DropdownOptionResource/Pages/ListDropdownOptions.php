@@ -50,11 +50,6 @@ class ListDropdownOptions extends ListRecords
         ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_BAGIAN_DITUJU)->count())
         ->badgeColor('danger')
         ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_BAGIAN_DITUJU)),
-      'pegawai_piket' => Tab::make('Pegawai Piket')
-        ->icon('heroicon-o-user-group')
-        ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)->count())
-        ->badgeColor('primary')
-        ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)),
     ];
   }
 

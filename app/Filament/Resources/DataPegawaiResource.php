@@ -5,7 +5,13 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DataPegawaiResource\Pages;
 use App\Models\Pegawai;
 use App\Models\User;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
@@ -41,10 +47,12 @@ class DataPegawaiResource extends Resource
         ->columns(2)
         ->schema([
           Forms\Components\TextInput::make('nama')
+            ->label('Nama Lengkap')
             ->required()
             ->maxLength(255)
             ->placeholder('Contoh: Drs. H. Ahmad Suryadi, M.Pd.'),
           Forms\Components\TextInput::make('nip')
+            ->label('NIP')
             ->required()
             ->unique(ignoreRecord: true)
             ->minLength(18)
@@ -62,18 +70,21 @@ class DataPegawaiResource extends Resource
             ->helperText(function ($state) {
               if (!$state) return 'NIP harus tepat 18 digit angka';
               $length = strlen($state);
-              $status = $length === 18 ? '✓ valid' : '✗ belum lengkap';
+              $status = $length === 18 ? '✓ sesuai' : '✗ belum lengkap';
               return "{$length}/18 digit — {$status}";
             }),
           Forms\Components\TextInput::make('jabatan')
+            ->label('Jabatan')
             ->required()
             ->maxLength(255)
             ->placeholder('Contoh: Kepala Cabang Dinas'),
           Forms\Components\TextInput::make('unit_kerja')
+            ->label('Unit Kerja')
             ->required()
             ->maxLength(255)
             ->placeholder('Contoh: Sub Bagian Tata Usaha'),
           Forms\Components\TextInput::make('nomor_hp')
+            ->label('Nomor HP')
             ->tel()
             ->prefix('+62')
             ->placeholder('8xx-xxxx-xxxx')
@@ -81,6 +92,7 @@ class DataPegawaiResource extends Resource
             ->maxLength(15)
             ->helperText('Format: 8xx-xxxx-xxxx (tanpa 0 di depan)'),
           Forms\Components\Toggle::make('is_active')
+            ->label('Status Aktif')
             ->helperText('Nonaktifkan jika pegawai sudah tidak bertugas.')
             ->inline(false),
         ]),
@@ -156,8 +168,94 @@ class DataPegawaiResource extends Resource
           ->trueLabel('Aktif')
           ->falseLabel('Nonaktif'),
       ])
-      ->recordActions([])
-      ->toolbarActions([]);
+      ->recordActions([
+        ActionGroup::make([
+          EditAction::make()
+            ->label('Edit')
+            ->icon('heroicon-o-pencil-square')
+            ->color('warning'),
+          DeleteAction::make()
+            ->label('Hapus')
+            ->icon('heroicon-o-trash')
+            ->color('danger'),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
+      ])
+      ->toolbarActions([
+        BulkActionGroup::make([
+          BulkAction::make('bulk_activate')
+            ->label('Aktifkan Terpilih')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->requiresConfirmation()
+            ->modalHeading('Aktifkan Pegawai Terpilih')
+            ->modalDescription('Semua data pegawai yang dipilih akan diaktifkan.')
+            ->modalSubmitActionLabel('Aktifkan')
+            ->action(function ($records): void {
+              $count = 0;
+
+              $records->each(function (Pegawai $record) use (&$count): void {
+                if (! $record->is_active) {
+                  $record->update(['is_active' => true]);
+                  $count++;
+                }
+              });
+
+              Notification::make()
+                ->success()
+                ->title('Bulk update selesai')
+                ->body($count . ' data pegawai berhasil diaktifkan.')
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+          BulkAction::make('bulk_deactivate')
+            ->label('Nonaktifkan Terpilih')
+            ->icon('heroicon-o-no-symbol')
+            ->color('info')
+            ->requiresConfirmation()
+            ->modalHeading('Nonaktifkan Pegawai Terpilih')
+            ->modalDescription('Semua data pegawai yang dipilih akan dinonaktifkan.')
+            ->modalSubmitActionLabel('Nonaktifkan')
+            ->action(function ($records): void {
+              $count = 0;
+
+              $records->each(function (Pegawai $record) use (&$count): void {
+                if ($record->is_active) {
+                  $record->update(['is_active' => false]);
+                  $count++;
+                }
+              });
+
+              Notification::make()
+                ->success()
+                ->title('Bulk update selesai')
+                ->body($count . ' data pegawai berhasil dinonaktifkan.')
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+          BulkAction::make('bulk_delete')
+            ->label('Hapus Terpilih')
+            ->icon('heroicon-o-trash')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Hapus Data Pegawai Terpilih')
+            ->modalDescription('Semua data pegawai yang dipilih akan dihapus permanen.')
+            ->modalSubmitActionLabel('Hapus')
+            ->action(function ($records): void {
+              $count = $records->count();
+              $records->each->delete();
+
+              Notification::make()
+                ->success()
+                ->title('Bulk hapus selesai')
+                ->body($count . ' data pegawai berhasil dihapus.')
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
+        ]),
+      ]);
   }
 
   public static function getRelations(): array

@@ -4,11 +4,12 @@ namespace App\Imports;
 
 use App\Models\Pegawai;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Illuminate\Support\Collection;
 
 class PegawaiImport
 {
     protected array $errors = [];
+    protected array $processedNips = [];
+    protected array $processedRows = [];
     protected int $imported = 0;
     protected int $updated = 0;
     protected int $skipped = 0;
@@ -50,6 +51,7 @@ class PegawaiImport
                 'unit kerja', 'unit_kerja' => 'unit_kerja',
                 'nomor hp', 'nomor_hp', 'no. hp', 'no hp', 'hp', 'telepon', 'phone' => 'nomor_hp',
                 'status', 'is_active', 'aktif' => 'is_active',
+                'role', 'role user', 'role_user', 'role pegawai', 'role_pegawai' => 'role_user_name',
                 default => null,
             };
             if ($mapped) {
@@ -132,6 +134,11 @@ class PegawaiImport
                         'is_active' => $data['is_active'],
                     ]);
                     $this->updated++;
+                    $this->processedNips[$data['nip']] = $data['nip'];
+                    $this->processedRows[$data['nip']] = [
+                        'nip' => $data['nip'],
+                        'role_user_name' => (string) ($data['role_user_name'] ?? ''),
+                    ];
                 } else {
                     Pegawai::create([
                         'nama' => $data['nama'],
@@ -142,6 +149,11 @@ class PegawaiImport
                         'is_active' => $data['is_active'],
                     ]);
                     $this->imported++;
+                    $this->processedNips[$data['nip']] = $data['nip'];
+                    $this->processedRows[$data['nip']] = [
+                        'nip' => $data['nip'],
+                        'role_user_name' => (string) ($data['role_user_name'] ?? ''),
+                    ];
                 }
             } catch (\Exception $e) {
                 $this->errors[] = "Baris {$rowNumber}: Gagal menyimpan data — " . $e->getMessage();
@@ -175,6 +187,16 @@ class PegawaiImport
     public function hasErrors(): bool
     {
         return count($this->errors) > 0;
+    }
+
+    public function getProcessedNips(): array
+    {
+        return array_values($this->processedNips);
+    }
+
+    public function getProcessedRows(): array
+    {
+        return array_values($this->processedRows);
     }
 
     public function getSummary(): string

@@ -6,61 +6,166 @@
 @endphp
 
 @if(!empty($properties))
-    <div class="space-y-3">
+    <style>
+        .al-detail-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .al-detail-item {
+            border: 1px solid #e4e4e7;
+            border-radius: 0.85rem;
+            background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+            padding: 0.8rem;
+        }
+
+        .al-detail-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+        }
+
+        .al-detail-icon {
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .al-detail-icon :where(svg) {
+            width: 1.1rem;
+            height: 1.1rem;
+            color: #71717a;
+        }
+
+        .al-detail-content {
+            flex: 1;
+            min-width: 0;
+            display: grid;
+            gap: 0.28rem;
+        }
+
+        .al-detail-key {
+            font-size: 0.81rem;
+            font-weight: 700;
+            color: #27272a;
+            line-height: 1.3;
+        }
+
+        .al-detail-value {
+            font-size: 0.83rem;
+            color: #52525b;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .al-detail-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            border: 1px solid #d4d4d8;
+            background: #ffffff;
+            color: #27272a;
+            padding: 0.15rem 0.48rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+
+        .al-detail-empty {
+            border: 1px dashed #d4d4d8;
+            border-radius: 0.85rem;
+            background: #fafafa;
+            padding: 0.8rem;
+            font-size: 0.82rem;
+            color: #71717a;
+            font-style: italic;
+        }
+
+        .dark .al-detail-item {
+            border-color: #3f3f46;
+            background: linear-gradient(180deg, #18181b 0%, #111113 100%);
+        }
+
+        .dark .al-detail-icon :where(svg) {
+            color: #a1a1aa;
+        }
+
+        .dark .al-detail-key {
+            color: #f4f4f5;
+        }
+
+        .dark .al-detail-value {
+            color: #d4d4d8;
+        }
+
+        .dark .al-detail-chip {
+            border-color: #52525b;
+            background: #18181b;
+            color: #e4e4e7;
+        }
+
+        .dark .al-detail-empty {
+            border-color: #52525b;
+            background: #18181b;
+            color: #a1a1aa;
+        }
+    </style>
+
+    <div class="al-detail-grid">
         @foreach($properties as $key => $value)
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0 mt-0.5">
+            <article class="al-detail-item">
+                <div class="al-detail-wrap">
+                    <div class="al-detail-icon">
                         @switch($key)
                             @case('ip_address')
-                                <x-heroicon-o-globe-alt class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-globe-alt />
                                 @break
                             @case('user_agent')
-                                <x-heroicon-o-device-phone-mobile class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-device-phone-mobile />
                                 @break
                             @case('email')
-                                <x-heroicon-o-envelope class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-envelope />
                                 @break
                             @case('role')
-                                <x-heroicon-o-shield-check class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-shield-check />
                                 @break
                             @case('user_name')
                             @case('nama_tamu')
                             @case('nama')
-                                <x-heroicon-o-user class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-user />
                                 @break
                             @case('nip')
-                                <x-heroicon-o-identification class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-identification />
                                 @break
                             @case('jumlah')
-                                <x-heroicon-o-calculator class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-calculator />
                                 @break
                             @case('tipe')
                             @case('jenis_izin')
                             @case('kategori')
-                                <x-heroicon-o-tag class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-tag />
                                 @break
                             @case('filter')
-                                <x-heroicon-o-funnel class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-funnel />
                                 @break
                             @default
-                                <x-heroicon-o-information-circle class="w-5 h-5 text-gray-400" />
+                                <x-heroicon-o-information-circle />
                         @endswitch
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+
+                    <div class="al-detail-content">
+                        <div class="al-detail-key">
                             {{ ucfirst(str_replace('_', ' ', $key)) }}
                         </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
+
+                        <div class="al-detail-value">
                             @if(is_array($value))
                                 @if(empty($value))
-                                    <span class="text-gray-400 italic">Tidak ada filter</span>
+                                    <span class="al-detail-empty">Tidak ada filter</span>
                                 @else
                                     <div class="space-y-1">
                                         @foreach($value as $subKey => $subValue)
                                             @if($subValue)
                                                 <div class="flex items-center gap-2">
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                                    <span class="al-detail-chip">
                                                         {{ ucfirst(str_replace('_', ' ', $subKey)) }}
                                                     </span>
                                                     <span>{{ is_array($subValue) ? json_encode($subValue) : $subValue }}</span>
@@ -70,20 +175,20 @@
                                     </div>
                                 @endif
                             @elseif(is_bool($value))
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $value ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' }}">
+                                <span class="al-detail-chip">
                                     {{ $value ? 'Ya' : 'Tidak' }}
                                 </span>
                             @elseif(is_null($value) || $value === '')
-                                <span class="text-gray-400 italic">(kosong)</span>
+                                <span class="al-detail-empty">(kosong)</span>
                             @else
                                 {{ $value }}
                             @endif
                         </div>
                     </div>
                 </div>
-            </div>
+            </article>
         @endforeach
     </div>
 @else
-    <p class="text-sm text-gray-500 dark:text-gray-400 italic">Tidak ada detail tambahan.</p>
+    <p class="al-detail-empty">Tidak ada detail tambahan.</p>
 @endif

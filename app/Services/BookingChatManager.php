@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class BookingChatManager
 {
+    public const EDIT_WINDOW_MINUTES = 30;
+
     public function resolveStaffUsersForBooking(BukuTamu $booking): Collection
     {
         return User::query()
@@ -87,8 +89,7 @@ class BookingChatManager
         ?string $message = null,
         ?array $attachment = null,
         ?string $replyToMessageId = null,
-    ): BookingChatMessage
-    {
+    ): BookingChatMessage {
         if (!$chat->canBeAccessedBy($sender)) {
             abort(403);
         }
@@ -132,6 +133,62 @@ class BookingChatManager
             $chat->clearTypingFor($sender);
 
             return $chatMessage;
+        });
+    }
+
+    public function editMessage(
+        BookingChat $chat,
+        User $editor,
+        string $messageId,
+        string $message,
+    ): BookingChatMessage {
+        if (!$chat->canBeAccessedBy($editor)) {
+            abort(403);
+        }
+
+        $sanitizedMessage = trim($message);
+
+        if ($sanitizedMessage === '') {
+            throw new \InvalidArgumentException('Pesan wajib diisi.');
+        }
+
+        $chatMessage = $chat->messages()
+            ->whereKey($messageId)
+            ->where('is_system', false)
+            ->first();
+
+        if (!$chatMessage) {
+            throw new \InvalidArgumentException('Pesan tidak tersedia.');
+        }
+
+        if ((string) $chatMessage->sender_user_id !== (string) $editor->id) {
+            throw new \InvalidArgumentException('Anda hanya bisa mengedit pesan milik sendiri.');
+        }
+
+        if ($chatMessage->isDeletedForEveryone()) {
+            throw new \InvalidArgumentException('Pesan yang sudah dihapus tidak bisa diedit.');
+        }
+
+        if ($chatMessage->hasAttachment() || $chatMessage->message === '[Lampiran]') {
+            throw new \InvalidArgumentException('Pesan lampiran belum bisa diedit.');
+        }
+
+        if (!$chatMessage->isWithinEditWindow(self::EDIT_WINDOW_MINUTES)) {
+            throw new \InvalidArgumentException('Pesan hanya bisa diedit dalam 30 menit setelah dikirim.');
+        }
+
+        if ($chatMessage->message === $sanitizedMessage) {
+            return $chatMessage;
+        }
+
+        return DB::transaction(function () use ($chatMessage, $editor, $sanitizedMessage): BookingChatMessage {
+            $chatMessage->forceFill([
+                'message' => $sanitizedMessage,
+                'edited_at' => now(),
+                'edited_by' => $editor->id,
+            ])->save();
+
+            return $chatMessage->fresh();
         });
     }
 }

@@ -25,7 +25,7 @@ class ListPegawaiPikets extends ListRecords
                 ->color('gray')
                 ->modalHeading('Import Data Pegawai Piket dari Excel')
                 ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai piket.')
-                ->form([
+                ->schema([
                     FileUpload::make('file')
                         ->label('File Excel')
                         ->disk('local')

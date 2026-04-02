@@ -15,93 +15,115 @@ use Illuminate\Validation\Rules\Password;
 
 class EditProfile extends BaseEditProfile
 {
-    protected string | Width | null $maxWidth = '5xl';
+  protected string | Width | null $maxWidth = '4xl';
 
-    protected static ?string $title = 'Profil';
+  protected static ?string $title = 'Profil';
 
-    protected static ?string $navigationLabel = 'Profil';
+  protected static ?string $navigationLabel = 'Profil';
 
-    public function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-          Grid::make([
-            'default' => 1,
-            'md' => 2,
-          ])
-            ->schema([
-              Section::make('Informasi Akun')
-                ->description('Perbarui data akun utama Anda')
-                ->icon('heroicon-o-user')
-                ->schema([
-                  $this->getNameFormComponent()
-                    ->label('Nama Lengkap'),
-                  $this->getEmailFormComponent()
-                    ->label('Email'),
-                ])
-                ->columnSpan(1),
+  public function form(Schema $schema): Schema
+  {
+    return $schema
+      ->components([
+        Grid::make([
+          'default' => 1,
+          'md' => 2,
+        ])
+          ->schema([
+            Section::make('Informasi Akun')
+              ->description('Perbarui data akun')
+              ->icon('heroicon-o-user')
+              ->schema([
+                $this->getNameFormComponent()
+                  ->label('Nama Lengkap'),
+                $this->getEmailFormComponent()
+                  ->label('Email'),
+                Forms\Components\FileUpload::make('profile_photo_path')
+                  ->label('Foto Profil')
+                  ->image()
+                  ->default('profile-photos/default-donut.svg')
+                  ->directory('profile-photos')
+                  ->disk('public')
+                  ->visibility('public')
+                  ->maxSize(2048)
+                  ->panelLayout('compact')
+                  ->imagePreviewHeight('110')
+                  ->placeholder('Upload / ganti foto profil')
+                  ->openable()
+                  ->imageEditor()
+                  ->imageEditorAspectRatioOptions([null, '1:1'])
+                  ->imageEditorMode(2)
+                  ->imageEditorEmptyFillColor('#000000')
+                  ->automaticallyCropImagesToAspectRatio(false)
+                  ->automaticallyResizeImagesMode('contain')
+                  ->automaticallyResizeImagesToWidth('512')
+                  ->automaticallyResizeImagesToHeight('512')
+                  ->helperText('Jika kosong akan pakai ikon default. Klik upload untuk mengganti foto.')
+                  ->columnSpanFull(),
+              ])
+              ->columnSpan(1),
 
-              Section::make('Keamanan Akun')
-                ->description('Untuk ganti password, masukkan password lama terlebih dahulu')
-                ->icon('heroicon-o-lock-closed')
-                ->schema([
-                  Forms\Components\TextInput::make('current_password')
-                    ->label('Password Saat Ini')
-                    ->password()
-                    ->revealable()
-                    ->dehydrated(false)
-                    ->required(fn(callable $get) => filled($get('password')))
-                    ->rules([
-                      fn() => function (string $attribute, $value, $fail) {
-                        $user = Auth::user();
+            Section::make('Keamanan Akun')
+              ->description('Masukkan password lama jika ingin ganti password')
+              ->icon('heroicon-o-lock-closed')
+              ->schema([
+                Forms\Components\TextInput::make('current_password')
+                  ->label('Password Saat Ini')
+                  ->password()
+                  ->revealable()
+                  ->dehydrated(false)
+                  ->required(fn(callable $get) => filled($get('password')))
+                  ->rules([
+                    fn() => function (string $attribute, $value, $fail) {
+                      $user = Auth::user();
 
-                        if ($user && !Hash::check((string) $value, $user->password)) {
-                          $fail('Password saat ini tidak sesuai.');
-                        }
-                      },
-                    ]),
-                  Forms\Components\TextInput::make('password')
-                    ->label('Password Baru')
-                    ->password()
-                    ->revealable()
-                    ->rule(Password::default())
-                    ->same('passwordConfirmation')
-                    ->dehydrateStateUsing(fn(?string $state) => filled($state) ? Hash::make($state) : null),
-                  Forms\Components\TextInput::make('passwordConfirmation')
-                    ->label('Konfirmasi Password Baru')
-                    ->password()
-                    ->revealable()
-                    ->dehydrated(false)
-                    ->requiredWith('password'),
-                ])
-                ->columnSpan(1),
-            ]),
-            ]);
+                      if ($user && !Hash::check((string) $value, $user->password)) {
+                        $fail('Password saat ini tidak sesuai.');
+                      }
+                    },
+                  ]),
+                Forms\Components\TextInput::make('password')
+                  ->label('Password Baru')
+                  ->password()
+                  ->revealable()
+                  ->rule(Password::default())
+                  ->same('passwordConfirmation')
+                  ->dehydrateStateUsing(fn(?string $state) => filled($state) ? Hash::make($state) : null),
+                Forms\Components\TextInput::make('passwordConfirmation')
+                  ->label('Konfirmasi Password Baru')
+                  ->password()
+                  ->revealable()
+                  ->dehydrated(false)
+                  ->requiredWith('password'),
+              ])
+              ->columnSpan(1),
+          ]),
+      ]);
+  }
+
+  /**
+   * @param array<string, mixed> $data
+   * @return array<string, mixed>
+   */
+  protected function mutateFormDataBeforeSave(array $data): array
+  {
+    if (blank($data['password'] ?? null)) {
+      unset($data['password']);
     }
 
-    /**
-     * @param array<string, mixed> $data
-     * @return array<string, mixed>
-     */
-    protected function mutateFormDataBeforeSave(array $data): array
-    {
-      if (blank($data['password'] ?? null)) {
-        unset($data['password']);
-      }
+    unset($data['current_password'], $data['passwordConfirmation']);
 
-      unset($data['current_password'], $data['passwordConfirmation']);
+    return $data;
+  }
 
-      return $data;
-    }
+  protected function getSavedNotification(): ?Notification
+  {
+    return null;
+  }
 
-    protected function getSavedNotification(): ?Notification
-    {
-        return null;
-    }
-
-    protected function afterSave(): void
-    {
-        $this->js(<<<'JS'
+  protected function afterSave(): void
+  {
+    $this->js(<<<'JS'
       (function() {
         let toast = document.getElementById('filament-toast');
         if (!toast) {
@@ -142,13 +164,13 @@ class EditProfile extends BaseEditProfile
         }, 5000);
       })();
     JS);
-    }
+  }
 
-    protected function getFormActions(): array
-    {
-        return [
-            $this->getSaveFormAction(),
-        $this->getCancelFormAction(),
-        ];
-    }
+  protected function getFormActions(): array
+  {
+    return [
+      $this->getSaveFormAction(),
+      $this->getCancelFormAction(),
+    ];
+  }
 }

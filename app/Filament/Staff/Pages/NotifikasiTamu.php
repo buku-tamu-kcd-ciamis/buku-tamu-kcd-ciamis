@@ -112,13 +112,14 @@ class NotifikasiTamu extends Page implements HasTable
                     ->label('Pesan')
                     ->limit(40)
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\BadgeColumn::make('response')
+                Tables\Columns\TextColumn::make('response')
                     ->label('Status')
-                    ->colors([
-                        'warning' => fn($state) => $state === null,
-                        'success' => 'diterima',
-                        'danger' => 'ditolak',
-                    ])
+                    ->badge()
+                    ->color(fn($state): string => match ($state) {
+                        'diterima' => 'success',
+                        'ditolak' => 'danger',
+                        default => 'warning',
+                    })
                     ->formatStateUsing(fn($state) => match ($state) {
                         'diterima' => 'Diterima',
                         'ditolak' => 'Ditolak',

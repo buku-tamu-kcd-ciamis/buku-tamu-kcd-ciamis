@@ -44,7 +44,7 @@ class ListActivityLogs extends ListRecords
                 ->hidden(fn(): bool => ! (Auth::user()?->hasRole('Super Admin') ?? false))
                 ->modalHeading('Hapus & Backup Log Aktivitas')
                 ->modalDescription('Sistem akan membuat file backup terlebih dahulu, lalu menghapus seluruh log aktivitas. Tindakan ini memerlukan verifikasi password Super Admin.')
-                ->form([
+                ->schema([
                     TextInput::make('password')
                         ->label('Password Super Admin')
                         ->password()

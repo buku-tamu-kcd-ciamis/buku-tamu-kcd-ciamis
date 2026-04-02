@@ -167,7 +167,7 @@ class BukuTamuResource extends Resource
                         ->modalDescription(fn(BukuTamu $record): string => static::hasDeletePasswordVerification()
                             ? "Data '{$record->nama_lengkap}' akan dihapus permanen."
                             : "Data '{$record->nama_lengkap}' akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.")
-                        ->form(fn(): array => static::hasDeletePasswordVerification()
+                        ->schema(fn(): array => static::hasDeletePasswordVerification()
                             ? []
                             : [
                                 Forms\Components\TextInput::make('password')
@@ -267,7 +267,7 @@ class BukuTamuResource extends Resource
                         ->modalDescription(fn(): string => static::hasDeletePasswordVerification()
                             ? 'Semua data buku tamu yang dipilih akan dihapus permanen.'
                             : 'Semua data buku tamu yang dipilih akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.')
-                        ->form(fn(): array => static::hasDeletePasswordVerification()
+                        ->schema(fn(): array => static::hasDeletePasswordVerification()
                             ? []
                             : [
                                 Forms\Components\TextInput::make('password')

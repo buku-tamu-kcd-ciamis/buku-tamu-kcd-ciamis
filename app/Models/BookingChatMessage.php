@@ -17,12 +17,14 @@ class BookingChatMessage extends Model
     protected $fillable = [
         'booking_chat_id',
         'sender_user_id',
+        'edited_by',
         'reply_to_message_id',
         'message',
         'attachment_path',
         'attachment_name',
         'attachment_mime',
         'attachment_size',
+        'edited_at',
         'deleted_for_everyone_at',
         'deleted_for_everyone_by',
         'is_system',
@@ -32,6 +34,7 @@ class BookingChatMessage extends Model
     protected $casts = [
         'is_system' => 'boolean',
         'attachment_size' => 'integer',
+        'edited_at' => 'datetime',
         'deleted_for_everyone_at' => 'datetime',
         'read_at' => 'datetime',
     ];
@@ -54,6 +57,11 @@ class BookingChatMessage extends Model
     public function deletedForEveryoneBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'deleted_for_everyone_by');
+    }
+
+    public function editedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edited_by');
     }
 
     public function userDeletions(): HasMany
@@ -105,5 +113,16 @@ class BookingChatMessage extends Model
     public function isDeletedForEveryone(): bool
     {
         return $this->deleted_for_everyone_at !== null;
+    }
+
+    public function isEdited(): bool
+    {
+        return $this->edited_at !== null;
+    }
+
+    public function isWithinEditWindow(int $minutes = 30): bool
+    {
+        return $this->created_at !== null
+            && $this->created_at->gte(now()->subMinutes($minutes));
     }
 }

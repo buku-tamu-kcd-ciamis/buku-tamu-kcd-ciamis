@@ -296,7 +296,7 @@ class PegawaiIzinResource extends Resource
             ->label('Setujui')
             ->icon('heroicon-o-check-circle')
             ->color('success')
-            ->form([
+            ->schema([
               Textarea::make('catatan_verifikasi')
                 ->label('Catatan Verifikasi')
                 ->placeholder('Opsional')
@@ -359,7 +359,7 @@ class PegawaiIzinResource extends Resource
             ->label('Tolak')
             ->icon('heroicon-o-x-circle')
             ->color('danger')
-            ->form([
+            ->schema([
               Textarea::make('catatan_verifikasi')
                 ->label('Alasan Penolakan')
                 ->rows(3)

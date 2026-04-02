@@ -33,6 +33,7 @@ class ChatBooking extends Page
 
     public ?string $selectedChatId = null;
     public ?string $replyToMessageId = null;
+    public ?string $editingMessageId = null;
     public string $messageDraft = '';
     public $attachmentDraft = null;
     public int $attachmentInputIteration = 0;
@@ -167,6 +168,7 @@ class ChatBooking extends Page
 
         $this->selectedChatId = $chat->id;
         $this->replyToMessageId = null;
+        $this->editingMessageId = null;
         $chat->markMessagesAsReadFor(Auth::user());
         $this->touchPresence($chat);
         $this->dispatch('booking-chat-scroll-bottom');
@@ -193,7 +195,78 @@ class ChatBooking extends Page
             return;
         }
 
+        $this->editingMessageId = null;
         $this->replyToMessageId = $targetMessage->id;
+    }
+
+    public function startEditingMessage(string $messageId): void
+    {
+        $chat = $this->getSelectedChat();
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
+        if (!$chat) {
+            return;
+        }
+
+        $targetMessage = $chat->messages()
+            ->visibleForUser($authUser)
+            ->whereNull('deleted_for_everyone_at')
+            ->where('is_system', false)
+            ->whereKey($messageId)
+            ->first();
+
+        if (!$targetMessage) {
+            return;
+        }
+
+        if ((string) $targetMessage->sender_user_id !== (string) $authUser->id) {
+            Notification::make()
+                ->title('Aksi ditolak')
+                ->body('Anda hanya bisa mengedit pesan milik sendiri.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        if ($targetMessage->hasAttachment() || $targetMessage->message === '[Lampiran]') {
+            Notification::make()
+                ->title('Tidak bisa diedit')
+                ->body('Pesan lampiran belum bisa diedit.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        if (!$targetMessage->isWithinEditWindow(BookingChatManager::EDIT_WINDOW_MINUTES)) {
+            Notification::make()
+                ->title('Batas waktu edit habis')
+                ->body('Pesan hanya bisa diedit dalam 30 menit setelah dikirim.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $this->editingMessageId = $targetMessage->id;
+        $this->replyToMessageId = null;
+        $this->messageDraft = (string) $targetMessage->message;
+
+        if ($this->attachmentDraft) {
+            $this->attachmentDraft = null;
+            $this->attachmentInputIteration++;
+        }
+
+        $this->dispatch('booking-chat-reset-input');
+    }
+
+    public function cancelEditingMessage(): void
+    {
+        $this->editingMessageId = null;
+        $this->messageDraft = '';
+        $this->dispatch('booking-chat-reset-input');
     }
 
     public function clearReplyTarget(): void
@@ -227,6 +300,10 @@ class ChatBooking extends Page
 
         if ($this->replyToMessageId === $message->id) {
             $this->replyToMessageId = null;
+        }
+
+        if ($this->editingMessageId === $message->id) {
+            $this->cancelEditingMessage();
         }
 
         Notification::make()
@@ -298,6 +375,10 @@ class ChatBooking extends Page
             $this->replyToMessageId = null;
         }
 
+        if ($this->editingMessageId === $message->id) {
+            $this->cancelEditingMessage();
+        }
+
         Notification::make()
             ->title('Pesan dihapus untuk semua')
             ->success()
@@ -340,6 +421,60 @@ class ChatBooking extends Page
         }
 
         $messageText = trim($this->messageDraft);
+
+        if ($this->editingMessageId) {
+            if ($this->attachmentDraft) {
+                Notification::make()
+                    ->title('Mode edit aktif')
+                    ->body('Batalkan edit dulu jika ingin mengirim lampiran.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+
+            if ($messageText === '') {
+                Notification::make()
+                    ->title('Pesan kosong')
+                    ->body('Isi teks terlebih dahulu untuk menyimpan perubahan pesan.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+
+            try {
+                $chatManager->editMessage($chat, Auth::user(), $this->editingMessageId, $messageText);
+            } catch (\InvalidArgumentException $exception) {
+                Notification::make()
+                    ->title('Tidak bisa mengedit pesan')
+                    ->body($exception->getMessage() !== ''
+                        ? $exception->getMessage()
+                        : 'Pesan ini tidak tersedia atau tidak memenuhi syarat untuk diedit.')
+                    ->warning()
+                    ->send();
+
+                $this->editingMessageId = null;
+
+                return;
+            }
+
+            $this->messageDraft = '';
+            $this->editingMessageId = null;
+            $this->replyToMessageId = null;
+            $chat->markMessagesAsReadFor(Auth::user());
+            $this->touchPresence($chat->fresh());
+            $this->dispatch('booking-chat-scroll-bottom');
+            $this->dispatch('booking-chat-reset-input');
+
+            Notification::make()
+                ->title('Pesan berhasil diedit')
+                ->success()
+                ->send();
+
+            return;
+        }
+
         $attachmentPayload = null;
 
         if ($this->attachmentDraft) {
@@ -621,6 +756,43 @@ class ChatBooking extends Page
         }
 
         return $replyMessage;
+    }
+
+    public function getActiveEditingMessage(?BookingChat $chat = null): ?BookingChatMessage
+    {
+        if (!$this->editingMessageId) {
+            return null;
+        }
+
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
+        $chat ??= $this->getSelectedChat();
+
+        if (!$chat) {
+            return null;
+        }
+
+        $editingMessage = $chat->messages()
+            ->visibleForUser($authUser)
+            ->whereNull('deleted_for_everyone_at')
+            ->where('is_system', false)
+            ->where('sender_user_id', $authUser->id)
+            ->whereKey($this->editingMessageId)
+            ->first();
+
+        if (
+            !$editingMessage
+            || $editingMessage->hasAttachment()
+            || $editingMessage->message === '[Lampiran]'
+            || !$editingMessage->isWithinEditWindow(BookingChatManager::EDIT_WINDOW_MINUTES)
+        ) {
+            $this->editingMessageId = null;
+
+            return null;
+        }
+
+        return $editingMessage;
     }
 
     public function getCounterpartState(?BookingChat $chat): array

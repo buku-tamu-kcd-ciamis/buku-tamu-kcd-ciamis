@@ -25,7 +25,7 @@ class ListDataPegawai extends ListRecords
         ->color('gray')
         ->modalHeading('Import Data Pegawai dari Excel')
         ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai.')
-        ->form([
+        ->schema([
           FileUpload::make('file')
             ->label('File Excel')
             ->disk('local')

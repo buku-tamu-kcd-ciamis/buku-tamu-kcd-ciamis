@@ -133,6 +133,7 @@ class User extends Authenticatable implements FilamentUser, HasEmailAuthenticati
         'name',
         'email',
         'password',
+        'profile_photo_path',
         'role_user_id',
         'pegawai_id',
         'email_authentication_enabled',

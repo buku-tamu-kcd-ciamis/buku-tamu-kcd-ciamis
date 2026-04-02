@@ -180,16 +180,18 @@ class PegawaiIzinResource extends Resource
                     ->label('Keterangan')
                     ->limit(30)
                     ->toggleable(),
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('status')
                     ->label('Status')
+                    ->badge()
                     ->formatStateUsing(fn($state) => PegawaiIzin::STATUS_LABELS[$state] ?? $state)
-                    ->colors([
-                        'warning' => 'menunggu',
-                        'success' => 'disetujui',
-                        'danger' => 'ditolak',
-                        'primary' => 'aktif',
-                        'gray' => 'selesai',
-                    ]),
+                    ->color(fn($state): string => match ($state) {
+                        'menunggu' => 'warning',
+                        'disetujui' => 'success',
+                        'ditolak' => 'danger',
+                        'aktif' => 'primary',
+                        'selesai' => 'gray',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Pengajuan')
                     ->since()

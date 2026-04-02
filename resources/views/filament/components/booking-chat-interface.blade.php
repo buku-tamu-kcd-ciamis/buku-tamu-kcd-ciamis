@@ -5,6 +5,7 @@
     $counterpartState = $this->getCounterpartState($selectedChat);
     $quickReplies = $this->getQuickReplies();
     $activeReplyMessage = $this->getActiveReplyMessage($selectedChat);
+    $activeEditingMessage = $this->getActiveEditingMessage($selectedChat);
     $lastThreadSeparator = null;
     $lastMessageDay = null;
     $selectedBookingDateText = $selectedChat?->bukuTamu?->created_at
@@ -63,8 +64,8 @@
                     @php
                         $isActive = $selectedChat?->id === $chat->id;
                         $latestMessage = $chat->previewMessage ?? $chat->latestMessage;
-                        $threadTimeSource = $latestMessage?->created_at ?? $chat->last_message_at ?? $chat->bukuTamu?->created_at ?? $chat->created_at;
-                        $activityAt = $latestMessage?->created_at ?? $threadTimeSource;
+                        $threadTimeSource = $latestMessage?->edited_at ?? $latestMessage?->created_at ?? $chat->last_message_at ?? $chat->bukuTamu?->created_at ?? $chat->created_at;
+                        $activityAt = $latestMessage?->edited_at ?? $latestMessage?->created_at ?? $threadTimeSource;
                         $threadSeparatorKey = $threadTimeSource?->format('Y-m-d') ?? 'no-date';
                         $threadSeparatorLabel = match (true) {
                             !$threadTimeSource => 'Tanpa tanggal',
@@ -158,6 +159,8 @@
                 cameraOpen: false,
                 cameraError: '',
                 cameraStream: null,
+                cameraFacingMode: 'user',
+                cameraSwitching: false,
                 cameraNeedsFlip: false,
                 cameraManualFlip: null,
                 cameraFlipStorageKey: 'booking-chat-camera-unmirror',
@@ -268,6 +271,32 @@
                     // Desktop webcam umumnya front-facing dan sering tampil mirror.
                     return true;
                 },
+                detectFacingModeFromStream(stream, fallback = 'user') {
+                    const normalizedFallback = fallback === 'environment' ? 'environment' : 'user';
+                    const track = stream?.getVideoTracks?.()[0];
+
+                    if (!track) {
+                        return normalizedFallback;
+                    }
+
+                    const settingsFacingMode = track.getSettings?.()?.facingMode;
+
+                    if (settingsFacingMode === 'environment' || settingsFacingMode === 'user') {
+                        return settingsFacingMode;
+                    }
+
+                    const label = String(track.label || '').toLowerCase();
+
+                    if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                        return 'environment';
+                    }
+
+                    if (label.includes('front') || label.includes('facetime') || label.includes('user')) {
+                        return 'user';
+                    }
+
+                    return normalizedFallback;
+                },
                 getEffectiveCameraFlip() {
                     return this.cameraManualFlip === null ? this.cameraNeedsFlip : this.cameraManualFlip;
                 },
@@ -286,6 +315,73 @@
                     this.saveCameraFlipPreference(this.cameraManualFlip);
                     this.applyCameraMirrorFix();
                 },
+                async startCameraStream(preferredFacingMode = 'user') {
+                    const normalizedPreferredMode = preferredFacingMode === 'environment' ? 'environment' : 'user';
+                    const fallbackMode = normalizedPreferredMode === 'user' ? 'environment' : 'user';
+                    const baseVideoConstraints = {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                    };
+
+                    this.cameraError = '';
+                    this.stopCameraStream();
+
+                    const streamAttempts = [
+                        { ...baseVideoConstraints, facingMode: { exact: normalizedPreferredMode } },
+                        { ...baseVideoConstraints, facingMode: { ideal: normalizedPreferredMode } },
+                        { ...baseVideoConstraints, facingMode: { ideal: fallbackMode } },
+                        baseVideoConstraints,
+                        true,
+                    ];
+
+                    for (const videoConstraints of streamAttempts) {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({
+                                video: videoConstraints,
+                                audio: false,
+                            });
+
+                            this.cameraStream = stream;
+                            this.cameraFacingMode = this.detectFacingModeFromStream(stream, normalizedPreferredMode);
+                            this.cameraNeedsFlip = this.shouldUnmirrorFrontCamera(stream);
+
+                            if (this.cameraManualFlip === null) {
+                                this.cameraManualFlip = this.cameraNeedsFlip;
+                                this.saveCameraFlipPreference(this.cameraManualFlip);
+                            }
+
+                            await this.$nextTick();
+
+                            if (this.$refs.cameraVideo) {
+                                this.$refs.cameraVideo.srcObject = stream;
+                                this.$refs.cameraVideo.onloadedmetadata = () => this.applyCameraMirrorFix();
+                                this.$refs.cameraVideo.onresize = () => this.applyCameraMirrorFix();
+                                await this.$refs.cameraVideo.play();
+                                this.applyCameraMirrorFix();
+                                setTimeout(() => this.applyCameraMirrorFix(), 120);
+                            }
+
+                            return true;
+                        } catch (error) {
+                            // Try the next constraint strategy.
+                        }
+                    }
+
+                    this.cameraError = 'Kamera tidak dapat diakses. Cek izin kamera di browser.';
+                    this.stopCameraStream();
+
+                    return false;
+                },
+                async switchCameraFacing() {
+                    if (!this.cameraOpen || this.cameraSwitching) {
+                        return;
+                    }
+
+                    this.cameraSwitching = true;
+                    const nextMode = this.cameraFacingMode === 'user' ? 'environment' : 'user';
+                    await this.startCameraStream(nextMode);
+                    this.cameraSwitching = false;
+                },
                 async openCamera() {
                     this.cameraOpen = true;
                     this.cameraError = '';
@@ -298,42 +394,13 @@
                         return;
                     }
 
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia({
-                            video: {
-                                facingMode: { ideal: 'user' },
-                                width: { ideal: 1280 },
-                                height: { ideal: 720 },
-                            },
-                            audio: false,
-                        });
-
-                        this.cameraStream = stream;
-                        this.cameraNeedsFlip = this.shouldUnmirrorFrontCamera(stream);
-                        if (this.cameraManualFlip === null) {
-                            this.cameraManualFlip = this.cameraNeedsFlip;
-                            this.saveCameraFlipPreference(this.cameraManualFlip);
-                        }
-
-                        await this.$nextTick();
-
-                        if (this.$refs.cameraVideo) {
-                            this.$refs.cameraVideo.srcObject = stream;
-                            this.$refs.cameraVideo.onloadedmetadata = () => this.applyCameraMirrorFix();
-                            this.$refs.cameraVideo.onresize = () => this.applyCameraMirrorFix();
-                            await this.$refs.cameraVideo.play();
-                            this.applyCameraMirrorFix();
-                            setTimeout(() => this.applyCameraMirrorFix(), 120);
-                        }
-                    } catch (error) {
-                        this.cameraError = 'Kamera tidak dapat diakses. Cek izin kamera di browser.';
-                        this.stopCameraStream();
-                    }
+                    await this.startCameraStream(this.cameraFacingMode);
                 },
                 closeCamera() {
                     this.stopCameraStream();
                     this.cameraOpen = false;
                     this.cameraError = '';
+                    this.cameraSwitching = false;
                     this.$dispatch('booking-chat-pause-polling', { paused: false });
                 },
                 assignAttachmentFile(file) {
@@ -471,6 +538,12 @@
                             $attachmentUrl = $message->attachmentUrl();
                             $repliedToMessage = $message->repliedTo;
                             $deletedForEveryone = $message->isDeletedForEveryone();
+                            $messageTimeSource = $message->isEdited() && $message->edited_at ? $message->edited_at : $message->created_at;
+                            $canEditMessage = $isMine
+                                && !$deletedForEveryone
+                                && !$hasAttachment
+                                && $message->message !== '[Lampiran]'
+                                && $message->isWithinEditWindow(\App\Services\BookingChatManager::EDIT_WINDOW_MINUTES);
                         @endphp
 
                         @if ($messageDay !== $lastMessageDay)
@@ -596,7 +669,10 @@
 
                                 <div class="booking-chat-message-meta">
                                     <p class="booking-chat-message-time">
-                                        {{ $message->created_at?->format('H:i') }}
+                                        @if (!$isSystem && !$deletedForEveryone && $message->isEdited())
+                                            <span class="booking-chat-message-edited">diedit</span>
+                                        @endif
+                                        {{ $messageTimeSource?->format('H:i') }}
                                         @if(!$isSystem && $isMine)
                                             <span class="booking-chat-message-check {{ $message->read_at ? 'is-read' : '' }}"><span class="booking-chat-check-mark">✓</span><span class="booking-chat-check-mark">✓</span></span>
                                         @endif
@@ -621,6 +697,14 @@
                                                     class="booking-chat-message-action-btn"
                                                     x-on:click="$wire.setReplyTo('{{ $message->id }}'); open = false"
                                                 >Balas</button>
+                                            @endif
+
+                                            @if ($canEditMessage)
+                                                <button
+                                                    type="button"
+                                                    class="booking-chat-message-action-btn"
+                                                    x-on:click="$wire.startEditingMessage('{{ $message->id }}'); open = false"
+                                                >Edit Pesan</button>
                                             @endif
 
                                             <button
@@ -675,8 +759,28 @@
                     </div>
                 @endif
 
+                @if ($activeEditingMessage)
+                    @php
+                        $activeEditingPreviewText = \Illuminate\Support\Str::limit((string) $activeEditingMessage->message, 130);
+                    @endphp
+
+                    <div class="booking-chat-reply-draft">
+                        <div class="booking-chat-reply-draft-texts">
+                            <p class="booking-chat-reply-draft-title">Mode edit pesan</p>
+                            <p class="booking-chat-reply-draft-preview">{{ $activeEditingPreviewText }}</p>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="cancelEditingMessage"
+                            class="booking-chat-reply-draft-close"
+                            title="Batalkan edit"
+                            aria-label="Batalkan edit"
+                        >✕</button>
+                    </div>
+                @endif
+
                 {{-- Quick Replies --}}
-                @if (count($quickReplies) > 0)
+                @if (count($quickReplies) > 0 && !$activeEditingMessage)
                     <div class="booking-chat-quick-replies" x-show="showQuickReplies" x-cloak>
                         @foreach ($quickReplies as $reply)
                             <button
@@ -690,7 +794,7 @@
                 @endif
 
                 {{-- Attachment Preview --}}
-                @if ($attachmentDraft)
+                @if ($attachmentDraft && !$activeEditingMessage)
                     @php
                         $attachmentDraftName = $attachmentDraft->getClientOriginalName();
                         $attachmentDraftExtension = strtolower(pathinfo($attachmentDraftName, PATHINFO_EXTENSION));
@@ -791,14 +895,26 @@
                                 title="Tutup"
                             >✕</button>
                             <p class="booking-chat-camera-title">Ambil foto</p>
-                            <button
-                                type="button"
-                                class="booking-chat-camera-flip-preview"
-                                x-on:click="toggleCameraFlip()"
-                                :class="{ 'is-active': getEffectiveCameraFlip() }"
-                                aria-label="Balikkan tampilan kamera"
-                                title="Balikkan tampilan"
-                            >↔</button>
+                            <div class="booking-chat-camera-controls">
+                                <button
+                                    type="button"
+                                    class="booking-chat-camera-flip-preview"
+                                    x-on:click="toggleCameraFlip()"
+                                    :class="{ 'is-active': getEffectiveCameraFlip() }"
+                                    :disabled="cameraError !== ''"
+                                    aria-label="Mirror tampilan kamera"
+                                    title="Mirror tampilan"
+                                >↔</button>
+                                <button
+                                    type="button"
+                                    class="booking-chat-camera-flip-preview"
+                                    x-on:click="switchCameraFacing()"
+                                    :class="{ 'is-active': cameraFacingMode === 'environment' }"
+                                    :disabled="cameraSwitching || cameraError !== ''"
+                                    aria-label="Balik kamera depan dan belakang"
+                                    title="Balik kamera depan/belakang"
+                                >⟳</button>
+                            </div>
                         </div>
 
                         <div class="booking-chat-camera-viewport">
@@ -832,51 +948,53 @@
                 </div>
 
                 <form wire:submit.prevent="sendMessage" class="booking-chat-composer">
-                    <div class="booking-chat-composer-tools">
-                        {{-- Attachment button --}}
-                        <label class="booking-chat-attach-btn" title="Lampirkan berkas">
-                            <x-heroicon-o-paper-clip class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                            <input
-                                type="file"
-                                wire:model="attachmentDraft"
-                                wire:key="attachment-{{ $attachmentInputIteration }}"
-                                accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
-                                x-ref="attachInput"
-                                class="booking-chat-attach-input"
-                            />
-                        </label>
+                    @if (!$activeEditingMessage)
+                        <div class="booking-chat-composer-tools">
+                            {{-- Attachment button --}}
+                            <label class="booking-chat-attach-btn" title="Lampirkan berkas">
+                                <x-heroicon-o-paper-clip class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                <input
+                                    type="file"
+                                    wire:model="attachmentDraft"
+                                    wire:key="attachment-{{ $attachmentInputIteration }}"
+                                    accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
+                                    x-ref="attachInput"
+                                    class="booking-chat-attach-input"
+                                />
+                            </label>
 
-                        <button
-                            type="button"
-                            class="booking-chat-camera-btn"
-                            x-on:click="openCamera()"
-                            title="Ambil foto dari kamera"
-                            aria-label="Ambil foto dari kamera"
-                        ><x-heroicon-o-camera class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
-
-                        @if ($panelLabel === 'Piket')
                             <button
                                 type="button"
-                                class="booking-chat-contact-btn"
-                                wire:click="shareGuestContact"
-                                wire:loading.attr="disabled"
-                                wire:target="shareGuestContact"
-                                title="Bagikan kontak tamu"
-                                aria-label="Bagikan kontak tamu"
-                            ><x-heroicon-o-user-circle class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
-                        @endif
+                                class="booking-chat-camera-btn"
+                                x-on:click="openCamera()"
+                                title="Ambil foto dari kamera"
+                                aria-label="Ambil foto dari kamera"
+                            ><x-heroicon-o-camera class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
 
-                        {{-- Quick replies toggle --}}
-                        @if (count($quickReplies) > 0)
-                            <button
-                                type="button"
-                                x-on:click="showQuickReplies = !showQuickReplies"
-                                class="booking-chat-quick-reply-toggle"
-                                title="Balasan cepat"
-                                :class="{ 'is-active': showQuickReplies }"
-                            ><x-heroicon-o-bolt class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
-                        @endif
-                    </div>
+                            @if ($panelLabel === 'Piket')
+                                <button
+                                    type="button"
+                                    class="booking-chat-contact-btn"
+                                    wire:click="shareGuestContact"
+                                    wire:loading.attr="disabled"
+                                    wire:target="shareGuestContact"
+                                    title="Bagikan kontak tamu"
+                                    aria-label="Bagikan kontak tamu"
+                                ><x-heroicon-o-user-circle class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
+                            @endif
+
+                            {{-- Quick replies toggle --}}
+                            @if (count($quickReplies) > 0)
+                                <button
+                                    type="button"
+                                    x-on:click="showQuickReplies = !showQuickReplies"
+                                    class="booking-chat-quick-reply-toggle"
+                                    title="Balasan cepat"
+                                    :class="{ 'is-active': showQuickReplies }"
+                                ><x-heroicon-o-bolt class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
+                            @endif
+                        </div>
+                    @endif
 
                     <div class="booking-chat-composer-row">
                         <textarea
@@ -889,7 +1007,7 @@
                             x-init="resizeComposer($el)"
                             rows="1"
                             maxlength="2000"
-                            placeholder="Ketik pesan... (Enter kirim, Shift+Enter baris baru)"
+                            placeholder="{{ $activeEditingMessage ? 'Edit pesan lalu tekan kirim untuk simpan.' : 'Ketik pesan... (Enter kirim, Shift+Enter baris baru)' }}"
                             class="booking-chat-textarea"
                         ></textarea>
 
@@ -898,10 +1016,14 @@
                             class="booking-chat-send-btn"
                             wire:loading.attr="disabled"
                             wire:target="sendMessage"
-                            aria-label="Kirim pesan"
-                            title="Kirim"
+                            aria-label="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim pesan' }}"
+                            title="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim' }}"
                         >
-                            <x-heroicon-s-paper-airplane class="w-5 h-5 text-white" />
+                            @if ($activeEditingMessage)
+                                <x-heroicon-s-check class="w-5 h-5 text-white" />
+                            @else
+                                <x-heroicon-s-paper-airplane class="w-5 h-5 text-white" />
+                            @endif
                         </button>
                     </div>
                 </form>

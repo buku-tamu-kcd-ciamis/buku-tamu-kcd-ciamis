@@ -229,6 +229,28 @@
 
     </div>{{-- /.wrapper --}}
 
+    <div class="apk-reminder" id="apkReminder" role="status" aria-live="polite">
+        <button type="button" class="apk-reminder__close" id="apkReminderClose" aria-label="Tutup pengingat download APK">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="apk-reminder__content">
+            <img class="apk-reminder__logo" src="{{ asset('img/logo-cadisdik.png') }}" alt="Logo KCD">
+            <p class="apk-reminder__title">Pakai Android?</p>
+            <p class="apk-reminder__desc">Gunakan aplikasi Buku Tamu KCD agar akses lebih cepat.</p>
+        </div>
+        @if($apkDownloadAvailable ?? false)
+            <a class="apk-reminder__action" href="{{ route('apk.download') }}">
+                <i class="fa-solid fa-download"></i>
+                Download APK
+            </a>
+        @else
+            <span class="apk-reminder__action is-disabled">
+                <i class="fa-solid fa-circle-info"></i>
+                APK belum tersedia
+            </span>
+        @endif
+    </div>
+
     <!-- Floating Barcode Button -->
     <button type="button" class="floating-btn" id="btnBarcode" title="Survey Kepuasan Masyarakat">
         <i class="fa-solid fa-qrcode"></i>
@@ -291,6 +313,42 @@
 
             updateYear();
             setInterval(updateYear, 60 * 1000);
+        })();
+
+        (function setupApkReminder() {
+            const reminder = document.getElementById('apkReminder');
+            const closeButton = document.getElementById('apkReminderClose');
+
+            if (!reminder || !closeButton) {
+                return;
+            }
+
+            const userAgent = navigator.userAgent || '';
+            const isAndroidWebView = /Android/i.test(userAgent) && /;\s*wv\)|\bwv\b/i.test(userAgent);
+            const isCapacitorNative = Boolean(
+                window.Capacitor &&
+                (
+                    (typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) ||
+                    (typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() !== 'web')
+                )
+            );
+            const isTrustedWebActivity = document.referrer.startsWith('android-app://');
+            const isApkRuntime = isCapacitorNative || isAndroidWebView || isTrustedWebActivity;
+
+            if (isApkRuntime) {
+                reminder.classList.add('is-hidden');
+
+                return;
+            }
+
+            window.setTimeout(() => {
+                reminder.classList.add('is-visible');
+            }, 700);
+
+            closeButton.addEventListener('click', () => {
+                reminder.classList.remove('is-visible');
+                reminder.classList.add('is-hidden');
+            });
         })();
     </script>
     <script src="{{ asset('js/public/buku-tamu.js') }}"></script>

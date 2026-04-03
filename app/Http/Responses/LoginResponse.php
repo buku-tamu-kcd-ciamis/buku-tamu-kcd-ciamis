@@ -2,16 +2,20 @@
 
 namespace App\Http\Responses;
 
+use App\Models\User;
 use Filament\Facades\Filament;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse as LoginResponseContract;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportRedirects\Redirector;
 
 class LoginResponse implements LoginResponseContract
 {
-    public function toResponse($request): RedirectResponse
+    public function toResponse($request): RedirectResponse | Redirector
     {
-        $user = auth()->user();
+        /** @var User|null $user */
+        $user = Auth::user();
         $fallbackUrl = $user?->getDashboardRoute() ?? '/';
 
         $intendedUrl = (string) $request->session()->get('url.intended', '');

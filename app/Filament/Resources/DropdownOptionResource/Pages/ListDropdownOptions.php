@@ -4,11 +4,15 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 
 use App\Filament\Resources\DropdownOptionResource;
 use App\Models\DropdownOption;
+use App\Models\PengaturanKcd;
 use Filament\Actions;
+use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class ListDropdownOptions extends ListRecords
 {
@@ -20,6 +24,64 @@ class ListDropdownOptions extends ListRecords
       Actions\CreateAction::make()
         ->label('Tambahkan Opsi Dropdown')
         ->color('info'),
+      Actions\Action::make('ganti_barcode_skm')
+        ->label('Ganti Barcode SKM')
+        ->icon('heroicon-o-qr-code')
+        ->color('warning')
+        ->fillForm(fn(): array => [
+          'barcode_skm_current' => PengaturanKcd::getSettings()->barcode_skm,
+        ])
+        ->schema([
+          FileUpload::make('barcode_skm_current')
+            ->label('Preview Barcode Saat Ini')
+            ->image()
+            ->disk('public')
+            ->visibility('public')
+            ->panelLayout('compact')
+            ->imagePreviewHeight('140')
+            ->openable()
+            ->dehydrated(false)
+            ->disabled()
+            ->helperText('Preview barcode SKM yang sedang aktif.'),
+          FileUpload::make('barcode_skm')
+            ->label('Upload Gambar Baru')
+            ->image()
+            ->disk('public')
+            ->directory('barcode-skm')
+            ->visibility('public')
+            ->panelLayout('compact')
+            ->imagePreviewHeight('140')
+            ->placeholder('<span class="filepond--label-action">Pilih File SKM Baru</span>')
+            ->openable()
+            ->imageEditor()
+            ->required()
+            ->maxSize(2048)
+            ->helperText('Pilih file gambar barcode SKM terbaru (maks. 2 MB).'),
+        ])
+        ->action(function (array $data): void {
+          $settings = PengaturanKcd::getSettings();
+          $oldBarcode = $settings->barcode_skm;
+          $newBarcode = $data['barcode_skm'] ?? null;
+
+          if (
+            $oldBarcode
+            && $newBarcode
+            && $oldBarcode !== $newBarcode
+            && Storage::disk('public')->exists($oldBarcode)
+          ) {
+            Storage::disk('public')->delete($oldBarcode);
+          }
+
+          $settings->update([
+            'barcode_skm' => $newBarcode,
+          ]);
+
+          Notification::make()
+            ->success()
+            ->title('Barcode SKM berhasil diperbarui')
+            ->body('Perubahan langsung diterapkan pada halaman buku tamu.')
+            ->send();
+        }),
     ];
   }
 

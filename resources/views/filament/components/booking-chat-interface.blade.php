@@ -165,6 +165,11 @@
                 cameraNeedsFlip: false,
                 cameraManualFlip: null,
                 cameraFlipStorageKey: 'booking-chat-camera-unmirror',
+                dragCounter: 0,
+                isDropActive: false,
+                dropNotice: '',
+                dropNoticeType: 'info',
+                dropNoticeTimer: null,
                 imagePreviewOpen: false,
                 imagePreviewUrl: '',
                 imagePreviewName: '',
@@ -218,6 +223,84 @@
                     this.imagePreviewUrl = '';
                     this.imagePreviewName = '';
                     this.$dispatch('booking-chat-pause-polling', { paused: false });
+                },
+                isSafariLikeBrowser() {
+                    const ua = (navigator.userAgent || '').toLowerCase();
+                    const isSafari = ua.includes('safari')
+                        && !ua.includes('chrome')
+                        && !ua.includes('crios')
+                        && !ua.includes('android')
+                        && !ua.includes('edg')
+                        && !ua.includes('opr');
+                    const isIos = /iphone|ipad|ipod/.test(ua);
+
+                    return isSafari || isIos;
+                },
+                downloadAttachment(url, fileName = 'Lampiran') {
+                    if (!url) {
+                        return;
+                    }
+
+                    // Safari/iOS tends to block async popup downloads; same-tab navigation is the most reliable.
+                    if (this.isSafariLikeBrowser()) {
+                        window.location.assign(url);
+
+                        return;
+                    }
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+
+                    if (fileName) {
+                        link.setAttribute('download', fileName);
+                    }
+
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                },
+                showDropNotice(message, type = 'info') {
+                    this.dropNotice = message;
+                    this.dropNoticeType = type;
+
+                    if (this.dropNoticeTimer) {
+                        clearTimeout(this.dropNoticeTimer);
+                    }
+
+                    this.dropNoticeTimer = setTimeout(() => {
+                        this.dropNotice = '';
+                    }, 3200);
+                },
+                getAllowedAttachmentExtensions() {
+                    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
+                },
+                validateAttachmentFile(file) {
+                    if (!file) {
+                        this.showDropNotice('File tidak ditemukan.', 'error');
+
+                        return false;
+                    }
+
+                    const maxBytes = 10 * 1024 * 1024;
+
+                    if ((file.size || 0) > maxBytes) {
+                        this.showDropNotice('Ukuran berkas maksimal 10 MB.', 'error');
+
+                        return false;
+                    }
+
+                    const fileName = String(file.name || '').toLowerCase();
+                    const extension = fileName.includes('.') ? fileName.split('.').pop() : '';
+
+                    if (extension && !this.getAllowedAttachmentExtensions().includes(extension)) {
+                        this.showDropNotice('Format berkas tidak didukung.', 'error');
+
+                        return false;
+                    }
+
+                    return true;
                 },
                 stopCameraStream() {
                     if (this.cameraStream) {
@@ -407,13 +490,209 @@
                 assignAttachmentFile(file) {
                     if (!this.$refs.attachInput || !window.DataTransfer) {
                         this.cameraError = 'Browser tidak mendukung transfer file dari kamera.';
-                        return;
+                        this.showDropNotice('Browser tidak mendukung transfer file otomatis.', 'error');
+
+                        return false;
                     }
 
                     const transfer = new DataTransfer();
                     transfer.items.add(file);
                     this.$refs.attachInput.files = transfer.files;
                     this.$refs.attachInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                    return true;
+                },
+                attachFileToComposer(file, successMessage = 'Lampiran siap dikirim.') {
+                    if (!this.validateAttachmentFile(file)) {
+                        return false;
+                    }
+
+                    if (!this.assignAttachmentFile(file)) {
+                        return false;
+                    }
+
+                    this.showDropNotice(successMessage, 'success');
+
+                    return true;
+                },
+                canAcceptDropPayload(dataTransfer) {
+                    if (!dataTransfer) {
+                        return false;
+                    }
+
+                    const types = Array.from(dataTransfer.types || []);
+
+                    return types.includes('Files') || types.includes('text/uri-list') || types.includes('text/plain') || types.includes('text/html');
+                },
+                handleComposerDragEnter(event) {
+                    if (!this.canAcceptDropPayload(event.dataTransfer)) {
+                        return;
+                    }
+
+                    this.dragCounter += 1;
+                    this.isDropActive = true;
+                },
+                handleComposerDragOver(event) {
+                    if (!this.canAcceptDropPayload(event.dataTransfer)) {
+                        return;
+                    }
+
+                    this.isDropActive = true;
+                },
+                handleComposerDragLeave() {
+                    this.dragCounter = Math.max(0, this.dragCounter - 1);
+
+                    if (this.dragCounter === 0) {
+                        this.isDropActive = false;
+                    }
+                },
+                extractDroppedUrl(dataTransfer) {
+                    if (!dataTransfer) {
+                        return '';
+                    }
+
+                    const uriList = (dataTransfer.getData('text/uri-list') || '')
+                        .split(/\r?\n/u)
+                        .map((line) => line.trim())
+                        .find((line) => line !== '' && !line.startsWith('#'));
+
+                    if (uriList && /^https?:\/\//i.test(uriList)) {
+                        return uriList;
+                    }
+
+                    const plainText = (dataTransfer.getData('text/plain') || '').trim();
+
+                    if (plainText && /^https?:\/\//i.test(plainText)) {
+                        return plainText;
+                    }
+
+                    const html = dataTransfer.getData('text/html') || '';
+                    const srcMatch = html.match(/src=['`]([^'`]+)['`]/i);
+
+                    if (srcMatch && srcMatch[1] && /^https?:\/\//i.test(srcMatch[1])) {
+                        return srcMatch[1];
+                    }
+
+                    return '';
+                },
+                inferFileNameFromUrl(url, contentType = '') {
+                    const cleanUrl = String(url || '').split('#')[0].split('?')[0];
+                    const lastSegment = cleanUrl.split('/').pop() || '';
+
+                    if (lastSegment.includes('.')) {
+                        return decodeURIComponent(lastSegment);
+                    }
+
+                    const mime = String(contentType || '').split(';')[0].trim().toLowerCase();
+                    const extensionMap = {
+                        'image/jpeg': 'jpg',
+                        'image/jpg': 'jpg',
+                        'image/png': 'png',
+                        'image/gif': 'gif',
+                        'image/webp': 'webp',
+                        'image/bmp': 'bmp',
+                        'application/pdf': 'pdf',
+                        'text/plain': 'txt',
+                        'text/csv': 'csv',
+                        'application/zip': 'zip',
+                    };
+                    const extension = extensionMap[mime] || 'bin';
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+                    return `drop-${timestamp}.${extension}`;
+                },
+                async attachUrlAsFile(url) {
+                    try {
+                        const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+
+                        if (!response.ok) {
+                            throw new Error('FETCH_FAILED');
+                        }
+
+                        const blob = await response.blob();
+
+                        if (!blob || blob.size <= 0) {
+                            throw new Error('EMPTY_BLOB');
+                        }
+
+                        const mimeType = String(blob.type || response.headers.get('content-type') || 'application/octet-stream');
+                        const fileName = this.inferFileNameFromUrl(url, mimeType);
+                        const file = new File([blob], fileName, { type: mimeType });
+
+                        return this.attachFileToComposer(file, 'File dari sumber online siap dikirim.');
+                    } catch (error) {
+                        this.showDropNotice('Gagal mengambil file dari online. Simpan dulu ke komputer lalu drag ulang.', 'error');
+
+                        return false;
+                    }
+                },
+                async handleComposerDrop(event) {
+                    this.dragCounter = 0;
+                    this.isDropActive = false;
+
+                    const dataTransfer = event.dataTransfer;
+
+                    if (!dataTransfer) {
+                        return;
+                    }
+
+                    const files = Array.from(dataTransfer.files || []);
+
+                    if (files.length > 0) {
+                        this.attachFileToComposer(files[0], `Lampiran ${files[0].name || ''} siap dikirim.`.trim());
+
+                        return;
+                    }
+
+                    const droppedUrl = this.extractDroppedUrl(dataTransfer);
+
+                    if (droppedUrl) {
+                        await this.attachUrlAsFile(droppedUrl);
+
+                        return;
+                    }
+
+                    this.showDropNotice('Data drag & drop tidak dikenali.', 'error');
+                },
+                handleComposerPaste(event) {
+                    const clipboardData = event.clipboardData || window.clipboardData;
+
+                    if (!clipboardData || !clipboardData.items || !this.$refs.attachInput) {
+                        return;
+                    }
+
+                    const imageItem = Array.from(clipboardData.items).find((item) => {
+                        return item.kind === 'file' && String(item.type || '').startsWith('image/');
+                    });
+
+                    if (!imageItem) {
+                        return;
+                    }
+
+                    const originalFile = imageItem.getAsFile();
+
+                    if (!originalFile) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const mime = String(originalFile.type || 'image/png').toLowerCase();
+                    const extensionMap = {
+                        'image/jpeg': 'jpg',
+                        'image/jpg': 'jpg',
+                        'image/png': 'png',
+                        'image/gif': 'gif',
+                        'image/webp': 'webp',
+                        'image/bmp': 'bmp',
+                    };
+                    const extension = extensionMap[mime] || 'png';
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const pastedFile = new File([originalFile], `paste-${timestamp}.${extension}`, {
+                        type: mime,
+                    });
+
+                    this.attachFileToComposer(pastedFile, 'Gambar dari clipboard siap dikirim.');
                 },
                 captureCameraPhoto() {
                     if (!this.$refs.cameraVideo || !this.$refs.cameraCanvas) {
@@ -455,8 +734,9 @@
                         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                         const file = new File([blob], `kamera-${timestamp}.jpg`, { type: 'image/jpeg' });
 
-                        this.assignAttachmentFile(file);
-                        this.closeCamera();
+                        if (this.assignAttachmentFile(file)) {
+                            this.closeCamera();
+                        }
                     }, 'image/jpeg', 0.92);
                 }
             }"
@@ -665,7 +945,14 @@
                                                 />
                                             </button>
                                         @else
-                                            <a href="{{ $attachmentUrl }}" target="_blank" download="{{ $message->attachment_name }}" class="booking-chat-attachment-file">
+                                            <a
+                                                href="{{ $attachmentUrl }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download="{{ $message->attachment_name }}"
+                                                x-on:click.prevent="downloadAttachment(@js($attachmentUrl), @js($message->attachment_name ?? 'Lampiran'))"
+                                                class="booking-chat-attachment-file"
+                                            >
                                                 <span class="booking-chat-attachment-icon">
                                                     <x-heroicon-o-paper-clip class="w-5 h-5" />
                                                 </span>
@@ -874,13 +1161,24 @@
                     <div class="booking-chat-image-dialog">
                         <div class="booking-chat-image-head">
                             <p class="booking-chat-image-title" x-text="imagePreviewName"></p>
-                            <button
-                                type="button"
-                                class="booking-chat-image-close"
-                                x-on:click="closeImagePreview()"
-                                aria-label="Tutup preview gambar"
-                                title="Tutup"
-                            >✕</button>
+
+                            <div class="booking-chat-image-actions">
+                                <button
+                                    type="button"
+                                    class="booking-chat-image-download"
+                                    x-on:click="downloadAttachment(imagePreviewUrl, imagePreviewName)"
+                                    aria-label="Download gambar"
+                                    title="Download gambar"
+                                >Download</button>
+
+                                <button
+                                    type="button"
+                                    class="booking-chat-image-close"
+                                    x-on:click="closeImagePreview()"
+                                    aria-label="Tutup preview gambar"
+                                    title="Tutup"
+                                >✕</button>
+                            </div>
                         </div>
 
                         <div class="booking-chat-image-viewport">
@@ -974,7 +1272,15 @@
                         </div>
                     </div>
                 @else
-                    <form wire:submit.prevent="sendMessage" class="booking-chat-composer">
+                    <form
+                        wire:submit.prevent="sendMessage"
+                        class="booking-chat-composer"
+                        x-bind:class="{ 'is-drop-active': isDropActive }"
+                        x-on:dragenter.prevent="handleComposerDragEnter($event)"
+                        x-on:dragover.prevent="handleComposerDragOver($event)"
+                        x-on:dragleave.prevent="handleComposerDragLeave()"
+                        x-on:drop.prevent="handleComposerDrop($event)"
+                    >
                         @if (!$activeEditingMessage)
                             <div class="booking-chat-composer-tools">
                                 {{-- Attachment button --}}
@@ -1023,12 +1329,22 @@
                             </div>
                         @endif
 
+                        <p
+                            x-cloak
+                            x-show="dropNotice !== ''"
+                            x-transition.opacity
+                            class="booking-chat-drop-notice"
+                            x-bind:class="`is-${dropNoticeType}`"
+                            x-text="dropNotice"
+                        ></p>
+
                         <div class="booking-chat-composer-row">
                             <textarea
                                 wire:model.defer="messageDraft"
                                 wire:input.debounce.500ms="markTyping"
                                 wire:focus="markTyping"
                                 x-on:keydown="if ($event.key === 'Enter' && !$event.shiftKey) { $event.preventDefault(); $el.form.requestSubmit(); }"
+                                x-on:paste="handleComposerPaste($event)"
                                 x-on:input="resizeComposer($el)"
                                 x-on:booking-chat-reset-input.window="resizeComposer($el)"
                                 x-init="resizeComposer($el)"

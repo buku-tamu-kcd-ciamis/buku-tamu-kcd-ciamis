@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,11 @@ class AuthenticatedSessionController extends Controller
 
         // Redirect based on user role, but only honor intended URL in the same panel scope.
         $user = Auth::user();
+
+        if (!$user instanceof User) {
+            return redirect('/');
+        }
+
         $redirect = $user->getDashboardRoute();
         $intendedUrl = (string) $request->session()->get('url.intended', '');
         $request->session()->forget('url.intended');

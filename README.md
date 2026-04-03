@@ -329,7 +329,7 @@ Project ini dikembangkan oleh siswa RPL SMKN 1 Ciamis:
 
 - **Email**: cadisdik13@disdik.jabarprov.go.id
 - **Phone**: (0265) 771045
-- **Website**: [cadisdik13.disdik.jabarprov.go.id](#)
+- **Website**: [etamu-kcd.smkn1ciamis.id](https://etamu-kcd.smkn1ciamis.id)
 
 ---
 

@@ -386,7 +386,7 @@ class BukuTamuResource extends Resource
             ])
             ->modalHeading('Export Data Buku Tamu (Excel)')
             ->modalDescription('Pilih filter data. Anda bisa memilih lebih dari satu nama, keperluan, dan staff tujuan.')
-            ->form([
+            ->schema([
                 Forms\Components\DatePicker::make('tanggal_mulai')
                     ->label('Tanggal Mulai')
                     ->default($dateRangeDefaults['mulai'])

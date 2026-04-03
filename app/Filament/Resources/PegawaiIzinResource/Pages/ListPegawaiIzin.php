@@ -33,7 +33,7 @@ class ListPegawaiIzin extends ListRecords
         ->color('success')
         ->modalHeading('Export Data Izin Pegawai (Excel)')
         ->modalDescription('Filter data berdasarkan rentang tanggal, nama pegawai, jenis izin, status, dan nama piket. Anda dapat memilih lebih dari satu nilai.')
-        ->form([
+        ->schema([
           DatePicker::make('tanggal_mulai')
             ->label('Tanggal Mulai (Dari)')
             ->default($dateRangeDefaults['mulai'])

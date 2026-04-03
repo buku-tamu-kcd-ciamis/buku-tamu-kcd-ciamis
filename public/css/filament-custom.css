@@ -3040,6 +3040,15 @@ a.fi-color-success:hover {
     border-top: 1px solid #e2ebe6;
     background: #ffffff;
     padding: 0.6rem 0.8rem;
+    transition: background 0.15s ease, border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-composer.is-drop-active {
+    border-top-color: #2fb37f;
+    background: #f2fff8;
+    box-shadow: inset 0 0 0 1px rgba(47, 179, 127, 0.28);
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
@@ -3048,6 +3057,37 @@ a.fi-color-success:hover {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
     gap: 0.45rem;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-drop-notice {
+    margin: 0 0 0.45rem;
+    padding: 0.38rem 0.62rem;
+    border-radius: 0.55rem;
+    font-size: 0.73rem;
+    line-height: 1.35;
+    border: 1px solid transparent;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-drop-notice.is-success {
+    background: #ecfdf3;
+    border-color: #b7ebcd;
+    color: #14643f;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-drop-notice.is-error {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #9f1239;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-drop-notice.is-info {
+    background: #eef6ff;
+    border-color: #bfdbfe;
+    color: #1e3a8a;
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
@@ -4065,6 +4105,32 @@ a.fi-color-success:hover {
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-image-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-image-download {
+    border: 1px solid #285f46;
+    background: #1f7a4f;
+    color: #f0fdf4;
+    height: 1.9rem;
+    padding: 0 0.8rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-image-download:hover {
+    background: #19623f;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
     .booking-chat-image-close {
     border: none;
     background: #192432;
@@ -4337,6 +4403,32 @@ a.fi-color-success:hover {
 .dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-composer {
     border-color: #202c33;
     background: #202c33;
+}
+
+.dark
+    .fi-body:is(.fi-panel-staff, .fi-panel-piket)
+    .booking-chat-composer.is-drop-active {
+    border-top-color: #2fb37f;
+    background: #20372f;
+    box-shadow: inset 0 0 0 1px rgba(75, 182, 136, 0.35);
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-drop-notice.is-success {
+    background: rgba(31, 122, 79, 0.35);
+    border-color: rgba(47, 179, 127, 0.5);
+    color: #c8f3dd;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-drop-notice.is-error {
+    background: rgba(159, 18, 57, 0.28);
+    border-color: rgba(251, 113, 133, 0.45);
+    color: #ffd6de;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-drop-notice.is-info {
+    background: rgba(30, 58, 138, 0.28);
+    border-color: rgba(96, 165, 250, 0.45);
+    color: #dbeafe;
 }
 
 .dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-messages {

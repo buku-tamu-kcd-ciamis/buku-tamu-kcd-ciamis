@@ -3,14 +3,25 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "android:add": "npx cap add android",
+        "android:sync": "npx cap sync android",
+        "android:copy": "npx cap copy android",
+        "android:open": "npx cap open android",
+        "android:prepare": "npm run build; npm run android:sync",
+        "android:apk:debug": "cd android; .\\gradlew.bat assembleDebug"
     },
     "devDependencies": {
+        "@capacitor/cli": "^8.3.0",
         "@tailwindcss/vite": "^4.1",
         "alpinejs": "^3.14",
         "axios": "^1.7",
         "laravel-vite-plugin": "^1.2",
         "sass-embedded": "^1.83",
         "vite": "^6.0"
+    },
+    "dependencies": {
+        "@capacitor/android": "^8.3.0",
+        "@capacitor/core": "^8.3.0"
     }
 }

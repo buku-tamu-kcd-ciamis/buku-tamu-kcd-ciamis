@@ -33,7 +33,7 @@ class ListUsers extends ListRecords
                 ->color('success')
                 ->modalHeading('Import Data Pegawai dari Excel')
                 ->modalDescription('Unggah file Excel untuk sinkron data pegawai sekaligus akun user. Role user dibaca dari kolom "Role User" di template import.')
-                ->form([
+                ->schema([
                     FileUpload::make('file')
                         ->label('File Excel')
                         ->disk('local')

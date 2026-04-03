@@ -50,3 +50,9 @@ Homestead.yaml
 /.vscode
 .DS_Store
 Thumbs.db
+
+# Android / Capacitor local build files
+/android/.gradle/
+/android/local.properties
+/android/build/
+/android/app/build/

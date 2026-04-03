@@ -134,7 +134,7 @@ class RiwayatTamu extends Page implements HasTable
           ),
         Tables\Filters\Filter::make('kunjungan_terakhir')
           ->label('Periode Terakhir Berkunjung')
-          ->form([
+          ->schema([
             Forms\Components\DatePicker::make('dari')
               ->label('Dari'),
             Forms\Components\DatePicker::make('sampai')
@@ -171,7 +171,7 @@ class RiwayatTamu extends Page implements HasTable
             ->modalDescription(fn(BukuTamu $record): string => static::hasDeletePasswordVerification()
               ? "Semua riwayat kunjungan untuk '{$record->nama_lengkap}' akan dihapus permanen."
               : "Semua riwayat kunjungan untuk '{$record->nama_lengkap}' akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.")
-            ->form(fn(): array => static::hasDeletePasswordVerification()
+            ->schema(fn(): array => static::hasDeletePasswordVerification()
               ? []
               : [
                 Forms\Components\TextInput::make('password')
@@ -224,7 +224,7 @@ class RiwayatTamu extends Page implements HasTable
             ->modalDescription(fn(): string => static::hasDeletePasswordVerification()
               ? 'Semua riwayat pengunjung terpilih akan dihapus permanen.'
               : 'Semua riwayat pengunjung terpilih akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.')
-            ->form(fn(): array => static::hasDeletePasswordVerification()
+            ->schema(fn(): array => static::hasDeletePasswordVerification()
               ? []
               : [
                 Forms\Components\TextInput::make('password')

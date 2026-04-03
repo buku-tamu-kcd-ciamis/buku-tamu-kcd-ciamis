@@ -221,6 +221,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return asset($rawPath);
         }
 
-        return Storage::disk('public')->url($rawPath);
+        return Storage::url($rawPath);
     }
 }

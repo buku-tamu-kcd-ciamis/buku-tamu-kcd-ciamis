@@ -1,0 +1,16 @@
+{
+  "appId": "id.cadisdik.bukutamu",
+  "appName": "Buku Tamu KCD",
+  "webDir": "android-web",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://etamu-kcd.smkn1ciamis.id",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

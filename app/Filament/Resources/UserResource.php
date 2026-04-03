@@ -12,7 +12,6 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -121,9 +120,7 @@ class UserResource extends Resource
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
-                        Placeholder::make('security_note')
-                            ->label('Standar Password')
-                            ->content('Gunakan minimal 8 karakter dengan kombinasi huruf besar, huruf kecil, angka, dan simbol.')
+                        SchemaView::make('filament.resources.user-resource.partials.password-security-note')
                             ->columnSpanFull(),
                         TextInput::make('password')
                             ->label('Password')
@@ -228,7 +225,7 @@ class UserResource extends Resource
                         ->modalDescription(fn(User $record): string => static::hasDeletePasswordVerification()
                             ? "User '{$record->name}' akan dihapus permanen."
                             : "User '{$record->name}' akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.")
-                        ->form(fn(): array => static::hasDeletePasswordVerification()
+                        ->schema(fn(): array => static::hasDeletePasswordVerification()
                             ? []
                             : [
                                 TextInput::make('password')

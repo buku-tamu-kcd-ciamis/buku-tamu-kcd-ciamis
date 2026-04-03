@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    $apkCandidates = [
+        storage_path('app/public/apk/buku-tamu-kcd.apk'),
+        base_path('android/app/build/outputs/apk/release/app-release.apk'),
+        base_path('android/app/build/outputs/apk/debug/app-debug.apk'),
+    ];
+
+    $apkDownloadAvailable = collect($apkCandidates)
+        ->contains(fn(string $path): bool => File::exists($path));
+
     // Get list of staff (pegawai linked to users with Staff role)
     $staffList = \App\Models\User::whereHas('role_user', function ($q) {
         $q->where('name', 'Staff');
@@ -28,8 +37,31 @@ Route::get('/', function () {
         'keperluanOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_KEPERLUAN),
         'kabupatenKotaOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_KABUPATEN_KOTA),
         'staffList' => $staffList,
+        'apkDownloadAvailable' => $apkDownloadAvailable,
     ]);
 })->name('index');
+
+Route::get('/download/apk', function () {
+    $apkCandidates = [
+        storage_path('app/public/apk/buku-tamu-kcd.apk'),
+        base_path('android/app/build/outputs/apk/release/app-release.apk'),
+        base_path('android/app/build/outputs/apk/debug/app-debug.apk'),
+    ];
+
+    foreach ($apkCandidates as $path) {
+        if (!File::exists($path)) {
+            continue;
+        }
+
+        return response()->download(
+            $path,
+            'Buku-Tamu-KCD.apk',
+            ['Content-Type' => 'application/vnd.android.package-archive']
+        );
+    }
+
+    abort(404, 'File APK belum tersedia di server.');
+})->name('apk.download');
 
 Route::get('/api/dropdown-options/{category}', function (string $category) {
     if (!array_key_exists($category, DropdownOption::CATEGORY_LABELS)) {

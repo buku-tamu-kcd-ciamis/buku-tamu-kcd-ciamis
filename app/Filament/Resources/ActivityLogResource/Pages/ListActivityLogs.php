@@ -41,7 +41,7 @@ class ListActivityLogs extends ListRecords
                 ->icon('heroicon-o-trash')
                 ->color('danger')
                 ->requiresConfirmation()
-                ->hidden(fn(): bool => ! (Auth::user()?->hasRole('Super Admin') ?? false))
+                ->hidden(fn(): bool => ! $this->isCurrentUserSuperAdmin())
                 ->modalHeading('Hapus & Backup Log Aktivitas')
                 ->modalDescription('Sistem akan membuat file backup terlebih dahulu, lalu menghapus seluruh log aktivitas. Tindakan ini memerlukan verifikasi password Super Admin.')
                 ->schema([
@@ -76,6 +76,14 @@ class ListActivityLogs extends ListRecords
                         ->send();
                 }),
         ];
+    }
+
+    protected function isCurrentUserSuperAdmin(): bool
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        return (bool) ($user && $user->hasRole('Super Admin'));
     }
 
     protected function exportToExcel(bool $download = true, bool $persistBackup = false)

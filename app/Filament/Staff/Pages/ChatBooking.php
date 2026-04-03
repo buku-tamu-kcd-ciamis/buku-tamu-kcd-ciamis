@@ -393,6 +393,10 @@ class ChatBooking extends Page
             return;
         }
 
+        if (($chat->bukuTamu?->status ?? null) === BukuTamu::STATUS_SELESAI) {
+            return;
+        }
+
         $chat->markTypingFor(Auth::user());
         $this->touchPresence($chat);
         $this->dispatch('booking-chat-reset-input');
@@ -502,8 +506,10 @@ class ChatBooking extends Page
             $chatManager->sendMessage($chat, Auth::user(), $messageText, $attachmentPayload, $this->replyToMessageId);
         } catch (\InvalidArgumentException $exception) {
             Notification::make()
-                ->title('Balasan tidak valid')
-                ->body('Pesan yang ingin dibalas sudah tidak tersedia.')
+                ->title('Tidak bisa mengirim pesan')
+                ->body($exception->getMessage() !== ''
+                    ? $exception->getMessage()
+                    : 'Pesan tidak bisa dikirim pada thread ini.')
                 ->warning()
                 ->send();
 
@@ -551,7 +557,7 @@ class ChatBooking extends Page
 
         $messages = $chat->messages()
             ->visibleForUser($authUser)
-            ->with('sender:id,name,email')
+            ->with('sender:id,name,email,profile_photo_path')
             ->oldest('created_at')
             ->get();
 
@@ -592,6 +598,57 @@ class ChatBooking extends Page
         ]);
     }
 
+    public function markSelectedBookingAsSelesai(BookingChatManager $chatManager): void
+    {
+        $chat = $this->getSelectedChat();
+
+        if (!$chat || !$chat->bukuTamu) {
+            Notification::make()
+                ->title('Data booking tidak ditemukan')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $booking = $chat->bukuTamu;
+
+        if ($booking->status === BukuTamu::STATUS_SELESAI) {
+            Notification::make()
+                ->title('Status sudah selesai')
+                ->body('Thread ini sudah ditutup sebelumnya.')
+                ->info()
+                ->send();
+
+            return;
+        }
+
+        $booking->update([
+            'status' => BukuTamu::STATUS_SELESAI,
+        ]);
+
+        $chatManager->sendSystemMessage(
+            $chat,
+            'Status booking diubah menjadi Selesai oleh Staff. Thread ini ditutup dan tidak bisa dilanjutkan hingga ada booking baru dari tamu yang sama ke staff yang sama.',
+        );
+
+        $this->messageDraft = '';
+        $this->replyToMessageId = null;
+        $this->editingMessageId = null;
+
+        if ($this->attachmentDraft) {
+            $this->attachmentDraft = null;
+            $this->attachmentInputIteration++;
+        }
+
+        $this->dispatch('booking-chat-reset-input');
+
+        Notification::make()
+            ->title('Status booking diubah ke Selesai')
+            ->success()
+            ->send();
+    }
+
     public function getChats(): Collection
     {
         /** @var User $user */
@@ -603,15 +660,15 @@ class ChatBooking extends Page
             ->where('staff_user_id', $user->id)
             ->with([
                 'bukuTamu:id,nama_lengkap,instansi,staff_dituju,status,created_at,foto_selfie',
-                'staffUser:id,name,email',
-                'piketUser:id,name,email',
+                'staffUser:id,name,email,profile_photo_path',
+                'piketUser:id,name,email,profile_photo_path',
                 'latestMessage' => function ($messageQuery) use ($user) {
                     $messageQuery
                         ->whereNull('deleted_for_everyone_at')
                         ->whereDoesntHave('userDeletions', function (Builder $deletionQuery) use ($user) {
                             $deletionQuery->where('user_id', $user->id);
                         })
-                        ->with('sender:id,name,email');
+                        ->with('sender:id,name,email,profile_photo_path');
                 },
             ])
             ->withCount([
@@ -666,7 +723,7 @@ class ChatBooking extends Page
                             ->where('message', 'like', $searchTerm)
                             ->orWhere('attachment_name', 'like', $searchTerm);
                     })
-                    ->with('sender:id,name,email')
+                    ->with('sender:id,name,email,profile_photo_path')
                     ->latest('created_at')
                     ->first();
 
@@ -680,7 +737,7 @@ class ChatBooking extends Page
             $latestVisibleMessage = $chat->messages()
                 ->visibleForUser($user)
                 ->whereNull('deleted_for_everyone_at')
-                ->with('sender:id,name,email')
+                ->with('sender:id,name,email,profile_photo_path')
                 ->latest('created_at')
                 ->first();
 
@@ -718,10 +775,10 @@ class ChatBooking extends Page
         return $chat->messages()
             ->visibleForUser($authUser)
             ->with([
-                'sender:id,name,email',
+                'sender:id,name,email,profile_photo_path',
                 'deletedForEveryoneBy:id,name',
                 'repliedTo:id,sender_user_id,message,attachment_name,is_system,deleted_for_everyone_at',
-                'repliedTo.sender:id,name,email',
+                'repliedTo.sender:id,name,email,profile_photo_path',
             ])
             ->oldest('created_at')
             ->limit(200)
@@ -746,7 +803,7 @@ class ChatBooking extends Page
         $replyMessage = $chat->messages()
             ->visibleForUser($authUser)
             ->whereNull('deleted_for_everyone_at')
-            ->with('sender:id,name,email')
+            ->with('sender:id,name,email,profile_photo_path')
             ->where('is_system', false)
             ->whereKey($this->replyToMessageId)
             ->first();
@@ -836,6 +893,11 @@ class ChatBooking extends Page
 
     public function resolveCounterpartAvatarUrl(BookingChat $chat): string
     {
+        // On Staff panel, booking list avatar should represent the booking guest.
+        if ($chat->bukuTamu?->foto_selfie_url) {
+            return $chat->bukuTamu->foto_selfie_url;
+        }
+
         /** @var User $authUser */
         $authUser = Auth::user();
 
@@ -844,10 +906,6 @@ class ChatBooking extends Page
 
         if ($counterpartAvatar) {
             return $counterpartAvatar;
-        }
-
-        if ($chat->bukuTamu?->foto_selfie_url) {
-            return $chat->bukuTamu->foto_selfie_url;
         }
 
         return $this->resolveUserAvatarUrl($counterpart);
@@ -936,8 +994,8 @@ class ChatBooking extends Page
             ->where('staff_user_id', $user->id)
             ->with([
                 'bukuTamu:id,nama_lengkap,instansi,staff_dituju,status,created_at,foto_selfie',
-                'staffUser:id,name,email',
-                'piketUser:id,name,email',
+                'staffUser:id,name,email,profile_photo_path',
+                'piketUser:id,name,email,profile_photo_path',
             ])
             ->first();
 
@@ -960,3 +1018,4 @@ class ChatBooking extends Page
         }
     }
 }
+

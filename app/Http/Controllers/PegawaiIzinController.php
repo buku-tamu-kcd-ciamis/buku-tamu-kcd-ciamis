@@ -10,6 +10,14 @@ class PegawaiIzinController extends Controller
 {
     public function print($id)
     {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $user->role_user && $user->role_user->canPrint(),
+            403,
+            'Anda tidak memiliki izin untuk mencetak surat izin pegawai.'
+        );
+
         $pegawai = PegawaiIzin::findOrFail($id);
 
         abort_unless($pegawai->isVerifiedByKcd(), 403, 'Data izin belum diverifikasi Kepala KCD, sehingga belum dapat dicetak.');
@@ -36,6 +44,14 @@ class PegawaiIzinController extends Controller
 
     public function printBulk(Request $request)
     {
+        $user = Auth::user();
+
+        abort_unless(
+            $user && $user->role_user && $user->role_user->canPrint(),
+            403,
+            'Anda tidak memiliki izin untuk mencetak surat izin pegawai.'
+        );
+
         $selectedIds = collect(explode(',', (string) $request->query('ids', '')))
             ->map(fn(string $id): int => (int) trim($id))
             ->filter(fn(int $id): bool => $id > 0)

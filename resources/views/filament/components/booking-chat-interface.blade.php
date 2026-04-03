@@ -6,6 +6,7 @@
     $quickReplies = $this->getQuickReplies();
     $activeReplyMessage = $this->getActiveReplyMessage($selectedChat);
     $activeEditingMessage = $this->getActiveEditingMessage($selectedChat);
+    $isChatClosed = (($selectedChat?->bukuTamu?->status ?? null) === \App\Models\BukuTamu::STATUS_SELESAI);
     $lastThreadSeparator = null;
     $lastMessageDay = null;
     $selectedBookingDateText = $selectedChat?->bukuTamu?->created_at
@@ -500,6 +501,22 @@
                             >⋮</button>
 
                             <div class="booking-chat-room-actions-menu" x-show="open" x-cloak>
+                                @if ($panelLabel === 'Staff')
+                                    @if ($isChatClosed)
+                                        <button
+                                            type="button"
+                                            class="booking-chat-room-action-btn"
+                                            disabled
+                                        >Status sudah Selesai</button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="booking-chat-room-action-btn"
+                                            x-on:click="$wire.markSelectedBookingAsSelesai(); open = false"
+                                        >Ubah Status ke Selesai</button>
+                                    @endif
+                                @endif
+
                                 <button
                                     type="button"
                                     class="booking-chat-room-action-btn"
@@ -947,86 +964,97 @@
                     <canvas x-ref="cameraCanvas" class="booking-chat-camera-canvas" aria-hidden="true"></canvas>
                 </div>
 
-                <form wire:submit.prevent="sendMessage" class="booking-chat-composer">
-                    @if (!$activeEditingMessage)
-                        <div class="booking-chat-composer-tools">
-                            {{-- Attachment button --}}
-                            <label class="booking-chat-attach-btn" title="Lampirkan berkas">
-                                <x-heroicon-o-paper-clip class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                <input
-                                    type="file"
-                                    wire:model="attachmentDraft"
-                                    wire:key="attachment-{{ $attachmentInputIteration }}"
-                                    accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
-                                    x-ref="attachInput"
-                                    class="booking-chat-attach-input"
-                                />
-                            </label>
+                @if ($isChatClosed)
+                    <div class="booking-chat-reply-draft is-thread-closed">
+                        <div class="booking-chat-reply-draft-texts">
+                            <p class="booking-chat-reply-draft-title">Thread ditutup</p>
+                            <p class="booking-chat-reply-draft-preview is-thread-closed">
+                                Status booking sudah Selesai. Chat ini tidak bisa dilanjutkan dan akan aktif kembali saat ada booking baru dari tamu yang sama ke staff yang sama.
+                            </p>
+                        </div>
+                    </div>
+                @else
+                    <form wire:submit.prevent="sendMessage" class="booking-chat-composer">
+                        @if (!$activeEditingMessage)
+                            <div class="booking-chat-composer-tools">
+                                {{-- Attachment button --}}
+                                <label class="booking-chat-attach-btn" title="Lampirkan berkas">
+                                    <x-heroicon-o-paper-clip class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                    <input
+                                        type="file"
+                                        wire:model="attachmentDraft"
+                                        wire:key="attachment-{{ $attachmentInputIteration }}"
+                                        accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
+                                        x-ref="attachInput"
+                                        class="booking-chat-attach-input"
+                                    />
+                                </label>
+
+                                <button
+                                    type="button"
+                                    class="booking-chat-camera-btn"
+                                    x-on:click="openCamera()"
+                                    title="Ambil foto dari kamera"
+                                    aria-label="Ambil foto dari kamera"
+                                ><x-heroicon-o-camera class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
+
+                                @if ($panelLabel === 'Piket')
+                                    <button
+                                        type="button"
+                                        class="booking-chat-contact-btn"
+                                        wire:click="shareGuestContact"
+                                        wire:loading.attr="disabled"
+                                        wire:target="shareGuestContact"
+                                        title="Bagikan kontak tamu"
+                                        aria-label="Bagikan kontak tamu"
+                                    ><x-heroicon-o-user-circle class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
+                                @endif
+
+                                {{-- Quick replies toggle --}}
+                                @if (count($quickReplies) > 0)
+                                    <button
+                                        type="button"
+                                        x-on:click="showQuickReplies = !showQuickReplies"
+                                        class="booking-chat-quick-reply-toggle"
+                                        title="Balasan cepat"
+                                        :class="{ 'is-active': showQuickReplies }"
+                                    ><x-heroicon-o-bolt class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
+                                @endif
+                            </div>
+                        @endif
+
+                        <div class="booking-chat-composer-row">
+                            <textarea
+                                wire:model.defer="messageDraft"
+                                wire:input.debounce.500ms="markTyping"
+                                wire:focus="markTyping"
+                                x-on:keydown="if ($event.key === 'Enter' && !$event.shiftKey) { $event.preventDefault(); $el.form.requestSubmit(); }"
+                                x-on:input="resizeComposer($el)"
+                                x-on:booking-chat-reset-input.window="resizeComposer($el)"
+                                x-init="resizeComposer($el)"
+                                rows="1"
+                                maxlength="2000"
+                                placeholder="{{ $activeEditingMessage ? 'Edit pesan lalu tekan kirim untuk simpan.' : 'Ketik pesan... (Enter kirim, Shift+Enter baris baru)' }}"
+                                class="booking-chat-textarea"
+                            ></textarea>
 
                             <button
-                                type="button"
-                                class="booking-chat-camera-btn"
-                                x-on:click="openCamera()"
-                                title="Ambil foto dari kamera"
-                                aria-label="Ambil foto dari kamera"
-                            ><x-heroicon-o-camera class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
-
-                            @if ($panelLabel === 'Piket')
-                                <button
-                                    type="button"
-                                    class="booking-chat-contact-btn"
-                                    wire:click="shareGuestContact"
-                                    wire:loading.attr="disabled"
-                                    wire:target="shareGuestContact"
-                                    title="Bagikan kontak tamu"
-                                    aria-label="Bagikan kontak tamu"
-                                ><x-heroicon-o-user-circle class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
-                            @endif
-
-                            {{-- Quick replies toggle --}}
-                            @if (count($quickReplies) > 0)
-                                <button
-                                    type="button"
-                                    x-on:click="showQuickReplies = !showQuickReplies"
-                                    class="booking-chat-quick-reply-toggle"
-                                    title="Balasan cepat"
-                                    :class="{ 'is-active': showQuickReplies }"
-                                ><x-heroicon-o-bolt class="w-5 h-5 text-gray-500 dark:text-gray-400" /></button>
-                            @endif
+                                type="submit"
+                                class="booking-chat-send-btn"
+                                wire:loading.attr="disabled"
+                                wire:target="sendMessage"
+                                aria-label="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim pesan' }}"
+                                title="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim' }}"
+                            >
+                                @if ($activeEditingMessage)
+                                    <x-heroicon-s-check class="w-5 h-5 text-white" />
+                                @else
+                                    <x-heroicon-s-paper-airplane class="w-5 h-5 text-white" />
+                                @endif
+                            </button>
                         </div>
-                    @endif
-
-                    <div class="booking-chat-composer-row">
-                        <textarea
-                            wire:model.defer="messageDraft"
-                            wire:input.debounce.500ms="markTyping"
-                            wire:focus="markTyping"
-                            x-on:keydown="if ($event.key === 'Enter' && !$event.shiftKey) { $event.preventDefault(); $el.form.requestSubmit(); }"
-                            x-on:input="resizeComposer($el)"
-                            x-on:booking-chat-reset-input.window="resizeComposer($el)"
-                            x-init="resizeComposer($el)"
-                            rows="1"
-                            maxlength="2000"
-                            placeholder="{{ $activeEditingMessage ? 'Edit pesan lalu tekan kirim untuk simpan.' : 'Ketik pesan... (Enter kirim, Shift+Enter baris baru)' }}"
-                            class="booking-chat-textarea"
-                        ></textarea>
-
-                        <button
-                            type="submit"
-                            class="booking-chat-send-btn"
-                            wire:loading.attr="disabled"
-                            wire:target="sendMessage"
-                            aria-label="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim pesan' }}"
-                            title="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim' }}"
-                        >
-                            @if ($activeEditingMessage)
-                                <x-heroicon-s-check class="w-5 h-5 text-white" />
-                            @else
-                                <x-heroicon-s-paper-airplane class="w-5 h-5 text-white" />
-                            @endif
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                @endif
             @else
                 <div class="booking-chat-room-empty">
                     <div class="booking-chat-room-empty-icon">

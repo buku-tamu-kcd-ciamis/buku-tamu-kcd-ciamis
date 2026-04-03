@@ -324,7 +324,7 @@
                         <div class="inline-flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                             <span>Per halaman:</span>
                             @foreach([3, 5, 10] as $size)
-                                <a href="{{ request()->fullUrlWithQuery(['per_page' => $size, 'page' => 1]) }}" class="inline-flex items-center justify-center min-w-[30px] h-8 px-2 rounded-full border text-xs font-bold transition-colors {{ $this->kunjunganPerPage === $size ? 'bg-gray-900 border-gray-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">{{ $size }}</a>
+                                <a href="{{ request()->fullUrlWithQuery(['per_page' => $size, 'page' => 1]) }}" class="inline-flex items-center justify-center min-w-7.5 h-8 px-2 rounded-full border text-xs font-bold transition-colors {{ $this->kunjunganPerPage === $size ? 'bg-gray-900 border-gray-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">{{ $size }}</a>
                             @endforeach
                         </div>
                     </div>

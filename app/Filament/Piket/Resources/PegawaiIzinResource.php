@@ -39,6 +39,29 @@ class PegawaiIzinResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }
 
+  public static function canViewAny(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+
+    return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
+  }
+
+  public static function canCreate(): bool
+  {
+    return static::canViewAny();
+  }
+
+  public static function canView($record): bool
+  {
+    return static::canViewAny();
+  }
+
+  public static function canEdit($record): bool
+  {
+    return static::canViewAny();
+  }
+
   public static function form(Schema $schema): Schema
   {
     return $schema->components([

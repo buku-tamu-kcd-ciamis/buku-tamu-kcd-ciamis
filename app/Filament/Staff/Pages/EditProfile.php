@@ -48,7 +48,10 @@ class EditProfile extends BaseEditProfile
                   ->maxSize(2048)
                   ->panelLayout('compact')
                   ->imagePreviewHeight('110')
-                  ->placeholder('Upload / ganti foto profil')
+                  ->placeholder('<span class="filepond--label-action">Upload Foto Baru</span>')
+                  ->extraAlpineAttributes([
+                    'x-effect' => '$nextTick(() => { const input = $el.querySelector("input[type=file]"); if (input && input.hasAttribute("disabled")) { input.removeAttribute("disabled") } })',
+                  ])
                   ->openable()
                   ->imageEditor()
                   ->imageEditorAspectRatioOptions([null, '1:1'])
@@ -58,7 +61,7 @@ class EditProfile extends BaseEditProfile
                   ->automaticallyResizeImagesMode('contain')
                   ->automaticallyResizeImagesToWidth('512')
                   ->automaticallyResizeImagesToHeight('512')
-                  ->helperText('Jika kosong akan pakai ikon default. Klik upload untuk mengganti foto.')
+                  ->helperText('Panduan singkat: 1) Klik Upload Foto Baru. 2) Pilih file JPG/PNG (maks. 2 MB). 3) Klik Simpan Perubahan.')
                   ->columnSpanFull(),
               ])
               ->columnSpan(1),

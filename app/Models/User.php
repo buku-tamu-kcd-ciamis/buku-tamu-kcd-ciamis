@@ -5,7 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Traits\UuidTrait;
-use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
+use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
-class User extends Authenticatable implements FilamentUser, HasEmailAuthentication
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasFactory, Notifiable, UuidTrait, LogsActivity;
 
@@ -136,7 +137,6 @@ class User extends Authenticatable implements FilamentUser, HasEmailAuthenticati
         'profile_photo_path',
         'role_user_id',
         'pegawai_id',
-        'email_authentication_enabled',
     ];
 
     /**
@@ -159,22 +159,8 @@ class User extends Authenticatable implements FilamentUser, HasEmailAuthenticati
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'email_authentication_enabled' => 'boolean',
         ];
     }
-
-    public function hasEmailAuthentication(): bool
-    {
-        return (bool) $this->email_authentication_enabled;
-    }
-
-    public function toggleEmailAuthentication(bool $condition): void
-    {
-        $this->forceFill([
-            'email_authentication_enabled' => $condition,
-        ])->save();
-    }
-
 
     public function role_user(): BelongsTo
     {
@@ -204,5 +190,37 @@ class User extends Authenticatable implements FilamentUser, HasEmailAuthenticati
     public function bookingChatMessages(): HasMany
     {
         return $this->hasMany(BookingChatMessage::class, 'sender_user_id');
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        $rawPath = trim((string) ($this->profile_photo_path ?? ''));
+
+        // Some chat queries only select id/name/email. Fallback to DB once so avatar still resolves.
+        if ($rawPath === '' && $this->getKey()) {
+            $freshPath = static::query()
+                ->whereKey($this->getKey())
+                ->value('profile_photo_path');
+
+            $rawPath = trim((string) ($freshPath ?? ''));
+        }
+
+        if ($rawPath === '') {
+            return null;
+        }
+
+        if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
+            return $rawPath;
+        }
+
+        if (str_starts_with($rawPath, '/')) {
+            return url($rawPath);
+        }
+
+        if (str_starts_with($rawPath, 'storage/')) {
+            return asset($rawPath);
+        }
+
+        return Storage::disk('public')->url($rawPath);
     }
 }

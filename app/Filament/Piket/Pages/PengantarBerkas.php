@@ -43,6 +43,14 @@ class PengantarBerkas extends Page implements HasTable
     return $user && $user->role_user && $user->role_user->hasPermission('pengantar_berkas');
   }
 
+  public static function canAccess(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+
+    return $user && $user->role_user && $user->role_user->hasPermission('pengantar_berkas');
+  }
+
   public function table(Table $table): Table
   {
     return $table

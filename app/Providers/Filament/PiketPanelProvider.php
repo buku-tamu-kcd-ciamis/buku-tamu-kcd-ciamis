@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -27,12 +26,17 @@ class PiketPanelProvider extends PanelProvider
       ->id('piket')
       ->path('piket')
       ->login()
-      ->multiFactorAuthentication([
-        EmailAuthentication::make(),
-      ])
       ->profile(\App\Filament\Piket\Pages\EditProfile::class)
       ->darkMode(true)
-      ->brandName(fn() => 'Cabang Dinas Pendidikan Wilayah XIII — ' . (Auth::user()?->role_user?->name ?? 'Piket'))
+      ->brandName(function (): string {
+        $user = Auth::user();
+
+        if ($user) {
+          return 'Cabang Dinas Pendidikan Wilayah XIII — ' . ($user->role_user?->name ?? 'Piket');
+        }
+
+        return 'Cabang Dinas Pendidikan Wilayah XIII — Piket';
+      })
       ->favicon(asset('img/logo-cadisdik.png'))
       ->colors([
         'primary' => Color::Green,

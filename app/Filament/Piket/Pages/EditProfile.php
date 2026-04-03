@@ -15,7 +15,7 @@ use Illuminate\Validation\Rules\Password;
 
 class EditProfile extends BaseEditProfile
 {
-  protected string | Width | null $maxWidth = '5xl';
+  protected string | Width | null $maxWidth = '4xl';
 
   protected static ?string $title = 'Profil';
 
@@ -25,42 +25,78 @@ class EditProfile extends BaseEditProfile
   {
     return $schema
       ->components([
-        Grid::make(2)
+        Grid::make([
+          'default' => 1,
+          'md' => 2,
+        ])
           ->schema([
             Section::make('Informasi Akun')
-              ->description('Perbarui informasi akun Anda')
+              ->description('Perbarui data akun')
               ->icon('heroicon-o-user')
               ->schema([
                 $this->getNameFormComponent()
                   ->label('Nama Lengkap'),
                 $this->getEmailFormComponent()
                   ->label('Email'),
+                Forms\Components\FileUpload::make('profile_photo_path')
+                  ->label('Foto Profil')
+                  ->image()
+                  ->default('profile-photos/default-donut.svg')
+                  ->directory('profile-photos')
+                  ->disk('public')
+                  ->visibility('public')
+                  ->maxSize(2048)
+                  ->panelLayout('compact')
+                  ->imagePreviewHeight('110')
+                  ->placeholder('<span class="filepond--label-action">Upload Foto Baru</span>')
+                  ->extraAlpineAttributes([
+                    'x-effect' => '$nextTick(() => { const input = $el.querySelector("input[type=file]"); if (input && input.hasAttribute("disabled")) { input.removeAttribute("disabled") } })',
+                  ])
+                  ->openable()
+                  ->imageEditor()
+                  ->imageEditorAspectRatioOptions([null, '1:1'])
+                  ->imageEditorMode(2)
+                  ->imageEditorEmptyFillColor('#000000')
+                  ->automaticallyCropImagesToAspectRatio(false)
+                  ->automaticallyResizeImagesMode('contain')
+                  ->automaticallyResizeImagesToWidth('512')
+                  ->automaticallyResizeImagesToHeight('512')
+                  ->helperText('Panduan singkat: 1) Klik Upload Foto Baru. 2) Pilih file JPG/PNG (maks. 2 MB). 3) Klik Simpan Perubahan.')
+                  ->columnSpanFull(),
               ])
               ->columnSpan(1),
 
-            Section::make('Keamanan')
-              ->description('Ubah password akun Anda')
+            Section::make('Keamanan Akun')
+              ->description('Masukkan password lama jika ingin ganti password')
               ->icon('heroicon-o-lock-closed')
               ->schema([
                 Forms\Components\TextInput::make('current_password')
+                  ->label('Password Saat Ini')
                   ->password()
                   ->revealable()
+                  ->dehydrated(false)
                   ->required(fn(callable $get) => filled($get('password')))
                   ->rules([
                     fn() => function (string $attribute, $value, $fail) {
-                      if (! Hash::check($value, Auth::user()?->password ?? '')) {
+                      $user = Auth::user();
+
+                      if ($user && !Hash::check((string) $value, $user->password)) {
                         $fail('Password saat ini tidak sesuai.');
                       }
                     },
                   ]),
                 Forms\Components\TextInput::make('password')
+                  ->label('Password Baru')
                   ->password()
                   ->revealable()
                   ->rule(Password::default())
-                  ->same('passwordConfirmation'),
+                  ->same('passwordConfirmation')
+                  ->dehydrateStateUsing(fn(?string $state) => filled($state) ? Hash::make($state) : null),
                 Forms\Components\TextInput::make('passwordConfirmation')
+                  ->label('Konfirmasi Password Baru')
                   ->password()
                   ->revealable()
+                  ->dehydrated(false)
                   ->requiredWith('password')
               ])
               ->columnSpan(1),
@@ -74,9 +110,7 @@ class EditProfile extends BaseEditProfile
    */
   protected function mutateFormDataBeforeSave(array $data): array
   {
-    if (filled($data['password'] ?? null)) {
-      $data['password'] = Hash::make((string) $data['password']);
-    } else {
+    if (blank($data['password'] ?? null)) {
       unset($data['password']);
     }
 
@@ -122,7 +156,7 @@ class EditProfile extends BaseEditProfile
           });
           document.body.appendChild(toast);
         }
-        toast.textContent = 'Profil berhasil diperbarui! Perubahan pada akun Anda telah tersimpan.';
+        toast.textContent = 'Profil berhasil diperbarui!';
         setTimeout(() => {
           toast.style.transform = 'translateX(-50%) translateY(0)';
           toast.style.opacity = '1';

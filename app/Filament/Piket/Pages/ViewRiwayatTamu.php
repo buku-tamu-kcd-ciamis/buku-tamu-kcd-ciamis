@@ -3,9 +3,11 @@
 namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
+use App\Models\User;
 use Filament\Panel;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Illuminate\Support\Facades\Auth;
 use Livewire\WithPagination;
 
 class ViewRiwayatTamu extends Page
@@ -26,6 +28,14 @@ class ViewRiwayatTamu extends Page
     public static function getRoutePath(Panel $panel): string
     {
         return 'view-riwayat-tamu/{nik}';
+    }
+
+    public static function canAccess(): bool
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
     }
 
     public static function getUrl(

@@ -13,6 +13,13 @@ class BookingChatManager
 {
     public const EDIT_WINDOW_MINUTES = 30;
 
+    private function ensureChatIsOpenForConversation(BookingChat $chat): void
+    {
+        if (($chat->bukuTamu?->status ?? null) === BukuTamu::STATUS_SELESAI) {
+            throw new \InvalidArgumentException('Thread ini sudah ditutup karena status booking Selesai. Chat baru akan terbuka saat ada booking baru dari tamu yang sama ke staff yang sama.');
+        }
+    }
+
     public function resolveStaffUsersForBooking(BukuTamu $booking): Collection
     {
         return User::query()
@@ -94,6 +101,8 @@ class BookingChatManager
             abort(403);
         }
 
+        $this->ensureChatIsOpenForConversation($chat);
+
         $sanitizedMessage = trim((string) $message);
         $hasAttachment = is_array($attachment) && filled($attachment['path'] ?? null);
         $replyToMessage = null;
@@ -145,6 +154,8 @@ class BookingChatManager
         if (!$chat->canBeAccessedBy($editor)) {
             abort(403);
         }
+
+        $this->ensureChatIsOpenForConversation($chat);
 
         $sanitizedMessage = trim($message);
 

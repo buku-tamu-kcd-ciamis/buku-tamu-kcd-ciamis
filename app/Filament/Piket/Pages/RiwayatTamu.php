@@ -41,6 +41,14 @@ class RiwayatTamu extends Page implements HasTable
     return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
   }
 
+  public static function canAccess(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+
+    return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
+  }
+
   public function getTableRecordKey($record): string
   {
     return (string) $record->id;

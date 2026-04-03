@@ -152,7 +152,7 @@ class RekapIzinPegawaiResource extends Resource
       ->recordActions([])
       ->toolbarActions([])
       ->emptyStateHeading('Belum Ada Data Izin')
-      ->emptyStateDescription('Data rekap izin pegawai akan muncul setelah ada data izin yang diinput dari panel Piket.')
+        ->emptyStateDescription('Data rekap izin pegawai akan muncul setelah ada pengajuan izin dari panel Staff yang telah diproses.')
       ->emptyStateIcon('heroicon-o-clipboard-document-list');
   }
 

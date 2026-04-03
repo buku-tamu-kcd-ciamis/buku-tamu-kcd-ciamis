@@ -1,12 +1,39 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Api\DropdownOptionController;
+use App\Http\Controllers\Api\WebPushSubscriptionController;
 use App\Http\Controllers\BukuTamuController;
 use App\Http\Controllers\PegawaiIzinController;
 use App\Http\Controllers\UserManagementController;
 use App\Models\DropdownOption;
+use App\Models\PegawaiIzin;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/sitemap.xml', function () {
+    $urls = collect([
+        [
+            'loc' => route('index'),
+            'lastmod' => Carbon::now()->toAtomString(),
+            'changefreq' => 'daily',
+            'priority' => '1.0',
+        ],
+        [
+            'loc' => route('developer.about'),
+            'lastmod' => Carbon::now()->toAtomString(),
+            'changefreq' => 'monthly',
+            'priority' => '0.5',
+        ],
+    ]);
+
+    $xml = view('seo.sitemap', ['urls' => $urls])->render();
+
+    return response($xml, 200, [
+        'Content-Type' => 'application/xml; charset=UTF-8',
+    ]);
+})->name('sitemap');
 
 Route::get('/', function () {
     $apkCandidates = [
@@ -19,16 +46,77 @@ Route::get('/', function () {
         ->contains(fn(string $path): bool => File::exists($path));
 
     // Get list of staff (pegawai linked to users with Staff role)
-    $staffList = \App\Models\User::whereHas('role_user', function ($q) {
+    $staffUsers = \App\Models\User::whereHas('role_user', function ($q) {
         $q->where('name', 'Staff');
     })->whereNotNull('pegawai_id')
         ->with('pegawai')
         ->get()
         ->filter(fn($u) => $u->pegawai && $u->pegawai->is_active)
-        ->map(fn($u) => [
-            'value' => $u->pegawai->nama,
-            'label' => $u->pegawai->nama . ($u->pegawai->jabatan ? ' — ' . $u->pegawai->jabatan : ''),
-        ])
+        ->values();
+
+    $staffNips = $staffUsers
+        ->map(fn($u) => trim((string) ($u->pegawai->nip ?? '')))
+        ->filter()
+        ->values();
+
+    $staffNames = $staffUsers
+        ->map(fn($u) => trim((string) ($u->pegawai->nama ?? '')))
+        ->filter()
+        ->values();
+
+    $izinByNip = collect();
+    $izinByName = collect();
+
+    if ($staffNips->isNotEmpty() || $staffNames->isNotEmpty()) {
+        $izinStaff = PegawaiIzin::query()
+            ->select(['nip', 'nama_pegawai', 'status', 'tanggal_mulai', 'tanggal_selesai'])
+            ->whereIn('status', [PegawaiIzin::STATUS_DISETUJUI, PegawaiIzin::STATUS_AKTIF])
+            ->whereDate('tanggal_selesai', '>=', now()->toDateString())
+            ->where(function ($query) use ($staffNips, $staffNames): void {
+                if ($staffNips->isNotEmpty()) {
+                    $query->whereIn('nip', $staffNips->all());
+                }
+
+                if ($staffNames->isNotEmpty()) {
+                    $method = $staffNips->isNotEmpty() ? 'orWhereIn' : 'whereIn';
+                    $query->{$method}('nama_pegawai', $staffNames->all());
+                }
+            })
+            ->orderByDesc('tanggal_selesai')
+            ->get();
+
+        $izinByNip = $izinStaff
+            ->filter(fn(PegawaiIzin $izin): bool => filled($izin->nip))
+            ->keyBy(fn(PegawaiIzin $izin): string => trim((string) $izin->nip));
+
+        $izinByName = $izinStaff
+            ->filter(fn(PegawaiIzin $izin): bool => filled($izin->nama_pegawai))
+            ->keyBy(fn(PegawaiIzin $izin): string => mb_strtolower(trim((string) $izin->nama_pegawai)));
+    }
+
+    $staffList = $staffUsers
+        ->map(function ($u) use ($izinByNip, $izinByName): array {
+            $pegawai = $u->pegawai;
+            $pegawaiNip = trim((string) ($pegawai->nip ?? ''));
+            $pegawaiName = trim((string) ($pegawai->nama ?? ''));
+
+            $izin = filled($pegawaiNip)
+                ? $izinByNip->get($pegawaiNip)
+                : $izinByName->get(mb_strtolower($pegawaiName));
+
+            if (!$izin && filled($pegawaiName)) {
+                $izin = $izinByName->get(mb_strtolower($pegawaiName));
+            }
+
+            $isUnavailable = (bool) $izin;
+
+            return [
+                'value' => $pegawaiName,
+                'label' => $pegawaiName . ($pegawai->jabatan ? ' — ' . $pegawai->jabatan : ''),
+                'is_unavailable' => $isUnavailable,
+                'availability_note' => $isUnavailable ? 'Tidak Masuk' : null,
+            ];
+        })
         ->values()
         ->toArray();
 
@@ -63,12 +151,8 @@ Route::get('/download/apk', function () {
     abort(404, 'File APK belum tersedia di server.');
 })->name('apk.download');
 
-Route::get('/api/dropdown-options/{category}', function (string $category) {
-    if (!array_key_exists($category, DropdownOption::CATEGORY_LABELS)) {
-        return response()->json(['error' => 'Invalid category'], 404);
-    }
-    return response()->json(DropdownOption::getFullOptions($category));
-})->name('dropdown-options');
+Route::get('/api/dropdown-options/{category}', [DropdownOptionController::class, 'index'])
+    ->name('dropdown-options');
 
 Route::get('/tentang-developer', function () {
     $contributorsRaw = File::exists(base_path('CONTRIBUTORS.md'))
@@ -138,7 +222,7 @@ Route::get('/tentang-developer', function () {
         'teamMembers' => $teamMembers,
     ];
 
-    foreach (['developer-about', 'public.developer'] as $viewName) {
+    foreach (['developer-about'] as $viewName) {
         if (!view()->exists($viewName)) {
             continue;
         }
@@ -167,8 +251,15 @@ Route::get('/tentang-developer', function () {
 
 Route::post('/', [BukuTamuController::class, 'store'])->name('buku-tamu.store');
 Route::get('/api/guest-by-nik', [BukuTamuController::class, 'getByNik'])->name('buku-tamu.get-by-nik');
+Route::get('/preview/pegawai-izin/{id}', [PegawaiIzinController::class, 'preview'])
+    ->middleware('signed')
+    ->name('pegawai-izin.preview');
+
 // Print routes — dilindungi auth middleware agar data sensitif tidak diakses publik
 Route::middleware('auth')->group(function () {
+    Route::post('/api/web-push/subscriptions', [WebPushSubscriptionController::class, 'store'])->name('web-push.subscribe');
+    Route::delete('/api/web-push/subscriptions', [WebPushSubscriptionController::class, 'destroy'])->name('web-push.unsubscribe');
+
     Route::get('/print/buku-tamu/{id}', [BukuTamuController::class, 'print'])->name('buku-tamu.print');
     Route::get('/print/buku-tamu-bulk', [BukuTamuController::class, 'printBulk'])->name('buku-tamu.print-bulk');
     Route::get('/print/dropdown-options', [BukuTamuController::class, 'printDropdownOptions'])->name('dropdown-options.print');

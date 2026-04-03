@@ -88,11 +88,14 @@ class ListActivityLogs extends ListRecords
 
     protected function exportToExcel(bool $download = true, bool $persistBackup = false)
     {
-        $logs = Activity::with('causer')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $baseQuery = Activity::query()
+            ->with('causer')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
-        if ($logs->isEmpty()) {
+        $totalLogs = (clone $baseQuery)->count();
+
+        if ($totalLogs === 0) {
             Notification::make()
                 ->warning()
                 ->title('Tidak ada data!')
@@ -138,7 +141,7 @@ class ListActivityLogs extends ListRecords
 
         // Data rows
         $no = 1;
-        foreach ($logs as $log) {
+        foreach ($baseQuery->cursor() as $log) {
             $dataRow = Row::fromValues([
                 $no++,
                 $log->created_at->format('d/m/Y H:i:s'),
@@ -165,12 +168,12 @@ class ListActivityLogs extends ListRecords
             ->causedBy(Auth::user())
             ->event('created')
             ->withProperties([
-                'jumlah' => $logs->count(),
+                'jumlah' => $totalLogs,
                 'tipe' => 'backup_excel',
                 'file' => $fileName,
                 'path' => $relativePath,
             ])
-            ->log('Backup log aktivitas ke Excel (' . $logs->count() . ' data)');
+            ->log('Backup log aktivitas ke Excel (' . $totalLogs . ' data)');
 
         if ($download) {
             return response()->download($filePath, $fileName)->deleteFileAfterSend(! $persistBackup);
@@ -180,7 +183,7 @@ class ListActivityLogs extends ListRecords
             'file_name' => $fileName,
             'relative_path' => $relativePath,
             'file_path' => $filePath,
-            'count' => $logs->count(),
+            'count' => $totalLogs,
         ];
     }
 

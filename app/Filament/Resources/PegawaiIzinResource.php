@@ -342,8 +342,14 @@ class PegawaiIzinResource extends Resource
                 return;
               }
 
+              $today = now()->startOfDay();
+              $mulaiTanggal = $record->tanggal_mulai?->copy()?->startOfDay();
+              $statusSetelahVerifikasi = $mulaiTanggal?->lessThanOrEqualTo($today)
+                ? PegawaiIzin::STATUS_AKTIF
+                : PegawaiIzin::STATUS_DISETUJUI;
+
               $record->update([
-                'status' => PegawaiIzin::STATUS_DISETUJUI,
+                'status' => $statusSetelahVerifikasi,
                 'diverifikasi_oleh' => Auth::user()?->name,
                 'diverifikasi_pada' => now(),
                 'catatan_verifikasi' => blank($data['catatan_verifikasi'] ?? null)
@@ -354,7 +360,7 @@ class PegawaiIzinResource extends Resource
               Notification::make()
                 ->success()
                 ->title('Pengajuan disetujui')
-                ->body('Pengajuan izin berhasil diverifikasi Kepala Cabang Dinas.')
+                ->body('Pengajuan izin berhasil diverifikasi Kepala Cabang Dinas. Barcode verifikasi akan muncul otomatis di surat izin.')
                 ->send();
             }),
           Action::make('reject')

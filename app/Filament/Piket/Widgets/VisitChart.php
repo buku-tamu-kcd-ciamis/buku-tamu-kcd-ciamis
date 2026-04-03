@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class VisitChart extends ChartWidget
 {
   protected ?string $heading = 'Grafik Kunjungan Tamu';
-  protected static ?int $sort = 2;
+  protected static ?int $sort = 3;
   protected int | string | array $columnSpan = 'full';
 
   public ?string $filter = 'week';

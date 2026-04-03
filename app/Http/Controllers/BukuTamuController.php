@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\BukuTamu;
 use App\Models\NomorSuratSetting;
+use App\Models\PegawaiIzin;
 use App\Models\StaffNotification;
+use App\Models\User;
 use App\Services\BookingChatManager;
+use App\Services\GuestLookupService;
 use App\Helpers\ImageHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class BukuTamuController extends Controller
@@ -16,94 +21,234 @@ class BukuTamuController extends Controller
     /**
      * Lookup guest data for auto-fill by NIK, full name, phone number, or email.
      */
-    public function getByNik(Request $request)
+    public function getByNik(Request $request, GuestLookupService $guestLookupService)
     {
-        $nik = trim((string) $request->query('nik', ''));
-        $namaLengkap = trim((string) $request->query('nama_lengkap', ''));
-        $nomorHp = trim((string) $request->query('nomor_hp', ''));
-        $email = trim((string) $request->query('email', ''));
-        $isSuggest = $request->boolean('suggest', false);
+        $payload = [
+            'nik' => (string) $request->query('nik', ''),
+            'nama_lengkap' => (string) $request->query('nama_lengkap', ''),
+            'nomor_hp' => (string) $request->query('nomor_hp', ''),
+            'email' => (string) $request->query('email', ''),
+            'suggest' => $request->boolean('suggest', false),
+        ];
 
-        if ($nik === '' && $namaLengkap === '' && $nomorHp === '' && $email === '') {
-            return response()->json(['found' => false, 'suggestions' => []]);
-        }
+        $responsePayload = $guestLookupService->lookup($payload);
 
+        return response()->json($responsePayload);
+    }
+
+    private function resolveGuestLookup(
+        string $nik,
+        string $namaLengkap,
+        string $nomorHp,
+        string $email,
+        bool $isSuggest
+    ): array {
         if ($isSuggest) {
-            $suggestions = $this->buildSuggestionPayload(
-                $this->findGuestSuggestions($namaLengkap, $nomorHp, $email)
-            );
-
-            return response()->json([
-                'found' => false,
-                'suggestions' => $suggestions,
-            ]);
-        }
-
-        $guest = null;
-        $matchedBy = null;
-
-        if ($nik !== '') {
-            $guest = BukuTamu::where('nik', $nik)
-                ->orderBy('created_at', 'desc')
-                ->first();
-            $matchedBy = 'nik';
-        }
-
-        if (!$guest && $email !== '') {
-            $guest = BukuTamu::whereRaw('LOWER(email) = ?', [strtolower($email)])
-                ->orderBy('created_at', 'desc')
-                ->first();
-
-            if (!$guest) {
-                $guest = BukuTamu::where('email', 'like', '%' . $email . '%')
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+            if (!$this->hasMeaningfulSuggestionInput($nik, $namaLengkap, $nomorHp, $email)) {
+                return ['found' => false, 'suggestions' => []];
             }
 
-            $matchedBy = 'email';
+            return [
+                'found' => false,
+                'suggestions' => $this->buildSuggestionPayload(
+                    $this->findGuestSuggestions($namaLengkap, $nomorHp, $email)
+                ),
+            ];
         }
 
-        if (!$guest && $namaLengkap !== '') {
-            $nameMatches = BukuTamu::where('nama_lengkap', 'like', '%' . $namaLengkap . '%')
-                ->orderBy('created_at', 'desc')
-                ->get();
+        $candidates = $this->findGuestCandidates($nik, $namaLengkap, $nomorHp, $email);
+
+        if ($nik !== '') {
+            $guest = $candidates->first(fn(BukuTamu $candidate): bool => (string) ($candidate->nik ?? '') === $nik);
+
+            if ($guest) {
+                return [
+                    'found' => true,
+                    'matched_by' => 'nik',
+                    'data' => $this->formatGuestData($guest),
+                ];
+            }
+        }
+
+        if ($email !== '') {
+            $normalizedEmail = strtolower($email);
+
+            $guest = $candidates->first(
+                fn(BukuTamu $candidate): bool => strtolower((string) ($candidate->email ?? '')) === $normalizedEmail
+            );
+
+            if (!$guest) {
+                $guest = $candidates->first(
+                    fn(BukuTamu $candidate): bool => str_contains(strtolower((string) ($candidate->email ?? '')), $normalizedEmail)
+                );
+            }
+
+            if ($guest) {
+                return [
+                    'found' => true,
+                    'matched_by' => 'email',
+                    'data' => $this->formatGuestData($guest),
+                ];
+            }
+        }
+
+        if ($namaLengkap !== '') {
+            $normalizedName = strtolower($namaLengkap);
+
+            $nameMatches = $candidates
+                ->filter(fn(BukuTamu $candidate): bool => str_contains(strtolower((string) ($candidate->nama_lengkap ?? '')), $normalizedName))
+                ->values();
 
             if ($nameMatches->count() > 1) {
                 $nameSuggestions = $this->buildSuggestionPayload($nameMatches);
 
                 if ($nameSuggestions->count() === 1) {
-                    return response()->json([
+                    return [
                         'found' => true,
                         'matched_by' => 'nama_lengkap',
                         'data' => $nameSuggestions->first(),
-                    ]);
+                    ];
                 }
 
-                return response()->json([
+                return [
                     'found' => false,
                     'multiple' => true,
                     'matched_by' => 'nama_lengkap',
                     'suggestions' => $nameSuggestions,
-                ]);
+                ];
             }
 
             $guest = $nameMatches->first();
-            $matchedBy = 'nama_lengkap';
+
+            if ($guest) {
+                return [
+                    'found' => true,
+                    'matched_by' => 'nama_lengkap',
+                    'data' => $this->formatGuestData($guest),
+                ];
+            }
         }
 
-        if (!$guest && $nomorHp !== '') {
+        if ($nomorHp !== '') {
             $nomorHpNormalized = $this->normalizePhone($nomorHp);
-            $nomorHpLocal = str_starts_with($nomorHpNormalized, '62')
-                ? substr($nomorHpNormalized, 2)
-                : ltrim($nomorHpNormalized, '0');
 
-            $nomorHpDbExpr = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nomor_hp, '-', ''), ' ', ''), '+', ''), '(', ''), ')', ''), '.', '')";
+            $guest = $candidates->first(
+                fn(BukuTamu $candidate): bool => $this->phoneMatchesInput((string) ($candidate->nomor_hp ?? ''), $nomorHp, $nomorHpNormalized)
+            );
 
-            $guest = BukuTamu::where(function ($query) use ($nomorHp, $nomorHpNormalized, $nomorHpLocal, $nomorHpDbExpr) {
+            if ($guest) {
+                return [
+                    'found' => true,
+                    'matched_by' => 'nomor_hp',
+                    'data' => $this->formatGuestData($guest),
+                ];
+            }
+        }
+
+        return [
+            'found' => false,
+            'suggestions' => $this->buildSuggestionPayload($candidates),
+        ];
+    }
+
+    private function guestLookupCacheKey(array $payload): string
+    {
+        return 'guest_lookup_api:' . sha1(json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    private function hasMeaningfulSuggestionInput(string $nik, string $namaLengkap, string $nomorHp, string $email): bool
+    {
+        return strlen($nik) >= 4
+            || mb_strlen($namaLengkap) >= 2
+            || strlen($this->normalizePhone($nomorHp)) >= 4
+            || mb_strlen($email) >= 3;
+    }
+
+    private function phoneMatchesInput(string $dbPhone, string $rawInput, string $normalizedInput): bool
+    {
+        if ($rawInput !== '' && str_contains($dbPhone, $rawInput)) {
+            return true;
+        }
+
+        $dbPhoneNormalized = $this->normalizePhone($dbPhone);
+
+        if ($normalizedInput !== '' && str_contains($dbPhoneNormalized, $normalizedInput)) {
+            return true;
+        }
+
+        $localInput = str_starts_with($normalizedInput, '62')
+            ? substr($normalizedInput, 2)
+            : ltrim($normalizedInput, '0');
+
+        return $localInput !== ''
+            && $localInput !== $normalizedInput
+            && str_contains($dbPhoneNormalized, $localInput);
+    }
+
+    private function findGuestCandidates(
+        string $nik,
+        string $namaLengkap,
+        string $nomorHp,
+        string $email,
+        int $limit = 40
+    ): Collection {
+        $nik = trim($nik);
+        $namaLengkap = trim($namaLengkap);
+        $nomorHp = trim($nomorHp);
+        $email = trim($email);
+
+        if ($nik === '' && $namaLengkap === '' && $nomorHp === '' && $email === '') {
+            return collect();
+        }
+
+        $nomorHpNormalized = $this->normalizePhone($nomorHp);
+        $nomorHpLocal = str_starts_with($nomorHpNormalized, '62')
+            ? substr($nomorHpNormalized, 2)
+            : ltrim($nomorHpNormalized, '0');
+
+        $nomorHpDbExpr = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nomor_hp, '-', ''), ' ', ''), '+', ''), '(', ''), ')', ''), '.', '')";
+        $normalizedEmail = strtolower($email);
+
+        return BukuTamu::query()
+            ->select([
+                'id',
+                'jenis_id',
+                'nik',
+                'nama_lengkap',
+                'instansi',
+                'nomor_hp',
+                'jabatan',
+                'kabupaten_kota',
+                'email',
+                'created_at',
+            ])
+            ->where(function ($query) use ($nik, $namaLengkap, $nomorHp, $email, $normalizedEmail, $nomorHpNormalized, $nomorHpLocal, $nomorHpDbExpr) {
                 $hasCondition = false;
 
+                if ($nik !== '') {
+                    $query->where('nik', $nik);
+                    $hasCondition = true;
+                }
+
+                if ($namaLengkap !== '') {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $query->{$method}('nama_lengkap', 'like', '%' . $namaLengkap . '%');
+                    $hasCondition = true;
+                }
+
+                if ($email !== '') {
+                    $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
+                    $query->{$method}('LOWER(email) = ?', [$normalizedEmail]);
+                    $hasCondition = true;
+
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $query->{$method}('email', 'like', '%' . $email . '%');
+                    $hasCondition = true;
+                }
+
                 if ($nomorHp !== '') {
-                    $query->where('nomor_hp', 'like', '%' . $nomorHp . '%');
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $query->{$method}('nomor_hp', 'like', '%' . $nomorHp . '%');
                     $hasCondition = true;
                 }
 
@@ -118,77 +263,14 @@ class BukuTamuController extends Controller
                     $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpLocal . '%']);
                 }
             })
-                ->orderBy('created_at', 'desc')
-                ->first();
-            $matchedBy = 'nomor_hp';
-        }
-
-        if (!$guest) {
-            return response()->json([
-                'found' => false,
-                'suggestions' => $this->buildSuggestionPayload(
-                    $this->findGuestSuggestions($namaLengkap, $nomorHp, $email)
-                ),
-            ]);
-        }
-
-        return response()->json([
-            'found' => true,
-            'matched_by' => $matchedBy,
-            'data' => $this->formatGuestData($guest),
-        ]);
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
     }
 
     private function findGuestSuggestions(string $namaLengkap, string $nomorHp, string $email)
     {
-        $namaLengkap = trim($namaLengkap);
-        $nomorHp = trim($nomorHp);
-        $email = trim($email);
-
-        if ($namaLengkap === '' && $nomorHp === '' && $email === '') {
-            return collect();
-        }
-
-        $nomorHpNormalized = $this->normalizePhone($nomorHp);
-        $nomorHpLocal = str_starts_with($nomorHpNormalized, '62')
-            ? substr($nomorHpNormalized, 2)
-            : ltrim($nomorHpNormalized, '0');
-
-        $nomorHpDbExpr = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nomor_hp, '-', ''), ' ', ''), '+', ''), '(', ''), ')', ''), '.', '')";
-
-        return BukuTamu::where(function ($query) use ($namaLengkap, $nomorHp, $email, $nomorHpNormalized, $nomorHpLocal, $nomorHpDbExpr) {
-            $hasCondition = false;
-
-            if ($namaLengkap !== '') {
-                $query->where('nama_lengkap', 'like', '%' . $namaLengkap . '%');
-                $hasCondition = true;
-            }
-
-            if ($email !== '') {
-                $method = $hasCondition ? 'orWhere' : 'where';
-                $query->{$method}('email', 'like', '%' . $email . '%');
-                $hasCondition = true;
-            }
-
-            if ($nomorHp !== '') {
-                $method = $hasCondition ? 'orWhere' : 'where';
-                $query->{$method}('nomor_hp', 'like', '%' . $nomorHp . '%');
-                $hasCondition = true;
-            }
-
-            if ($nomorHpNormalized !== '') {
-                $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
-                $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpNormalized . '%']);
-                $hasCondition = true;
-            }
-
-            if ($nomorHpLocal !== '' && $nomorHpLocal !== $nomorHpNormalized) {
-                $method = $hasCondition ? 'orWhereRaw' : 'whereRaw';
-                $query->{$method}($nomorHpDbExpr . ' like ?', ['%' . $nomorHpLocal . '%']);
-            }
-        })
-            ->orderBy('created_at', 'desc')
-            ->get();
+        return $this->findGuestCandidates('', $namaLengkap, $nomorHp, $email, 50);
     }
 
     private function formatGuestData(BukuTamu $guest, bool $forSuggestion = false): array
@@ -303,6 +385,38 @@ class BukuTamuController extends Controller
                 'staff_dituju' => 'required|string|max:255',
             ]);
 
+            // Guard server-side: staff yang sedang izin terverifikasi tidak boleh dipilih.
+            $targetStaffName = trim((string) ($validatedData['staff_dituju'] ?? ''));
+
+            if ($targetStaffName !== '') {
+                $targetStaffNip = User::query()
+                    ->whereHas('role_user', fn($q) => $q->where('name', 'Staff'))
+                    ->whereHas('pegawai', fn($q) => $q->where('nama', $targetStaffName))
+                    ->with('pegawai:id,nip,nama')
+                    ->first()
+                    ?->pegawai
+                    ?->nip;
+
+                $staffSedangIzin = PegawaiIzin::query()
+                    ->whereIn('status', [PegawaiIzin::STATUS_DISETUJUI, PegawaiIzin::STATUS_AKTIF])
+                    ->whereDate('tanggal_selesai', '>=', now()->toDateString())
+                    ->when(
+                        filled($targetStaffNip),
+                        fn($query) => $query->where('nip', $targetStaffNip),
+                        fn($query) => $query->where('nama_pegawai', $targetStaffName)
+                    )
+                    ->exists();
+
+                if ($staffSedangIzin) {
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'staff_dituju' => 'Staff yang dipilih sedang tidak masuk (izin sudah di-ACC Kepala Cabang). Silakan pilih staff lain.',
+                        ])
+                        ->with('error', 'Staff tujuan sedang tidak masuk, silakan pilih staff lain.');
+                }
+            }
+
             // Proses & kompres gambar ke filesystem (bukan disimpan mentah di database)
             $validatedData['foto_selfie'] = ImageHelper::processAndStore(
                 $validatedData['foto_selfie'],
@@ -330,7 +444,7 @@ class BukuTamuController extends Controller
 
             // Create staff notification
             if (!empty($validatedData['staff_dituju'])) {
-                $staffUsers = \App\Models\User::whereHas('role_user', function ($q) {
+                $staffUsers = User::whereHas('role_user', function ($q) {
                     $q->where('name', 'Staff');
                 })->whereHas('pegawai', function ($q) use ($validatedData) {
                     $q->where('nama', $validatedData['staff_dituju']);

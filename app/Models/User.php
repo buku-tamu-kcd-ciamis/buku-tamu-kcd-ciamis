@@ -192,6 +192,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(BookingChatMessage::class, 'sender_user_id');
     }
 
+    public function webPushSubscriptions(): HasMany
+    {
+        return $this->hasMany(WebPushSubscription::class);
+    }
+
     public function getFilamentAvatarUrl(): ?string
     {
         $rawPath = trim((string) ($this->profile_photo_path ?? ''));

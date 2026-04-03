@@ -381,6 +381,45 @@ document.addEventListener("DOMContentLoaded", function () {
     let guestSuggestionIndex = -1;
     let guestSuggestions = [];
 
+    // Repository layer for remote guest lookup API.
+    const guestLookupRepository = {
+        async search(criteria, suggest = false) {
+            const params = new URLSearchParams();
+
+            if (criteria.nik) {
+                params.append("nik", criteria.nik);
+            }
+
+            if (criteria.namaLengkap) {
+                params.append("nama_lengkap", criteria.namaLengkap);
+            }
+
+            if (criteria.nomorHp) {
+                params.append("nomor_hp", criteria.nomorHp);
+            }
+
+            if (criteria.email) {
+                params.append("email", criteria.email);
+            }
+
+            if (suggest) {
+                params.append("suggest", "1");
+            }
+
+            if (!params.toString()) {
+                return { found: false, suggestions: [] };
+            }
+
+            const response = await fetch(`/api/guest-by-nik?${params.toString()}`);
+
+            if (!response.ok) {
+                throw new Error(`Guest lookup failed with status ${response.status}`);
+            }
+
+            return response.json();
+        },
+    };
+
     const namaInputWrapper = namaLengkapInput
         ? namaLengkapInput.closest(".input-wrapper")
         : null;
@@ -632,32 +671,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function fetchGuestSuggestions(criteria) {
-        const params = new URLSearchParams();
-
-        if (criteria.namaLengkap) {
-            params.append("nama_lengkap", criteria.namaLengkap);
-        }
-
-        if (criteria.nomorHp) {
-            params.append("nomor_hp", criteria.nomorHp);
-        }
-
-        if (criteria.email) {
-            params.append("email", criteria.email);
-        }
-
-        if (!params.toString()) {
+        if (!criteria.namaLengkap && !criteria.nomorHp && !criteria.email) {
             hideGuestSuggestions();
             return;
         }
 
-        params.append("suggest", "1");
-
         try {
-            const response = await fetch(
-                `/api/guest-by-nik?${params.toString()}`,
-            );
-            const result = await response.json();
+            const result = await guestLookupRepository.search(criteria, true);
             renderGuestSuggestions(result.suggestions || []);
         } catch (error) {
             console.error("Error fetching guest suggestions:", error);
@@ -666,31 +686,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to fetch guest data by NIK / name / phone
     async function fetchGuestData(criteria) {
-        const params = new URLSearchParams();
-
-        if (criteria.nik) {
-            params.append("nik", criteria.nik);
+        if (!criteria.nik && !criteria.namaLengkap && !criteria.nomorHp && !criteria.email) {
+            return;
         }
-
-        if (criteria.namaLengkap) {
-            params.append("nama_lengkap", criteria.namaLengkap);
-        }
-
-        if (criteria.nomorHp) {
-            params.append("nomor_hp", criteria.nomorHp);
-        }
-
-        if (criteria.email) {
-            params.append("email", criteria.email);
-        }
-
-        if (!params.toString()) return;
 
         try {
-            const response = await fetch(
-                `/api/guest-by-nik?${params.toString()}`,
-            );
-            const result = await response.json();
+            const result = await guestLookupRepository.search(criteria, false);
 
             if (result.found && result.data) {
                 applyGuestDataToForm(result.data, result.matched_by);
@@ -1034,25 +1035,61 @@ document.addEventListener("DOMContentLoaded", function () {
 
             filtered.forEach((item) => {
                 const div = document.createElement("div");
-                div.className = "autocomplete-item";
+                const isUnavailable = Boolean(item.is_unavailable);
+                div.className =
+                    "autocomplete-item" +
+                    (isUnavailable ? " is-disabled" : "");
+                const noteLabel = item.availability_note || "Tidak Masuk";
                 if (query) {
                     const idx = item.label.toLowerCase().indexOf(query);
                     if (idx >= 0) {
-                        div.innerHTML =
+                        const highlightedLabel =
                             item.label.substring(0, idx) +
                             "<strong>" +
                             item.label.substring(idx, idx + query.length) +
                             "</strong>" +
                             item.label.substring(idx + query.length);
+
+                        div.innerHTML = isUnavailable
+                            ?
+                              highlightedLabel +
+                              '<span class="autocomplete-meta">' +
+                              noteLabel +
+                              "</span>"
+                            : highlightedLabel;
                     } else {
-                        div.textContent = item.label;
+                        div.innerHTML = isUnavailable
+                            ?
+                              item.label +
+                              '<span class="autocomplete-meta">' +
+                              noteLabel +
+                              "</span>"
+                            : item.label;
                     }
                 } else {
-                    div.textContent = item.label;
+                    div.innerHTML = isUnavailable
+                        ?
+                          item.label +
+                          '<span class="autocomplete-meta">' +
+                          noteLabel +
+                          "</span>"
+                        : item.label;
                 }
                 div.dataset.value = item.value;
+                div.dataset.unavailable = isUnavailable ? "1" : "0";
                 div.addEventListener("mousedown", function (e) {
                     e.preventDefault();
+
+                    if (isUnavailable) {
+                        showToast(
+                            '<i class="fa-solid fa-circle-info"></i> Staff ' +
+                                item.value +
+                                " sedang tidak masuk (izin di-ACC Kepala Cabang). Silakan pilih staff lain.",
+                            "warning",
+                        );
+                        return;
+                    }
+
                     staffInput.value = item.label;
                     staffHidden.value = item.value;
                     staffList.classList.remove("show");
@@ -1084,7 +1121,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             s.value.toLowerCase() ===
                                 staffInput.value.toLowerCase(),
                     );
-                    if (match) {
+                    if (match && !match.is_unavailable) {
                         staffHidden.value = match.value;
                     }
                 }
@@ -1112,6 +1149,14 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (e.key === "Enter") {
                 e.preventDefault();
                 if (staffActiveIdx >= 0 && items[staffActiveIdx]) {
+                    if (items[staffActiveIdx].dataset.unavailable === "1") {
+                        showToast(
+                            '<i class="fa-solid fa-circle-info"></i> Staff tersebut sedang tidak masuk. Pilih staff lain.',
+                            "warning",
+                        );
+                        return;
+                    }
+
                     staffInput.value = items[staffActiveIdx].textContent;
                     staffHidden.value = items[staffActiveIdx].dataset.value;
                     staffList.classList.remove("show");

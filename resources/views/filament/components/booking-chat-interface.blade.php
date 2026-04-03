@@ -12,6 +12,21 @@
     $selectedBookingDateText = $selectedChat?->bukuTamu?->created_at
         ? $selectedChat->bukuTamu->created_at->locale('id')->isoFormat('dddd, D MMMM YYYY [pukul] HH:mm')
         : 'Tanggal booking belum tersedia';
+    $latestIncomingMessage = $messages
+        ->filter(fn ($message) => !$message->is_system
+            && !$message->isDeletedForEveryone()
+            && (string) $message->sender_user_id !== (string) auth()->id())
+        ->sortBy('created_at')
+        ->last();
+    $latestIncomingPreview = '';
+
+    if ($latestIncomingMessage) {
+        if ($latestIncomingMessage->hasAttachment() && $latestIncomingMessage->message === '[Lampiran]') {
+            $latestIncomingPreview = '[Lampiran] ' . ($latestIncomingMessage->attachment_name ?? 'Lampiran');
+        } else {
+            $latestIncomingPreview = \Illuminate\Support\Str::limit(trim((string) preg_replace('/\s+/u', ' ', (string) $latestIncomingMessage->message)), 120);
+        }
+    }
     // panelLabel = who is the current user's panel (e.g. 'Piket' or 'Staff')
     // counterpart label is the opposite
     $counterpartLabel = ($panelLabel === 'Piket') ? 'Staff' : 'Piket';
@@ -30,7 +45,17 @@
 
             this.pollingTimer = setInterval(() => {
                 if (!this.pausePolling) {
-                    this.$wire.refreshChatList();
+                    const refreshRequest = this.$wire.refreshChatList();
+
+                    if (refreshRequest && typeof refreshRequest.finally === 'function') {
+                        refreshRequest.finally(() => {
+                            window.dispatchEvent(new CustomEvent('booking-chat-refreshed'));
+                        });
+
+                        return;
+                    }
+
+                    window.dispatchEvent(new CustomEvent('booking-chat-refreshed'));
                 }
             }, 4000);
         },
@@ -170,6 +195,18 @@
                 dropNotice: '',
                 dropNoticeType: 'info',
                 dropNoticeTimer: null,
+                notificationPermission: 'default',
+                notificationPromptVisible: false,
+                notificationPromptDismissStorageKey: 'booking-chat-notification-dismissed',
+                lastObservedIncomingByChat: {},
+                lastNotifiedIncomingByChat: {},
+                notificationRegistration: null,
+                notificationClickListenerBound: false,
+                webPushPublicKey: @js((string) config('webpush.vapid.public_key', '')),
+                webPushSubscribeUrl: @js(route('web-push.subscribe')),
+                webPushUnsubscribeUrl: @js(route('web-push.unsubscribe')),
+                pushSubscriptionEndpoint: '',
+                pushSubscriptionSyncInFlight: false,
                 imagePreviewOpen: false,
                 imagePreviewUrl: '',
                 imagePreviewName: '',
@@ -272,6 +309,283 @@
                     this.dropNoticeTimer = setTimeout(() => {
                         this.dropNotice = '';
                     }, 3200);
+                },
+                syncNotificationPermissionState() {
+                    if (!('Notification' in window)) {
+                        this.notificationPermission = 'unsupported';
+                        this.notificationPromptVisible = false;
+
+                        return;
+                    }
+
+                    this.notificationPermission = Notification.permission;
+
+                    if (this.notificationPermission === 'granted') {
+                        this.notificationPromptVisible = false;
+
+                        return;
+                    }
+
+                    const dismissedAt = Number(window.localStorage.getItem(this.notificationPromptDismissStorageKey) || 0);
+                    const dismissDurationMs = 1000 * 60 * 60 * 12; // 12 jam
+                    const isDismissed = dismissedAt && (Date.now() - dismissedAt < dismissDurationMs);
+
+                    this.notificationPromptVisible = !isDismissed;
+                },
+                async initNotificationChannel() {
+                    this.syncNotificationPermissionState();
+
+                    if (!('serviceWorker' in navigator)) {
+                        this.notificationRegistration = null;
+
+                        return;
+                    }
+
+                    try {
+                        this.notificationRegistration = await navigator.serviceWorker.ready;
+
+                        if (this.notificationPermission === 'granted') {
+                            await this.ensureWebPushSubscription();
+                        }
+                    } catch (error) {
+                        this.notificationRegistration = null;
+                    }
+                },
+                urlBase64ToUint8Array(base64String) {
+                    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+                    const normalized = (base64String + padding)
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+                    const decoded = window.atob(normalized);
+                    const outputArray = new Uint8Array(decoded.length);
+
+                    for (let i = 0; i < decoded.length; i += 1) {
+                        outputArray[i] = decoded.charCodeAt(i);
+                    }
+
+                    return outputArray;
+                },
+                getCsrfToken() {
+                    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                },
+                async registerWebPushSubscription(subscription) {
+                    const payload = subscription?.toJSON?.();
+
+                    if (!payload?.endpoint || !payload?.keys?.p256dh || !payload?.keys?.auth) {
+                        throw new Error('INVALID_SUBSCRIPTION_PAYLOAD');
+                    }
+
+                    const response = await fetch(this.webPushSubscribeUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.getCsrfToken(),
+                        },
+                        body: JSON.stringify({
+                            endpoint: payload.endpoint,
+                            keys: payload.keys,
+                            contentEncoding: payload.contentEncoding || 'aes128gcm',
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('REGISTER_PUSH_SUBSCRIPTION_FAILED');
+                    }
+
+                    this.pushSubscriptionEndpoint = String(payload.endpoint);
+                },
+                async unregisterWebPushSubscription(endpoint) {
+                    if (!endpoint) {
+                        return;
+                    }
+
+                    await fetch(this.webPushUnsubscribeUrl, {
+                        method: 'DELETE',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.getCsrfToken(),
+                        },
+                        body: JSON.stringify({ endpoint }),
+                    });
+                },
+                async ensureWebPushSubscription() {
+                    if (
+                        this.pushSubscriptionSyncInFlight
+                        || this.notificationPermission !== 'granted'
+                        || this.webPushPublicKey === ''
+                        || !('serviceWorker' in navigator)
+                        || !('PushManager' in window)
+                    ) {
+                        return;
+                    }
+
+                    this.pushSubscriptionSyncInFlight = true;
+
+                    try {
+                        const registration = this.notificationRegistration || await navigator.serviceWorker.ready;
+                        this.notificationRegistration = registration;
+
+                        let subscription = await registration.pushManager.getSubscription();
+
+                        if (!subscription) {
+                            subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: this.urlBase64ToUint8Array(this.webPushPublicKey),
+                            });
+                        }
+
+                        await this.registerWebPushSubscription(subscription);
+                    } catch (error) {
+                        this.showDropNotice('Notifikasi push belum aktif penuh. Coba refresh halaman.', 'error');
+                    } finally {
+                        this.pushSubscriptionSyncInFlight = false;
+                    }
+                },
+                registerNotificationClickHandler() {
+                    if (this.notificationClickListenerBound || !('serviceWorker' in navigator)) {
+                        return;
+                    }
+
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        const payload = event?.data || {};
+
+                        if (payload.type !== 'BOOKING_CHAT_NOTIFICATION_CLICK') {
+                            return;
+                        }
+
+                        if (payload.chatId) {
+                            this.$wire.selectChat(payload.chatId);
+                        }
+
+                        window.focus();
+                    });
+
+                    this.notificationClickListenerBound = true;
+                },
+                dismissNotificationPrompt() {
+                    window.localStorage.setItem(this.notificationPromptDismissStorageKey, String(Date.now()));
+                    this.notificationPromptVisible = false;
+                },
+                async requestBrowserNotificationPermission() {
+                    if (!('Notification' in window)) {
+                        this.showDropNotice('Browser tidak mendukung notifikasi web.', 'error');
+
+                        return;
+                    }
+
+                    if (this.notificationPermission === 'denied') {
+                        this.showDropNotice('Notifikasi diblokir browser. Aktifkan manual pada pengaturan site permissions.', 'error');
+
+                        return;
+                    }
+
+                    const permission = await Notification.requestPermission();
+                    this.notificationPermission = permission;
+
+                    if (permission === 'granted') {
+                        await this.initNotificationChannel();
+                        await this.ensureWebPushSubscription();
+                        window.localStorage.removeItem(this.notificationPromptDismissStorageKey);
+                        this.notificationPromptVisible = false;
+                        this.showDropNotice('Notifikasi chat HP berhasil diaktifkan.', 'success');
+
+                        return;
+                    }
+
+                    this.showDropNotice('Izin notifikasi belum diberikan.', 'info');
+                    this.syncNotificationPermissionState();
+                },
+                getIncomingMessageMarkerPayload() {
+                    const marker = this.$refs.incomingMessageMarker;
+
+                    if (!marker) {
+                        return null;
+                    }
+
+                    return {
+                        chatId: String(marker.dataset.chatId || ''),
+                        messageId: String(marker.dataset.messageId || ''),
+                        senderName: String(marker.dataset.senderName || 'Pengguna'),
+                        preview: String(marker.dataset.preview || 'Pesan baru masuk.'),
+                    };
+                },
+                async showSystemNotification(payload) {
+                    if (this.notificationPermission !== 'granted') {
+                        return false;
+                    }
+
+                    const title = `Pesan baru dari ${payload.senderName}`;
+                    const options = {
+                        body: payload.preview,
+                        icon: '{{ asset('img/logo-cadisdik.png') }}',
+                        badge: '{{ asset('img/logo-cadisdik.png') }}',
+                        tag: `booking-chat-${payload.chatId}`,
+                        renotify: true,
+                        vibrate: [120, 60, 120],
+                        data: {
+                            chatId: payload.chatId,
+                            url: window.location.href,
+                        },
+                    };
+
+                    if (this.notificationRegistration && typeof this.notificationRegistration.showNotification === 'function') {
+                        await this.notificationRegistration.showNotification(title, options);
+
+                        return true;
+                    }
+
+                    if ('Notification' in window) {
+                        const fallbackNotification = new Notification(title, options);
+
+                        fallbackNotification.onclick = () => {
+                            window.focus();
+                            this.$wire.selectChat(payload.chatId);
+                            fallbackNotification.close();
+                        };
+
+                        return true;
+                    }
+
+                    return false;
+                },
+                syncIncomingMessageState(shouldNotify = false) {
+                    const payload = this.getIncomingMessageMarkerPayload();
+
+                    if (!payload || payload.chatId === '' || payload.messageId === '') {
+                        return;
+                    }
+
+                    const previousIncomingId = this.lastObservedIncomingByChat[payload.chatId];
+
+                    if (!previousIncomingId) {
+                        this.lastObservedIncomingByChat[payload.chatId] = payload.messageId;
+
+                        return;
+                    }
+
+                    if (previousIncomingId === payload.messageId) {
+                        return;
+                    }
+
+                    this.lastObservedIncomingByChat[payload.chatId] = payload.messageId;
+
+                    if (!shouldNotify || this.notificationPermission !== 'granted') {
+                        return;
+                    }
+
+                    if (this.lastNotifiedIncomingByChat[payload.chatId] === payload.messageId) {
+                        return;
+                    }
+
+                    this.lastNotifiedIncomingByChat[payload.chatId] = payload.messageId;
+
+                    this.showSystemNotification(payload).catch(() => {
+                        this.showDropNotice('Gagal menampilkan notifikasi HP.', 'error');
+                    });
                 },
                 getAllowedAttachmentExtensions() {
                     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
@@ -740,10 +1054,55 @@
                     }, 'image/jpeg', 0.92);
                 }
             }"
+            x-init="initNotificationChannel(); ensureWebPushSubscription(); registerNotificationClickHandler(); syncIncomingMessageState(false)"
+            x-on:booking-chat-refreshed.window="syncIncomingMessageState(true); syncNotificationPermissionState()"
+            x-on:focus.window="syncNotificationPermissionState(); if (notificationPermission === 'granted') { ensureWebPushSubscription() }"
             x-on:booking-chat-scroll-bottom.window="$nextTick(() => { if ($refs.viewport) { $refs.viewport.scrollTop = $refs.viewport.scrollHeight } })"
             x-on:keydown.escape.window="if (deleteConfirmOpen) closeDeleteConfirm(); if (imagePreviewOpen) closeImagePreview(); if (cameraOpen) closeCamera()"
         >
             @if ($selectedChat)
+                <div
+                    x-ref="incomingMessageMarker"
+                    class="booking-chat-incoming-marker"
+                    data-chat-id="{{ $selectedChat->id }}"
+                    data-message-id="{{ $latestIncomingMessage?->id ?? '' }}"
+                    data-sender-name="{{ e($latestIncomingMessage?->sender?->name ?? $counterpartState['name']) }}"
+                    data-preview="{{ e($latestIncomingPreview !== '' ? $latestIncomingPreview : 'Pesan baru masuk.') }}"
+                ></div>
+
+                <div
+                    x-cloak
+                    x-show="notificationPromptVisible"
+                    x-transition.opacity
+                    class="booking-chat-notification-popup"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <button
+                        type="button"
+                        class="booking-chat-notification-close"
+                        x-on:click="dismissNotificationPrompt()"
+                        aria-label="Tutup pengingat notifikasi"
+                    >✕</button>
+
+                    <div class="booking-chat-notification-content">
+                        <p class="booking-chat-notification-title">Aktifkan Notifikasi Chat</p>
+                        <p class="booking-chat-notification-desc" x-show="notificationPermission !== 'denied'">
+                            Supaya pesan baru dari {{ $counterpartLabel }} langsung muncul sebagai popup notifikasi sistem di HP.
+                        </p>
+                        <p class="booking-chat-notification-desc" x-show="notificationPermission === 'denied'">
+                            Izin notifikasi saat ini diblokir browser. Aktifkan kembali di pengaturan browser untuk situs ini.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="booking-chat-notification-action"
+                        x-on:click="requestBrowserNotificationPermission()"
+                        x-text="notificationPermission === 'denied' ? 'Cek Izin Browser' : 'Aktifkan Notifikasi'"
+                    ></button>
+                </div>
+
                 <header class="booking-chat-room-head">
                     <button
                         type="button"

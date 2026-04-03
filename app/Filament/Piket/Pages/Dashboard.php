@@ -13,6 +13,7 @@ class Dashboard extends BaseDashboard
   {
     return [
       \App\Filament\Piket\Widgets\StatsOverview::class,
+      \App\Filament\Piket\Widgets\StaffTidakMasukTodayWidget::class,
       \App\Filament\Piket\Widgets\VisitChart::class,
     ];
   }

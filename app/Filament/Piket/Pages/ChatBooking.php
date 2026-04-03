@@ -100,7 +100,17 @@ class ChatBooking extends Page
             $booking = BukuTamu::query()->find($bookingId);
 
             if ($booking) {
-                $chat = BookingChat::query()->where('buku_tamu_id', $bookingId)->first();
+                /** @var User $user */
+                $user = Auth::user();
+
+                $chat = BookingChat::query()
+                    ->where('buku_tamu_id', $bookingId)
+                    ->where(function (Builder $query) use ($user) {
+                        $query
+                            ->where('piket_user_id', $user->id)
+                            ->orWhereNull('piket_user_id');
+                    })
+                    ->first();
 
                 if (!$chat) {
                     $chat = $chatManager->bootstrapForBooking($booking, Auth::user())->first();
@@ -663,6 +673,11 @@ class ChatBooking extends Page
         $searchTerm = $searchKeyword !== '' ? '%' . $searchKeyword . '%' : null;
 
         $query = BookingChat::query()
+            ->where(function (Builder $query) use ($user) {
+                $query
+                    ->where('piket_user_id', $user->id)
+                    ->orWhereNull('piket_user_id');
+            })
             ->with([
                 'bukuTamu:id,nama_lengkap,instansi,staff_dituju,status,created_at,foto_selfie,nomor_hp',
                 'staffUser:id,name,email,profile_photo_path',
@@ -975,6 +990,11 @@ class ChatBooking extends Page
 
         $chat = BookingChat::query()
             ->where('id', $chatId)
+            ->where(function (Builder $query) use ($user) {
+                $query
+                    ->where('piket_user_id', $user->id)
+                    ->orWhereNull('piket_user_id');
+            })
             ->with([
                 'bukuTamu:id,nama_lengkap,instansi,staff_dituju,status,created_at,foto_selfie,nomor_hp',
                 'staffUser:id,name,email,profile_photo_path',

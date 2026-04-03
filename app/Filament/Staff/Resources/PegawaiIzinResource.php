@@ -63,6 +63,7 @@ class PegawaiIzinResource extends Resource
         return $schema
             ->components([
                 Section::make('Detail Izin')
+                    ->description('Pengajuan izin dari Staff akan diverifikasi oleh Kepala Cabang Dinas. Piket hanya memantau status izin aktif/selesai.')
                     ->icon('heroicon-o-calendar')
                     ->columnSpanFull()
                     ->schema([

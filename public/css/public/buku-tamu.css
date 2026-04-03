@@ -371,6 +371,10 @@ body {
     font-size: 15px;
     font-family: "Poppins", sans-serif;
     color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     cursor: pointer;
     transition: background 0.15s;
 }
@@ -378,6 +382,28 @@ body {
 .autocomplete-item.active {
     background: #0f9455;
     color: white;
+}
+.autocomplete-item .autocomplete-meta {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fee2e2;
+    color: #b91c1c;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.autocomplete-item.is-disabled,
+.autocomplete-item.is-disabled:hover,
+.autocomplete-item.is-disabled.active {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+.autocomplete-item.is-disabled strong {
+    color: #4b5563;
 }
 .autocomplete-item:last-child {
     border-radius: 0 0 6px 6px;

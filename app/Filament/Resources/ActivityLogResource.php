@@ -10,9 +10,11 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
 
 class ActivityLogResource extends Resource
@@ -166,6 +168,8 @@ class ActivityLogResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->orderByDesc('id'))
+            ->paginationMode(PaginationMode::Cursor)
             ->defaultPaginationPageOption(25)
             ->paginationPageOptions([10, 25, 50, 100])
             ->poll('30s')

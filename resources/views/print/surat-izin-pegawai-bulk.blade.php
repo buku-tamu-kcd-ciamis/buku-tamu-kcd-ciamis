@@ -13,6 +13,8 @@
         $pageSize = \App\Support\PrintPaperSize::pageSize($paperSize, 'portrait');
         $pageWidth = \App\Support\PrintPaperSize::pageWidth($paperSize, 'portrait');
         $baseFontSize = $isF4 ? '12.5pt' : '12pt';
+        $previewUrls = $previewUrls ?? [];
+        $previewQrDataUris = $previewQrDataUris ?? [];
     @endphp
     <style>
         @page {
@@ -180,6 +182,39 @@
             margin: 10px 0;
         }
 
+        .signature-qr {
+            margin-top: 10px;
+            border: 1px dashed #999;
+            border-radius: 8px;
+            padding: 8px;
+            background: #fafafa;
+        }
+
+        .signature-qr img {
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 6px;
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 4px;
+        }
+
+        .signature-qr .caption {
+            font-size: 8.8pt;
+            line-height: 1.25;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .signature-qr .url {
+            font-size: 7.5pt;
+            line-height: 1.2;
+            color: #666;
+            word-break: break-all;
+        }
+
         .signature-box .name {
             margin-top: 10px;
             font-weight: bold;
@@ -268,6 +303,8 @@
                 $statusLabel = \App\Models\PegawaiIzin::STATUS_LABELS[$pegawai->status] ?? ucfirst($pegawai->status);
                 $jenisIzin = \App\Models\PegawaiIzin::JENIS_IZIN_LABELS[$pegawai->jenis_izin] ?? $pegawai->jenis_izin;
                 $verifiedAt = $pegawai->diverifikasi_pada?->translatedFormat('d F Y, H:i');
+                $previewUrl = $previewUrls[$pegawai->id] ?? null;
+                $previewQrDataUri = $previewQrDataUris[$pegawai->id] ?? null;
             @endphp
 
             <div class="page {{ !$loop->last ? 'page-break' : '' }}">
@@ -384,6 +421,15 @@
                             @endif
                         </div>
                         <div class="signature-space"></div>
+                        @if($previewQrDataUri)
+                            <div class="signature-qr">
+                                <img src="{{ $previewQrDataUri }}" alt="QR Verifikasi TTD Kepala KCD">
+                                <p class="caption">Barcode TTD Digital Kepala</p>
+                                @if($previewUrl)
+                                    <p class="url">{{ $previewUrl }}</p>
+                                @endif
+                            </div>
+                        @endif
                         <p class="name">{{ $kepalaCabdin->formatted_nama }}</p>
                         <p class="nip">{{ $kepalaCabdin->formatted_nip }}</p>
                     </div>

@@ -6,11 +6,6 @@ use App\Filament\Piket\Resources\PegawaiIzinResource\Pages;
 use App\Models\Pegawai;
 use App\Models\DropdownOption;
 use App\Models\PegawaiIzin;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -49,7 +44,7 @@ class PegawaiIzinResource extends Resource
 
   public static function canCreate(): bool
   {
-    return static::canViewAny();
+    return false;
   }
 
   public static function canView($record): bool
@@ -59,7 +54,7 @@ class PegawaiIzinResource extends Resource
 
   public static function canEdit($record): bool
   {
-    return static::canViewAny();
+    return false;
   }
 
   public static function form(Schema $schema): Schema
@@ -280,9 +275,7 @@ class PegawaiIzinResource extends Resource
   {
     return [
       'index' => Pages\ListPegawaiIzin::route('/'),
-      'create' => Pages\CreatePegawaiIzin::route('/create'),
       'view' => Pages\ViewPegawaiIzin::route('/{record}'),
-      'edit' => Pages\EditPegawaiIzin::route('/{record}/edit'),
     ];
   }
 }

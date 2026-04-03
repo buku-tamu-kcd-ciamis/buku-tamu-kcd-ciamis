@@ -1,6 +1,12 @@
 ﻿@extends('layouts.main')
 
 @section('title', 'Tentang Developer — Cadisdik XIII')
+@section('seo_title', 'Tim Developer Buku Tamu KCD Ciamis')
+@section('seo_description', 'Profil tim developer yang membangun aplikasi Buku Tamu Digital KCD Ciamis.')
+@section('seo_keywords', 'developer buku tamu kcd, tim pengembang etamu kcd, profil developer ciamis')
+@section('seo_canonical', route('developer.about'))
+@section('seo_image', '/img/og-etamu-kcd.png')
+@section('seo_image_alt', 'Tim Developer Buku Tamu KCD Ciamis')
 
 @push('styles')
     <style>

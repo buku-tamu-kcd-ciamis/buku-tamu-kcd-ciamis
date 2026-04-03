@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Http\Responses\LoginResponse;
+use App\Repositories\Contracts\DropdownOptionRepositoryInterface;
+use App\Repositories\Contracts\GuestLookupRepositoryInterface;
+use App\Repositories\DropdownOptionRepository;
+use App\Repositories\GuestLookupRepository;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse as LoginResponseContract;
 use Filament\Notifications\Livewire\Notifications;
 use Filament\Support\Enums\Alignment;
@@ -21,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Override Filament's LoginResponse to redirect by user role
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+
+        // Repository bindings for API data access (SoC)
+        $this->app->bind(GuestLookupRepositoryInterface::class, GuestLookupRepository::class);
+        $this->app->bind(DropdownOptionRepositoryInterface::class, DropdownOptionRepository::class);
     }
 
     /**

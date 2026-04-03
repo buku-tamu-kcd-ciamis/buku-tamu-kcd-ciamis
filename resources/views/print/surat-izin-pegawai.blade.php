@@ -16,6 +16,9 @@
         $statusLabel = \App\Models\PegawaiIzin::STATUS_LABELS[$pegawai->status] ?? ucfirst($pegawai->status);
         $isVerifiedByKcd = in_array($pegawai->status, \App\Models\PegawaiIzin::VERIFIED_STATUSES, true);
         $verifiedAt = $pegawai->diverifikasi_pada?->translatedFormat('d F Y, H:i');
+        $previewUrl = $previewUrl ?? null;
+        $previewQrDataUri = $previewQrDataUri ?? null;
+        $isPreviewMode = $isPreviewMode ?? false;
     @endphp
     <style>
         @page {
@@ -215,6 +218,49 @@
             margin: 10px 0;
         }
 
+        .signature-qr {
+            margin-top: 10px;
+            border: 1px dashed #999;
+            border-radius: 8px;
+            padding: 8px;
+            background: #fafafa;
+        }
+
+        .signature-qr img {
+            width: 95px;
+            height: 95px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 6px;
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 4px;
+        }
+
+        .signature-qr .caption {
+            font-size: 8.8pt;
+            line-height: 1.25;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .signature-qr .url {
+            font-size: 7.8pt;
+            line-height: 1.2;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .preview-badge {
+            margin: 0 0 14px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: 10pt;
+        }
+
         .signature-box .name {
             margin-top: 10px;
             font-weight: bold;
@@ -279,14 +325,22 @@
 </head>
 
 <body>
-    <button class="print-btn no-print" onclick="printClean()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
-        </svg>
-        Cetak
-    </button>
+    @unless($isPreviewMode)
+        <button class="print-btn no-print" onclick="printClean()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z" />
+            </svg>
+            Cetak
+        </button>
+    @endunless
 
     <div class="page">
+        @if($isPreviewMode)
+            <div class="preview-badge">
+                Pratinjau verifikasi digital surat izin. Data ini valid jika barcode/tautan verifikasi sesuai dengan dokumen fisik.
+            </div>
+        @endif
+
         <!-- HEADER -->
         <div class="header">
             <img src="{{ asset('img/logo-jawabarat.png') }}" alt="Logo Jawa Barat" class="header-logo">
@@ -405,6 +459,15 @@
                     @endif
                 </div>
                 <div class="signature-space"></div>
+                @if($isVerifiedByKcd && $previewQrDataUri)
+                    <div class="signature-qr">
+                        <img src="{{ $previewQrDataUri }}" alt="QR Verifikasi TTD Kepala KCD">
+                        <p class="caption">Barcode TTD Digital Kepala</p>
+                        @if($previewUrl)
+                            <p class="url">{{ $previewUrl }}</p>
+                        @endif
+                    </div>
+                @endif
                 @if($isVerifiedByKcd)
                     <p class="name">{{ $kepalaCabdin->formatted_nama }}</p>
                     <p class="nip">{{ $kepalaCabdin->formatted_nip }}</p>

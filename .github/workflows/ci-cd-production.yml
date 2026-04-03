@@ -1,0 +1,181 @@
+name: CI/CD Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: Build Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, ctype, fileinfo, intl, json, openssl, pdo_mysql, tokenizer, xml
+          tools: composer:v2
+          coverage: none
+
+      - name: Validate composer
+        run: composer validate --strict
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Laravel sanity check
+        run: php artisan --version
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+
+    env:
+      DEPLOY_HOST: etamu-kcd.smkn1ciamis.id
+      DEPLOY_PORT: ${{ secrets.PROD_SSH_PORT }}
+      DEPLOY_USER: ${{ secrets.PROD_SSH_USER }}
+      DEPLOY_PASSWORD: ${{ secrets.PROD_SSH_PASSWORD }}
+      DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
+      APP_URL: https://etamu-kcd.smkn1ciamis.id
+      DB_HOST: ${{ secrets.PROD_DB_HOST }}
+      DB_PORT: ${{ secrets.PROD_DB_PORT }}
+      DB_DATABASE: ${{ secrets.PROD_DB_DATABASE }}
+      DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build deployable assets
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci
+          npm run build
+
+      - name: Preflight required secrets
+        run: |
+          set -euo pipefail
+          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PASSWORD DEPLOY_PATH DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
+          for key in "${required[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              echo "Missing required secret/env: ${key}"
+              exit 1
+            fi
+          done
+
+      - name: Install rsync + sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync sshpass
+
+      - name: Trust SSH host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Sync files to server
+        run: |
+          sshpass -p "${DEPLOY_PASSWORD}" rsync -az --delete \
+            -e "ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=yes" \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude "node_modules/" \
+            --exclude "vendor/" \
+            --exclude ".env" \
+            --exclude "storage/logs/*" \
+            --exclude "storage/framework/cache/*" \
+            --exclude "storage/framework/sessions/*" \
+            --exclude "storage/framework/views/*" \
+            ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
+
+      - name: Run remote deploy commands
+        run: |
+          sshpass -p "${DEPLOY_PASSWORD}" ssh -p "${DEPLOY_PORT}" -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "DEPLOY_PATH='${DEPLOY_PATH}' APP_URL='${APP_URL}' DB_HOST='${DB_HOST}' DB_PORT='${DB_PORT}' DB_DATABASE='${DB_DATABASE}' DB_USERNAME='${DB_USERNAME}' DB_PASSWORD='${DB_PASSWORD}' bash -s" <<'EOSSH'
+          set -euo pipefail
+
+          cd "${DEPLOY_PATH}"
+
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          fi
+
+          set_env() {
+            local key="$1"
+            local value="$2"
+
+            if grep -q "^${key}=" .env; then
+              sed -i "s|^${key}=.*|${key}=${value}|" .env
+            else
+              echo "${key}=${value}" >> .env
+            fi
+          }
+
+          set_env APP_ENV production
+          set_env APP_DEBUG false
+          set_env APP_URL "${APP_URL}"
+          set_env DB_CONNECTION mysql
+          set_env DB_HOST "${DB_HOST}"
+          set_env DB_PORT "${DB_PORT}"
+          set_env DB_DATABASE "${DB_DATABASE}"
+          set_env DB_USERNAME "${DB_USERNAME}"
+          set_env DB_PASSWORD "${DB_PASSWORD}"
+
+          if ! grep -q '^APP_KEY=base64:' .env; then
+            php artisan key:generate --force
+          fi
+
+          composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+
+          if command -v npm >/dev/null 2>&1; then
+            npm ci
+            npm run build
+          fi
+
+          php artisan migrate --force
+          php artisan storage:link || true
+          php artisan optimize:clear
+          php artisan config:cache
+          php artisan view:cache
+          php artisan queue:restart || true
+
+          chmod -R ug+rwx storage bootstrap/cache
+          EOSSH

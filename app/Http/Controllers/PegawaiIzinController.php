@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PegawaiIzin;
+use App\Support\PegawaiIzinVerificationQr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,6 +23,9 @@ class PegawaiIzinController extends Controller
 
         abort_unless($pegawai->isVerifiedByKcd(), 403, 'Data izin belum diverifikasi Kepala KCD, sehingga belum dapat dicetak.');
 
+        $previewUrl = PegawaiIzinVerificationQr::signedPreviewUrl($pegawai);
+        $previewQrDataUri = PegawaiIzinVerificationQr::signedPreviewQrDataUri($pegawai);
+
         // Log aktivitas mencetak surat
         $activity = activity('pegawai_izin')
             ->performedOn($pegawai)
@@ -39,7 +43,21 @@ class PegawaiIzinController extends Controller
 
         $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
-        return view('print.surat-izin-pegawai', compact('pegawai', 'kepalaCabdin'));
+        return view('print.surat-izin-pegawai', compact('pegawai', 'kepalaCabdin', 'previewUrl', 'previewQrDataUri'));
+    }
+
+    public function preview(Request $request, $id)
+    {
+        $pegawai = PegawaiIzin::findOrFail($id);
+
+        abort_unless($pegawai->isVerifiedByKcd(), 403, 'Data izin belum diverifikasi Kepala KCD, sehingga belum dapat dipratinjau.');
+
+        $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
+        $previewUrl = $request->fullUrl();
+        $previewQrDataUri = PegawaiIzinVerificationQr::signedPreviewQrDataUri($pegawai);
+        $isPreviewMode = true;
+
+        return view('print.surat-izin-pegawai', compact('pegawai', 'kepalaCabdin', 'previewUrl', 'previewQrDataUri', 'isPreviewMode'));
     }
 
     public function printBulk(Request $request)
@@ -68,6 +86,14 @@ class PegawaiIzinController extends Controller
 
         $skippedCount = max(0, $selectedList->count() - $pegawaiList->count());
 
+        $previewUrls = [];
+        $previewQrDataUris = [];
+
+        foreach ($pegawaiList as $item) {
+            $previewUrls[$item->id] = PegawaiIzinVerificationQr::signedPreviewUrl($item);
+            $previewQrDataUris[$item->id] = PegawaiIzinVerificationQr::signedPreviewQrDataUri($item);
+        }
+
         if (Auth::check() && $pegawaiList->isNotEmpty()) {
             activity('pegawai_izin')
                 ->causedBy(Auth::user())
@@ -81,6 +107,6 @@ class PegawaiIzinController extends Controller
 
         $kepalaCabdin = \App\Models\PengaturanKcd::getSettings();
 
-        return view('print.surat-izin-pegawai-bulk', compact('pegawaiList', 'kepalaCabdin', 'skippedCount'));
+        return view('print.surat-izin-pegawai-bulk', compact('pegawaiList', 'kepalaCabdin', 'skippedCount', 'previewUrls', 'previewQrDataUris'));
     }
 }

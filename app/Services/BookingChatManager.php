@@ -13,6 +13,11 @@ class BookingChatManager
 {
     public const EDIT_WINDOW_MINUTES = 30;
 
+    public function __construct(
+        private readonly WebPushNotificationService $webPushNotificationService,
+    ) {
+    }
+
     private function ensureChatIsOpenForConversation(BookingChat $chat): void
     {
         if (($chat->bukuTamu?->status ?? null) === BukuTamu::STATUS_SELESAI) {
@@ -121,7 +126,7 @@ class BookingChatManager
             throw new \InvalidArgumentException('Message or attachment is required.');
         }
 
-        return DB::transaction(function () use ($chat, $sender, $sanitizedMessage, $attachment, $hasAttachment, $replyToMessage): BookingChatMessage {
+        $chatMessage = DB::transaction(function () use ($chat, $sender, $sanitizedMessage, $attachment, $hasAttachment, $replyToMessage): BookingChatMessage {
             if ($sender->hasRole('Piket') && !$chat->piket_user_id) {
                 $chat->update(['piket_user_id' => $sender->id]);
             }
@@ -143,6 +148,14 @@ class BookingChatManager
 
             return $chatMessage;
         });
+
+        try {
+            $this->webPushNotificationService->notifyChatMessage($chat, $chatMessage, $sender);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return $chatMessage;
     }
 
     public function editMessage(

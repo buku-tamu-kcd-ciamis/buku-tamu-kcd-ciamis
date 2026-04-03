@@ -2,6 +2,12 @@
 @extends('layouts.main')
 
 @section('title', 'Buku Tamu — Cadisdik XIII')
+@section('seo_title', 'Buku Tamu Digital KCD Ciamis | Registrasi Tamu Online')
+@section('seo_description', 'Platform Buku Tamu Digital KCD Ciamis untuk registrasi tamu online, pengelolaan kunjungan, dan layanan administrasi pendidikan secara cepat dan tertib.')
+@section('seo_keywords', 'buku tamu digital ciamis, etamu kcd, registrasi tamu online, buku tamu cabang dinas pendidikan, aplikasi buku tamu sekolah, buku tamu smkn 1 ciamis')
+@section('seo_canonical', url('/'))
+@section('seo_image', '/img/og-etamu-kcd.png')
+@section('seo_image_alt', 'Buku Tamu Digital KCD Ciamis')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/public/buku-tamu.css') }}">

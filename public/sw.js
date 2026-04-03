@@ -125,3 +125,88 @@ self.addEventListener("message", (event) => {
         self.skipWaiting();
     }
 });
+
+function normalizeNotificationPayload(rawPayload) {
+    const payload = rawPayload || {};
+
+    return {
+        title: payload.title || "Notifikasi Baru",
+        body: payload.body || "Ada pembaruan baru.",
+        icon: payload.icon || "/img/logo-cadisdik.png",
+        badge: payload.badge || "/img/logo-cadisdik.png",
+        tag: payload.tag || "cadisdik-generic-notification",
+        data: {
+            chatId: payload.chatId || null,
+            url: payload.url || "/",
+        },
+    };
+}
+
+self.addEventListener("push", (event) => {
+    let parsedPayload = {};
+
+    try {
+        parsedPayload = event.data ? event.data.json() : {};
+    } catch (error) {
+        parsedPayload = {
+            title: "Notifikasi Baru",
+            body: event.data ? event.data.text() : "Ada pembaruan baru.",
+        };
+    }
+
+    const payload = normalizeNotificationPayload(parsedPayload);
+
+    event.waitUntil(
+        self.registration.showNotification(payload.title, {
+            body: payload.body,
+            icon: payload.icon,
+            badge: payload.badge,
+            tag: payload.tag,
+            renotify: true,
+            vibrate: [120, 60, 120],
+            data: payload.data,
+        }),
+    );
+});
+
+self.addEventListener("notificationclick", (event) => {
+    const payload = normalizeNotificationPayload(event.notification?.data || {});
+
+    event.notification.close();
+
+    event.waitUntil(
+        clients
+            .matchAll({ type: "window", includeUncontrolled: true })
+            .then((clientList) => {
+                const origin = self.location.origin;
+                const targetUrl = payload.data.url.startsWith("http")
+                    ? payload.data.url
+                    : `${origin}${payload.data.url}`;
+
+                for (const client of clientList) {
+                    if (!client.url.startsWith(origin)) {
+                        continue;
+                    }
+
+                    if ("navigate" in client && client.url !== targetUrl) {
+                        client.navigate(targetUrl).catch(() => undefined);
+                    }
+
+                    client.postMessage({
+                        type: "BOOKING_CHAT_NOTIFICATION_CLICK",
+                        chatId: payload.data.chatId,
+                    });
+
+                    if ("focus" in client) {
+                        return client.focus();
+                    }
+                }
+
+                if (clients.openWindow) {
+                    return clients.openWindow(targetUrl);
+                }
+
+                return undefined;
+            }),
+    );
+});

@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /staff
+Disallow: /piket
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://etamu-kcd.smkn1ciamis.id/sitemap.xml

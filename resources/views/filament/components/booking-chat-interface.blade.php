@@ -366,7 +366,12 @@
                     return outputArray;
                 },
                 getCsrfToken() {
-                    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    return document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+                },
+                isWebPushConfigured() {
+                    return this.webPushPublicKey !== ''
+                        && this.webPushSubscribeUrl !== ''
+                        && this.webPushUnsubscribeUrl !== '';
                 },
                 async registerWebPushSubscription(subscription) {
                     const payload = subscription?.toJSON?.();
@@ -416,11 +421,11 @@
                     if (
                         this.pushSubscriptionSyncInFlight
                         || this.notificationPermission !== 'granted'
-                        || this.webPushPublicKey === ''
+                        || !this.isWebPushConfigured()
                         || !('serviceWorker' in navigator)
                         || !('PushManager' in window)
                     ) {
-                        return;
+                        return false;
                     }
 
                     this.pushSubscriptionSyncInFlight = true;
@@ -439,8 +444,12 @@
                         }
 
                         await this.registerWebPushSubscription(subscription);
+
+                        return true;
                     } catch (error) {
                         this.showDropNotice('Notifikasi push belum aktif penuh. Coba refresh halaman.', 'error');
+
+                        return false;
                     } finally {
                         this.pushSubscriptionSyncInFlight = false;
                     }
@@ -477,6 +486,12 @@
                         return;
                     }
 
+                    if (!this.isWebPushConfigured()) {
+                        this.showDropNotice('Notifikasi belum aktif. Isi WEB_PUSH_VAPID_PUBLIC_KEY dan WEB_PUSH_VAPID_PRIVATE_KEY di .env.', 'error');
+
+                        return;
+                    }
+
                     if (this.notificationPermission === 'denied') {
                         this.showDropNotice('Notifikasi diblokir browser. Aktifkan manual pada pengaturan site permissions.', 'error');
 
@@ -488,7 +503,14 @@
 
                     if (permission === 'granted') {
                         await this.initNotificationChannel();
-                        await this.ensureWebPushSubscription();
+                        const isSubscribed = await this.ensureWebPushSubscription();
+
+                        if (!isSubscribed) {
+                            this.showDropNotice('Izin browser sudah aktif, tapi sinkronisasi push gagal. Cek konfigurasi VAPID lalu refresh.', 'error');
+
+                            return;
+                        }
+
                         window.localStorage.removeItem(this.notificationPromptDismissStorageKey);
                         this.notificationPromptVisible = false;
                         this.showDropNotice('Notifikasi chat HP berhasil diaktifkan.', 'success');
@@ -1087,10 +1109,13 @@
 
                     <div class="booking-chat-notification-content">
                         <p class="booking-chat-notification-title">Aktifkan Notifikasi Chat</p>
-                        <p class="booking-chat-notification-desc" x-show="notificationPermission !== 'denied'">
+                        <p class="booking-chat-notification-desc" x-show="webPushPublicKey === ''">
+                            Notifikasi chat belum bisa diaktifkan karena kunci VAPID server belum diisi.
+                        </p>
+                        <p class="booking-chat-notification-desc" x-show="webPushPublicKey !== '' && notificationPermission !== 'denied'">
                             Supaya pesan baru dari {{ $counterpartLabel }} langsung muncul sebagai popup notifikasi sistem di HP.
                         </p>
-                        <p class="booking-chat-notification-desc" x-show="notificationPermission === 'denied'">
+                        <p class="booking-chat-notification-desc" x-show="webPushPublicKey !== '' && notificationPermission === 'denied'">
                             Izin notifikasi saat ini diblokir browser. Aktifkan kembali di pengaturan browser untuk situs ini.
                         </p>
                     </div>
@@ -1099,7 +1124,8 @@
                         type="button"
                         class="booking-chat-notification-action"
                         x-on:click="requestBrowserNotificationPermission()"
-                        x-text="notificationPermission === 'denied' ? 'Cek Izin Browser' : 'Aktifkan Notifikasi'"
+                        x-bind:disabled="webPushPublicKey === ''"
+                        x-text="webPushPublicKey === '' ? 'Belum Tersedia' : (notificationPermission === 'denied' ? 'Cek Izin Browser' : 'Aktifkan Notifikasi')"
                     ></button>
                 </div>
 
@@ -1499,7 +1525,7 @@
                 >
                     <div class="booking-chat-delete-dialog">
                         <h4 class="booking-chat-delete-title" x-text="deleteConfirmMode === 'everyone' ? 'Hapus untuk Semua?' : 'Hapus untuk Saya?'"></h4>
-                        <p class="booking-chat-delete-text" x-text="deleteConfirmMode === 'everyone' ? 'Pesan akan diganti menjadi teks "pesan dihapus" untuk semua orang.' : 'Pesan ini hanya akan disembunyikan dari tampilan Anda.'"></p>
+                        <p class="booking-chat-delete-text" x-text="deleteConfirmMode === 'everyone' ? 'Pesan akan diganti menjadi teks &quot;pesan dihapus&quot; untuk semua orang.' : 'Pesan ini hanya akan disembunyikan dari tampilan Anda.'"></p>
 
                         <div class="booking-chat-delete-actions">
                             <button type="button" class="booking-chat-delete-cancel" x-on:click="closeDeleteConfirm()">Batal</button>

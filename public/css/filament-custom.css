@@ -3164,6 +3164,14 @@ a.fi-color-success:hover {
 }
 
 .fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
+    .booking-chat-notification-action:disabled {
+    background: #94a3b8;
+    color: #f8fafc;
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.fi-body:is(.fi-panel-admin, .fi-panel-staff, .fi-panel-piket)
     .booking-chat-textarea {
     width: 100%;
     resize: none;
@@ -4530,6 +4538,11 @@ a.fi-color-success:hover {
 
 .dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-notification-action:hover {
     background: #198748;
+}
+
+.dark .fi-body:is(.fi-panel-staff, .fi-panel-piket) .booking-chat-notification-action:disabled {
+    background: #475569;
+    color: #e2e8f0;
 }
 
 @media (max-width: 820px) {

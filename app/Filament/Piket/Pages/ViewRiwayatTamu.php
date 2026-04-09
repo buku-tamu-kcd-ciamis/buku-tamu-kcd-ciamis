@@ -35,7 +35,7 @@ class ViewRiwayatTamu extends Page
         /** @var User|null $user */
         $user = Auth::user();
 
-        return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
+        return (bool) ($user && $user->hasRole('Piket'));
     }
 
     public static function getUrl(

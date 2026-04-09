@@ -35,6 +35,14 @@ class RoleUserResource extends Resource
         return false;
     }
 
+    public static function canViewAny(): bool
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        return (bool) ($user && $user->hasRole('Super Admin'));
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

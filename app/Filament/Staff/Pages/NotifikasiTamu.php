@@ -22,7 +22,7 @@ class NotifikasiTamu extends Page implements HasTable
     use InteractsWithTable;
     use ChecksStaffPermission;
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = true;
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {
@@ -37,7 +37,8 @@ class NotifikasiTamu extends Page implements HasTable
 
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        return static::hasStaffPermission('notifikasi_tamu')
+            || static::hasStaffPermission('buku_tamu');
     }
 
     public static function canAccess(): bool

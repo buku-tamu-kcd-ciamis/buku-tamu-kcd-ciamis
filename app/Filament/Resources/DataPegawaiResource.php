@@ -38,6 +38,11 @@ class DataPegawaiResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('data_pegawai');
   }
 
+  public static function canViewAny(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function form(Schema $schema): Schema
   {
     return $schema->components([

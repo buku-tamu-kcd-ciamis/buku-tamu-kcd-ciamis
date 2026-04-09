@@ -44,6 +44,11 @@ class UserResource extends Resource
         return $user && $user->role_user && $user->role_user->hasPermission('user_management');
     }
 
+    public static function canViewAny(): bool
+    {
+        return static::shouldRegisterNavigation();
+    }
+
     public static function canDelete($record): bool
     {
         /** @var User|null $user */

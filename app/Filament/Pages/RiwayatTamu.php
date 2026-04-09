@@ -50,6 +50,11 @@ class RiwayatTamu extends Page implements HasTable
     return $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
   }
 
+  public static function canAccess(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function getNavigationItemActiveRoutePattern(): string | array
   {
     return [

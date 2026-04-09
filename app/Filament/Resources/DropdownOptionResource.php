@@ -40,6 +40,11 @@ class DropdownOptionResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('dropdown_options');
   }
 
+  public static function canViewAny(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function form(Schema $schema): Schema
   {
     return $schema->components([

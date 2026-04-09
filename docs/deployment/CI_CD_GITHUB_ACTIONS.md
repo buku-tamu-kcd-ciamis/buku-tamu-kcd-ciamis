@@ -18,16 +18,19 @@ Masuk ke:
 Buat secret berikut:
 
 1. PROD_SSH_USER
-- Value: pplgkcdssh
+- Value contoh: deployuser
 
-2. PROD_SSH_PASSWORD
-- Value: kcd@2026
+2. PROD_SSH_PRIVATE_KEY
+- Value: isi private key SSH (format OpenSSH, multi-line), contoh dimulai dari:
+	-----BEGIN OPENSSH PRIVATE KEY-----
+	...
+	-----END OPENSSH PRIVATE KEY-----
 
 3. PROD_SSH_PORT
 - Value: 22
 
 4. PROD_DEPLOY_PATH
-- Value contoh: /home/pplgkcdssh/etamu-kcd.smkn1ciamis.id
+- Value contoh: /home/deployuser/etamu-kcd.smkn1ciamis.id
 - Catatan: sesuaikan dengan path project di server Anda
 
 5. PROD_DB_HOST
@@ -37,13 +40,13 @@ Buat secret berikut:
 - Value: 3306
 
 7. PROD_DB_DATABASE
-- Value: c1kcd_db
+- Value contoh: app_production_db
 
 8. PROD_DB_USERNAME
-- Value: c1kcd_usr
+- Value contoh: app_production_user
 
 9. PROD_DB_PASSWORD
-- Value: kcd@2026
+- Value: password database production Anda
 
 ## 2) Cara kerja workflow
 
@@ -85,10 +88,11 @@ Pastikan server memiliki:
 ## 5) Checklist pertama kali
 
 1. Test SSH login manual ke server
-2. Pastikan path PROD_DEPLOY_PATH benar
-3. Pastikan project owner/group tepat
-4. Jalankan workflow manual sekali
-5. Cek aplikasi setelah deploy
+2. Pastikan public key sudah ditambahkan ke file ~/.ssh/authorized_keys pada user server
+3. Pastikan path PROD_DEPLOY_PATH benar
+4. Pastikan project owner/group tepat
+5. Jalankan workflow manual sekali
+6. Cek aplikasi setelah deploy
 
 ## 6) Keamanan penting
 

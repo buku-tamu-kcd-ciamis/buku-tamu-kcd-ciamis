@@ -58,7 +58,7 @@ jobs:
       DEPLOY_HOST: etamu-kcd.smkn1ciamis.id
       DEPLOY_PORT: ${{ secrets.PROD_SSH_PORT }}
       DEPLOY_USER: ${{ secrets.PROD_SSH_USER }}
-      DEPLOY_PASSWORD: ${{ secrets.PROD_SSH_PASSWORD }}
+      DEPLOY_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
       DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
       APP_URL: https://etamu-kcd.smkn1ciamis.id
       DB_HOST: ${{ secrets.PROD_DB_HOST }}
@@ -93,7 +93,7 @@ jobs:
       - name: Preflight required secrets
         run: |
           set -euo pipefail
-          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PASSWORD DEPLOY_PATH DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
+          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PRIVATE_KEY DEPLOY_PATH DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
           for key in "${required[@]}"; do
             if [ -z "${!key:-}" ]; then
               echo "Missing required secret/env: ${key}"
@@ -101,20 +101,27 @@ jobs:
             fi
           done
 
-      - name: Install rsync + sshpass
+      - name: Install rsync
         run: |
           sudo apt-get update
-          sudo apt-get install -y rsync sshpass
+          sudo apt-get install -y rsync
+
+      - name: Configure SSH private key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
 
       - name: Trust SSH host key
         run: |
-          mkdir -p ~/.ssh
           ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Sync files to server
         run: |
-          sshpass -p "${DEPLOY_PASSWORD}" rsync -az --delete \
-            -e "ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=yes" \
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -p ${DEPLOY_PORT} -o StrictHostKeyChecking=yes -o BatchMode=yes" \
             --exclude ".git/" \
             --exclude ".github/" \
             --exclude "node_modules/" \
@@ -128,7 +135,7 @@ jobs:
 
       - name: Run remote deploy commands
         run: |
-          sshpass -p "${DEPLOY_PASSWORD}" ssh -p "${DEPLOY_PORT}" -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          ssh -i ~/.ssh/id_ed25519 -p "${DEPLOY_PORT}" -o StrictHostKeyChecking=yes -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "DEPLOY_PATH='${DEPLOY_PATH}' APP_URL='${APP_URL}' DB_HOST='${DB_HOST}' DB_PORT='${DB_PORT}' DB_DATABASE='${DB_DATABASE}' DB_USERNAME='${DB_USERNAME}' DB_PASSWORD='${DB_PASSWORD}' bash -s" <<'EOSSH'
           set -euo pipefail
 

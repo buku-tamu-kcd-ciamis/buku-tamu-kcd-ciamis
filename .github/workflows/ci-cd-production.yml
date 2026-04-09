@@ -93,13 +93,35 @@ jobs:
       - name: Preflight required secrets
         run: |
           set -euo pipefail
-          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PRIVATE_KEY DEPLOY_PATH DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
+          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PRIVATE_KEY DEPLOY_PATH)
+          optional_db=(DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
+          missing=()
+          missing_optional=()
+
           for key in "${required[@]}"; do
             if [ -z "${!key:-}" ]; then
-              echo "Missing required secret/env: ${key}"
-              exit 1
+              missing+=("${key}")
             fi
           done
+
+          for key in "${optional_db[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              missing_optional+=("${key}")
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error title=Missing required deployment secrets::${missing[*]}"
+            echo "Context: event=${GITHUB_EVENT_NAME}, actor=${GITHUB_ACTOR}, ref=${GITHUB_REF}"
+            echo "Hint: simpan secret di Repository Settings > Secrets and variables > Actions > Repository secrets."
+            echo "Hint: jika menggunakan Environment secrets, job deploy harus memakai 'environment: <name>'."
+            exit 1
+          fi
+
+          if [ ${#missing_optional[@]} -gt 0 ]; then
+            echo "::warning title=Optional DB secrets not set::${missing_optional[*]}"
+            echo "Deploy akan lanjut dan nilai DB pada .env server tidak akan diubah."
+          fi
 
       - name: Install rsync
         run: |
@@ -156,15 +178,27 @@ jobs:
             fi
           }
 
+          set_env_if_present() {
+            local key="$1"
+            local value="$2"
+
+            if [ -n "${value}" ]; then
+              set_env "${key}" "${value}"
+            fi
+          }
+
           set_env APP_ENV production
           set_env APP_DEBUG false
           set_env APP_URL "${APP_URL}"
-          set_env DB_CONNECTION mysql
-          set_env DB_HOST "${DB_HOST}"
-          set_env DB_PORT "${DB_PORT}"
-          set_env DB_DATABASE "${DB_DATABASE}"
-          set_env DB_USERNAME "${DB_USERNAME}"
-          set_env DB_PASSWORD "${DB_PASSWORD}"
+          if [ -n "${DB_HOST}" ] && [ -n "${DB_PORT}" ] && [ -n "${DB_DATABASE}" ] && [ -n "${DB_USERNAME}" ] && [ -n "${DB_PASSWORD}" ]; then
+            set_env DB_CONNECTION mysql
+          fi
+
+          set_env_if_present DB_HOST "${DB_HOST}"
+          set_env_if_present DB_PORT "${DB_PORT}"
+          set_env_if_present DB_DATABASE "${DB_DATABASE}"
+          set_env_if_present DB_USERNAME "${DB_USERNAME}"
+          set_env_if_present DB_PASSWORD "${DB_PASSWORD}"
 
           if ! grep -q '^APP_KEY=base64:' .env; then
             php artisan key:generate --force

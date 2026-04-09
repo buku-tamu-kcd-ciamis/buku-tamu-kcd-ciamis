@@ -10,7 +10,7 @@
 @section('seo_image_alt', 'Buku Tamu Digital KCD Ciamis')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/public/buku-tamu.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/public/buku-tamu.css') }}?v={{ file_exists(public_path('css/public/buku-tamu.css')) ? filemtime(public_path('css/public/buku-tamu.css')) : '1' }}">
 @endpush
 
 @section('content')
@@ -357,5 +357,5 @@
             });
         })();
     </script>
-    <script src="{{ asset('js/public/buku-tamu.js') }}"></script>
+    <script src="{{ asset('js/public/buku-tamu.js') }}?v={{ file_exists(public_path('js/public/buku-tamu.js')) ? filemtime(public_path('js/public/buku-tamu.js')) : '1' }}"></script>
 @endpush

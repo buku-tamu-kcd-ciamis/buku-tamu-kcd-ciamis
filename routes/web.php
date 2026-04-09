@@ -7,6 +7,7 @@ use App\Http\Controllers\BukuTamuController;
 use App\Http\Controllers\PegawaiIzinController;
 use App\Http\Controllers\UserManagementController;
 use App\Models\DropdownOption;
+use App\Models\Pegawai;
 use App\Models\PegawaiIzin;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
@@ -45,22 +46,31 @@ Route::get('/', function () {
     $apkDownloadAvailable = collect($apkCandidates)
         ->contains(fn(string $path): bool => File::exists($path));
 
-    // Get list of staff (pegawai linked to users with Staff role)
-    $staffUsers = \App\Models\User::whereHas('role_user', function ($q) {
+    // Primary source: pegawai linked to users with Staff role.
+    // Fallback: all active pegawai to avoid empty public dropdown when linkage is incomplete.
+    $staffPegawai = \App\Models\User::whereHas('role_user', function ($q) {
         $q->where('name', 'Staff');
     })->whereNotNull('pegawai_id')
         ->with('pegawai')
         ->get()
-        ->filter(fn($u) => $u->pegawai && $u->pegawai->is_active)
+        ->map(fn($u) => $u->pegawai)
+        ->filter(fn($pegawai) => $pegawai && $pegawai->is_active)
         ->values();
 
-    $staffNips = $staffUsers
-        ->map(fn($u) => trim((string) ($u->pegawai->nip ?? '')))
+    if ($staffPegawai->isEmpty()) {
+        $staffPegawai = Pegawai::query()
+            ->where('is_active', true)
+            ->orderBy('nama')
+            ->get();
+    }
+
+    $staffNips = $staffPegawai
+        ->map(fn($pegawai) => trim((string) ($pegawai->nip ?? '')))
         ->filter()
         ->values();
 
-    $staffNames = $staffUsers
-        ->map(fn($u) => trim((string) ($u->pegawai->nama ?? '')))
+    $staffNames = $staffPegawai
+        ->map(fn($pegawai) => trim((string) ($pegawai->nama ?? '')))
         ->filter()
         ->values();
 
@@ -94,9 +104,8 @@ Route::get('/', function () {
             ->keyBy(fn(PegawaiIzin $izin): string => mb_strtolower(trim((string) $izin->nama_pegawai)));
     }
 
-    $staffList = $staffUsers
-        ->map(function ($u) use ($izinByNip, $izinByName): array {
-            $pegawai = $u->pegawai;
+    $staffList = $staffPegawai
+        ->map(function ($pegawai) use ($izinByNip, $izinByName): array {
             $pegawaiNip = trim((string) ($pegawai->nip ?? ''));
             $pegawaiName = trim((string) ($pegawai->nama ?? ''));
 
@@ -117,6 +126,7 @@ Route::get('/', function () {
                 'availability_note' => $isUnavailable ? 'Tidak Masuk' : null,
             ];
         })
+        ->unique('value')
         ->values()
         ->toArray();
 

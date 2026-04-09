@@ -15,7 +15,9 @@ Masuk ke:
 - Actions
 - New repository secret
 
-Buat secret berikut:
+Buat secret berikut.
+
+Wajib diisi (deploy tidak akan jalan jika kosong):
 
 1. PROD_SSH_USER
 - Value contoh: deployuser
@@ -32,6 +34,8 @@ Buat secret berikut:
 4. PROD_DEPLOY_PATH
 - Value contoh: /home/deployuser/etamu-kcd.smkn1ciamis.id
 - Catatan: sesuaikan dengan path project di server Anda
+
+Opsional (hanya untuk override nilai DB di .env server):
 
 5. PROD_DB_HOST
 - Value contoh umum: 127.0.0.1
@@ -60,7 +64,7 @@ Saat push ke branch main atau trigger manual:
 2. Job Deploy berjalan:
 - sync file ke server via rsync over SSH
 - inisialisasi .env jika belum ada
-- update env DB production dari secrets
+- update env DB production dari secrets (jika PROD_DB_* diisi)
 - composer install --no-dev
 - npm ci + npm run build (jika npm ada di server)
 - php artisan migrate --force

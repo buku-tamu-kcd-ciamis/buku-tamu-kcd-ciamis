@@ -56,16 +56,16 @@ jobs:
 
     env:
       DEPLOY_HOST: etamu-kcd.smkn1ciamis.id
-      DEPLOY_PORT: ${{ secrets.PROD_SSH_PORT }}
-      DEPLOY_USER: ${{ secrets.PROD_SSH_USER }}
-      DEPLOY_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-      DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
-      APP_URL: https://etamu-kcd.smkn1ciamis.id
-      DB_HOST: ${{ secrets.PROD_DB_HOST }}
-      DB_PORT: ${{ secrets.PROD_DB_PORT }}
-      DB_DATABASE: ${{ secrets.PROD_DB_DATABASE }}
-      DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
-      DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      DEPLOY_PORT: ${{ secrets.PROD_SSH_PORT || secrets.DEPLOY_PORT || vars.PROD_SSH_PORT || vars.DEPLOY_PORT }}
+      DEPLOY_USER: ${{ secrets.PROD_SSH_USER || secrets.DEPLOY_USER || vars.PROD_SSH_USER || vars.DEPLOY_USER }}
+      DEPLOY_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY || secrets.DEPLOY_PRIVATE_KEY }}
+      DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH || secrets.DEPLOY_PATH || vars.PROD_DEPLOY_PATH || vars.DEPLOY_PATH }}
+      APP_URL: ${{ vars.APP_URL || vars.PROD_APP_URL || 'https://etamu-kcd.smkn1ciamis.id' }}
+      DB_HOST: ${{ secrets.PROD_DB_HOST || vars.PROD_DB_HOST || vars.DB_HOST }}
+      DB_PORT: ${{ secrets.PROD_DB_PORT || vars.PROD_DB_PORT || vars.DB_PORT }}
+      DB_DATABASE: ${{ secrets.PROD_DB_DATABASE || vars.PROD_DB_DATABASE || vars.DB_DATABASE }}
+      DB_USERNAME: ${{ secrets.PROD_DB_USERNAME || vars.PROD_DB_USERNAME || vars.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD || secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -113,7 +113,12 @@ jobs:
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::error title=Missing required deployment secrets::${missing[*]}"
             echo "Context: event=${GITHUB_EVENT_NAME}, actor=${GITHUB_ACTOR}, ref=${GITHUB_REF}"
-            echo "Hint: simpan secret di Repository Settings > Secrets and variables > Actions > Repository secrets."
+            echo "Hint: isi salah satu nama yang didukung:"
+            echo "  DEPLOY_PORT <- PROD_SSH_PORT / DEPLOY_PORT (secret atau variable)"
+            echo "  DEPLOY_USER <- PROD_SSH_USER / DEPLOY_USER (secret atau variable)"
+            echo "  DEPLOY_PRIVATE_KEY <- PROD_SSH_PRIVATE_KEY / DEPLOY_PRIVATE_KEY (secret)"
+            echo "  DEPLOY_PATH <- PROD_DEPLOY_PATH / DEPLOY_PATH (secret atau variable)"
+            echo "Hint: simpan di Repository Settings > Secrets and variables > Actions."
             echo "Hint: jika menggunakan Environment secrets, job deploy harus memakai 'environment: <name>'."
             exit 1
           fi

@@ -140,9 +140,38 @@ jobs:
           printf '%s\n' "${DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
+      - name: Verify SSH connectivity
+        run: |
+          set -euo pipefail
+
+          echo "Resolving ${DEPLOY_HOST}..."
+          if ! getent hosts "${DEPLOY_HOST}" >/dev/null; then
+            echo "::error title=DNS resolution failed::Cannot resolve ${DEPLOY_HOST} from GitHub runner."
+            exit 1
+          fi
+
+          getent hosts "${DEPLOY_HOST}" | head -n 1
+
+          echo "Checking TCP connectivity to ${DEPLOY_HOST}:${DEPLOY_PORT}..."
+          if ! timeout 10 bash -c "cat < /dev/null > /dev/tcp/${DEPLOY_HOST}/${DEPLOY_PORT}" 2>/dev/null; then
+            echo "::error title=SSH port unreachable::Cannot reach ${DEPLOY_HOST}:${DEPLOY_PORT} from GitHub runner."
+            echo "Hint: pastikan firewall/server hosting mengizinkan koneksi SSH dari internet atau allowlist IP GitHub Actions."
+            exit 1
+          fi
+
+          echo "SSH port is reachable."
+
       - name: Trust SSH host key
         run: |
-          ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          touch ~/.ssh/known_hosts
+
+          if ! ssh-keyscan -T 10 -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            echo "::error title=ssh-keyscan failed::$(tr '\n' ' ' < /tmp/ssh-keyscan.err)"
+            echo "Hint: cek DEPLOY_PORT, DNS host, firewall, dan pastikan service SSH aktif di server."
+            exit 1
+          fi
+
           chmod 644 ~/.ssh/known_hosts
 
       - name: Sync files to server

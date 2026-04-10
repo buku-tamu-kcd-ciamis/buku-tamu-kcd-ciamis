@@ -36,17 +36,12 @@ class RiwayatTamu extends Page implements HasTable
 
   public static function shouldRegisterNavigation(): bool
   {
-    /** @var User $user */
-    $user = Auth::user();
-    return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
+    return true;
   }
 
   public static function canAccess(): bool
   {
-    /** @var User $user */
-    $user = Auth::user();
-
-    return $user && $user->role_user && $user->role_user->hasPermission('riwayat_tamu');
+    return true;
   }
 
   public function getTableRecordKey($record): string

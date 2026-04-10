@@ -34,8 +34,23 @@ class DataKepalaCabdin extends Page implements HasForms
         return $user?->role_user?->name === 'Super Admin';
     }
 
+    public static function canAccess(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        return $user?->role_user?->name === 'Super Admin';
+    }
+
     public function mount(): void
     {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user || $user->role_user?->name !== 'Super Admin') {
+            abort(403);
+        }
+
         $settings = PengaturanKcd::getSettings();
 
         $this->form->fill([

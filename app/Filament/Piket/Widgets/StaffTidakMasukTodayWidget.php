@@ -54,8 +54,7 @@ class StaffTidakMasukTodayWidget extends TableWidget
           ->sortable(),
       ])
       ->defaultSort('tanggal_mulai', 'asc')
-      ->defaultPaginationPageOption(5)
-      ->paginationPageOptions([5, 10])
+      ->paginated(false)
       ->emptyStateIcon('heroicon-o-check-circle')
       ->emptyStateHeading('Tidak ada staff yang tidak masuk hari ini')
       ->emptyStateDescription('Semua staff tercatat tersedia untuk hari ini.');

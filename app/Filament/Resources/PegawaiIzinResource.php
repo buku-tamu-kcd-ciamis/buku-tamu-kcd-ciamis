@@ -42,6 +42,11 @@ class PegawaiIzinResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }
 
+  public static function canViewAny(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function canCreate(): bool
   {
     return false;

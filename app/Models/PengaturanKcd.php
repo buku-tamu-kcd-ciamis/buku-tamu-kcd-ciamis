@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\Support\LogOptions;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PengaturanKcd extends Model
 {
@@ -18,7 +18,7 @@ class PengaturanKcd extends Model
     return LogOptions::defaults()
       ->logOnly(['nama_kepala', 'nip_kepala', 'jabatan', 'barcode_skm', 'paper_size'])
       ->logOnlyDirty()
-      ->dontLogEmptyChanges()
+      ->dontSubmitEmptyLogs()
       ->useLogName('pengaturan')
       ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
         'created' => 'Pengaturan KCD dibuat',

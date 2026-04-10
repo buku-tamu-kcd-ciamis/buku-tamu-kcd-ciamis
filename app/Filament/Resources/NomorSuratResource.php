@@ -33,6 +33,11 @@ class NomorSuratResource extends Resource
     return $user && $user->hasRole('Super Admin');
   }
 
+  public static function canViewAny(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function form(Schema $schema): Schema
   {
     return $schema->components([

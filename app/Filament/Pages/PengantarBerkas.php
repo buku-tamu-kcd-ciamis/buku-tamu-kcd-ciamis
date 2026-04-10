@@ -44,6 +44,14 @@ class PengantarBerkas extends Page implements HasTable
     return $user && $user->hasRole('Super Admin');
   }
 
+  public static function canAccess(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+
+    return $user && $user->hasRole('Super Admin');
+  }
+
   public static function getNavigationItemActiveRoutePattern(): string | array
   {
     return [
@@ -141,7 +149,7 @@ class PengantarBerkas extends Page implements HasTable
             ->modalDescription(fn(BukuTamu $record): string => static::hasDeletePasswordVerification()
               ? "Data '{$record->nama_lengkap}' akan dihapus permanen."
               : "Data '{$record->nama_lengkap}' akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.")
-            ->form(fn(): array => static::hasDeletePasswordVerification()
+            ->schema(fn(): array => static::hasDeletePasswordVerification()
               ? []
               : [
                 Forms\Components\TextInput::make('password')
@@ -194,7 +202,7 @@ class PengantarBerkas extends Page implements HasTable
             ->modalDescription(fn(): string => static::hasDeletePasswordVerification()
               ? 'Semua data pengantar berkas yang dipilih akan dihapus permanen.'
               : 'Semua data pengantar berkas yang dipilih akan dihapus permanen. Verifikasi password hanya diminta sekali per sesi login.')
-            ->form(fn(): array => static::hasDeletePasswordVerification()
+            ->schema(fn(): array => static::hasDeletePasswordVerification()
               ? []
               : [
                 Forms\Components\TextInput::make('password')

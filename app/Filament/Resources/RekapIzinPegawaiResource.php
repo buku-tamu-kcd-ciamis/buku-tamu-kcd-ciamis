@@ -31,6 +31,11 @@ class RekapIzinPegawaiResource extends Resource
     return $user && $user->role_user && $user->role_user->hasPermission('rekap_izin');
   }
 
+  public static function canViewAny(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function canCreate(): bool
   {
     return false;

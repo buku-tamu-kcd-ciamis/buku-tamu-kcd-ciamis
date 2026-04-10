@@ -41,6 +41,11 @@ class PegawaiPiketResource extends Resource
         return $user && $user->role_user && $user->role_user->hasPermission('pegawai_piket');
     }
 
+    public static function canViewAny(): bool
+    {
+        return static::shouldRegisterNavigation();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()

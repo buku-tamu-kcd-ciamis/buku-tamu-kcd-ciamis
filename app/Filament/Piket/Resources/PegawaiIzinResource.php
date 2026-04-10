@@ -226,7 +226,7 @@ class PegawaiIzinResource extends Resource
         Tables\Columns\TextColumn::make('jenis_izin')
           ->label('Jenis Izin')
           ->badge()
-          ->formatStateUsing(fn(string $state) => PegawaiIzin::JENIS_IZIN_LABELS[$state] ?? $state)
+          ->formatStateUsing(fn(?string $state): string => PegawaiIzin::JENIS_IZIN_LABELS[$state ?? ''] ?? ($state ?: '-'))
           ->color('info'),
         Tables\Columns\TextColumn::make('tanggal_mulai')
           ->label('Mulai')
@@ -242,12 +242,12 @@ class PegawaiIzinResource extends Resource
           ->sortable(),
         Tables\Columns\TextColumn::make('status')
           ->badge()
-          ->color(fn(string $state): string => match ($state) {
+          ->color(fn(?string $state): string => match ($state) {
             'aktif' => 'success',
             'selesai' => 'gray',
             default => 'gray',
           })
-          ->formatStateUsing(fn(string $state) => ucfirst($state)),
+          ->formatStateUsing(fn(?string $state): string => ucfirst($state ?? '-')),
       ])
       ->defaultSort('tanggal_mulai', 'desc')
       ->defaultPaginationPageOption(10)

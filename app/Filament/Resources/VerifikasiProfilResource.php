@@ -30,6 +30,11 @@ class VerifikasiProfilResource extends Resource
     return $user && $user->hasRole('Super Admin');
   }
 
+  public static function canViewAny(): bool
+  {
+    return static::shouldRegisterNavigation();
+  }
+
   public static function canCreate(): bool
   {
     return false;

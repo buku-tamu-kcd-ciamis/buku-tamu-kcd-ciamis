@@ -22,7 +22,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: mbstring, bcmath, ctype, fileinfo, intl, json, openssl, pdo_mysql, tokenizer, xml
           tools: composer:v2
           coverage: none
@@ -56,16 +56,16 @@ jobs:
 
     env:
       DEPLOY_HOST: etamu-kcd.smkn1ciamis.id
-      DEPLOY_PORT: ${{ secrets.PROD_SSH_PORT }}
-      DEPLOY_USER: ${{ secrets.PROD_SSH_USER }}
-      DEPLOY_PASSWORD: ${{ secrets.PROD_SSH_PASSWORD }}
-      DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH }}
-      APP_URL: https://etamu-kcd.smkn1ciamis.id
-      DB_HOST: ${{ secrets.PROD_DB_HOST }}
-      DB_PORT: ${{ secrets.PROD_DB_PORT }}
-      DB_DATABASE: ${{ secrets.PROD_DB_DATABASE }}
-      DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
-      DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+      DEPLOY_PORT: ${{ secrets.PROD_SSH_PORT || secrets.DEPLOY_PORT || vars.PROD_SSH_PORT || vars.DEPLOY_PORT }}
+      DEPLOY_USER: ${{ secrets.PROD_SSH_USER || secrets.DEPLOY_USER || vars.PROD_SSH_USER || vars.DEPLOY_USER }}
+      DEPLOY_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY || secrets.DEPLOY_PRIVATE_KEY }}
+      DEPLOY_PATH: ${{ secrets.PROD_DEPLOY_PATH || secrets.DEPLOY_PATH || vars.PROD_DEPLOY_PATH || vars.DEPLOY_PATH }}
+      APP_URL: ${{ vars.APP_URL || vars.PROD_APP_URL || 'https://etamu-kcd.smkn1ciamis.id' }}
+      DB_HOST: ${{ secrets.PROD_DB_HOST || vars.PROD_DB_HOST || vars.DB_HOST }}
+      DB_PORT: ${{ secrets.PROD_DB_PORT || vars.PROD_DB_PORT || vars.DB_PORT }}
+      DB_DATABASE: ${{ secrets.PROD_DB_DATABASE || vars.PROD_DB_DATABASE || vars.DB_DATABASE }}
+      DB_USERNAME: ${{ secrets.PROD_DB_USERNAME || vars.PROD_DB_USERNAME || vars.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD || secrets.DB_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -74,7 +74,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           tools: composer:v2
           coverage: none
 
@@ -93,28 +93,122 @@ jobs:
       - name: Preflight required secrets
         run: |
           set -euo pipefail
-          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PASSWORD DEPLOY_PATH DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
+          required=(DEPLOY_PORT DEPLOY_USER DEPLOY_PRIVATE_KEY DEPLOY_PATH)
+          optional_db=(DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD)
+          missing=()
+          missing_optional=()
+
           for key in "${required[@]}"; do
             if [ -z "${!key:-}" ]; then
-              echo "Missing required secret/env: ${key}"
-              exit 1
+              missing+=("${key}")
             fi
           done
 
-      - name: Install rsync + sshpass
+          for key in "${optional_db[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              missing_optional+=("${key}")
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error title=Missing required deployment secrets::${missing[*]}"
+            echo "Context: event=${GITHUB_EVENT_NAME}, actor=${GITHUB_ACTOR}, ref=${GITHUB_REF}"
+            echo "Hint: isi salah satu nama yang didukung:"
+            echo "  DEPLOY_PORT <- PROD_SSH_PORT / DEPLOY_PORT (secret atau variable)"
+            echo "  DEPLOY_USER <- PROD_SSH_USER / DEPLOY_USER (secret atau variable)"
+            echo "  DEPLOY_PRIVATE_KEY <- PROD_SSH_PRIVATE_KEY / DEPLOY_PRIVATE_KEY (secret)"
+            echo "  DEPLOY_PATH <- PROD_DEPLOY_PATH / DEPLOY_PATH (secret atau variable)"
+            echo "Hint: simpan di Repository Settings > Secrets and variables > Actions."
+            echo "Hint: jika menggunakan Environment secrets, job deploy harus memakai 'environment: <name>'."
+            exit 1
+          fi
+
+          if [ ${#missing_optional[@]} -gt 0 ]; then
+            echo "::warning title=Optional DB secrets not set::${missing_optional[*]}"
+            echo "Deploy akan lanjut dan nilai DB pada .env server tidak akan diubah."
+          fi
+
+      - name: Install rsync
         run: |
           sudo apt-get update
-          sudo apt-get install -y rsync sshpass
+          sudo apt-get install -y rsync
+
+      - name: Configure SSH private key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          KEY_MATERIAL="${DEPLOY_PRIVATE_KEY//$'\r'/}"
+          if [[ "${KEY_MATERIAL}" != *"BEGIN "*" PRIVATE KEY"* ]]; then
+            if printf '%s' "${KEY_MATERIAL}" | base64 -d > ~/.ssh/id_ed25519 2>/tmp/ssh-key-decode.err; then
+              chmod 600 ~/.ssh/id_ed25519
+            else
+              echo "::error title=Invalid SSH private key::Secret bukan format key langsung dan gagal decode Base64."
+              echo "Hint: isi secret dengan PRIVATE key utuh (BEGIN..END) atau Base64 dari file private key."
+              exit 1
+            fi
+          else
+            # Support secrets pasted as literal "\\n" lines or as normal multiline text.
+            if [[ "${KEY_MATERIAL}" == *"\\n"* ]]; then
+              printf '%b' "${KEY_MATERIAL}" > ~/.ssh/id_ed25519
+            else
+              printf '%s\n' "${KEY_MATERIAL}" > ~/.ssh/id_ed25519
+            fi
+
+            chmod 600 ~/.ssh/id_ed25519
+          fi
+
+          if head -n 1 ~/.ssh/id_ed25519 | grep -Eq '^(ssh-rsa|ssh-ed25519|ecdsa-sha2-nistp[0-9]+) '; then
+            echo "::error title=Invalid SSH private key::Terlihat seperti PUBLIC key (.pub), bukan private key."
+            echo "Hint: gunakan isi file private key (contoh: ~/.ssh/haikal), bukan ~/.ssh/haikal.pub."
+            exit 1
+          fi
+
+          if ! ssh-keygen -y -f ~/.ssh/id_ed25519 >/dev/null 2>/tmp/ssh-key-validate.err; then
+            echo "::error title=Invalid SSH private key::$(tr '\n' ' ' < /tmp/ssh-key-validate.err)"
+            echo "Hint: isi secret dengan PRIVATE key utuh (BEGIN..END), tanpa passphrase, dan bukan .pub."
+            exit 1
+          fi
+
+      - name: Verify SSH connectivity
+        run: |
+          set -euo pipefail
+
+          echo "Resolving ${DEPLOY_HOST}..."
+          if ! getent hosts "${DEPLOY_HOST}" >/dev/null; then
+            echo "::error title=DNS resolution failed::Cannot resolve ${DEPLOY_HOST} from GitHub runner."
+            exit 1
+          fi
+
+          getent hosts "${DEPLOY_HOST}" | head -n 1
+
+          echo "Checking TCP connectivity to ${DEPLOY_HOST}:${DEPLOY_PORT}..."
+          if ! timeout 10 bash -c "cat < /dev/null > /dev/tcp/${DEPLOY_HOST}/${DEPLOY_PORT}" 2>/dev/null; then
+            echo "::error title=SSH port unreachable::Cannot reach ${DEPLOY_HOST}:${DEPLOY_PORT} from GitHub runner."
+            echo "Hint: pastikan firewall/server hosting mengizinkan koneksi SSH dari internet atau allowlist IP GitHub Actions."
+            exit 1
+          fi
+
+          echo "SSH port is reachable."
 
       - name: Trust SSH host key
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          set -euo pipefail
+          touch ~/.ssh/known_hosts
+
+          if ! ssh-keyscan -T 10 -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts 2>/tmp/ssh-keyscan.err; then
+            echo "::error title=ssh-keyscan failed::$(tr '\n' ' ' < /tmp/ssh-keyscan.err)"
+            echo "Hint: cek DEPLOY_PORT, DNS host, firewall, dan pastikan service SSH aktif di server."
+            exit 1
+          fi
+
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Sync files to server
         run: |
-          sshpass -p "${DEPLOY_PASSWORD}" rsync -az --delete \
-            -e "ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=yes" \
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -p ${DEPLOY_PORT} -o StrictHostKeyChecking=yes -o BatchMode=yes" \
             --exclude ".git/" \
             --exclude ".github/" \
             --exclude "node_modules/" \
@@ -128,7 +222,7 @@ jobs:
 
       - name: Run remote deploy commands
         run: |
-          sshpass -p "${DEPLOY_PASSWORD}" ssh -p "${DEPLOY_PORT}" -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          ssh -i ~/.ssh/id_ed25519 -p "${DEPLOY_PORT}" -o StrictHostKeyChecking=yes -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "DEPLOY_PATH='${DEPLOY_PATH}' APP_URL='${APP_URL}' DB_HOST='${DB_HOST}' DB_PORT='${DB_PORT}' DB_DATABASE='${DB_DATABASE}' DB_USERNAME='${DB_USERNAME}' DB_PASSWORD='${DB_PASSWORD}' bash -s" <<'EOSSH'
           set -euo pipefail
 
@@ -149,15 +243,27 @@ jobs:
             fi
           }
 
+          set_env_if_present() {
+            local key="$1"
+            local value="$2"
+
+            if [ -n "${value}" ]; then
+              set_env "${key}" "${value}"
+            fi
+          }
+
           set_env APP_ENV production
           set_env APP_DEBUG false
           set_env APP_URL "${APP_URL}"
-          set_env DB_CONNECTION mysql
-          set_env DB_HOST "${DB_HOST}"
-          set_env DB_PORT "${DB_PORT}"
-          set_env DB_DATABASE "${DB_DATABASE}"
-          set_env DB_USERNAME "${DB_USERNAME}"
-          set_env DB_PASSWORD "${DB_PASSWORD}"
+          if [ -n "${DB_HOST}" ] && [ -n "${DB_PORT}" ] && [ -n "${DB_DATABASE}" ] && [ -n "${DB_USERNAME}" ] && [ -n "${DB_PASSWORD}" ]; then
+            set_env DB_CONNECTION mysql
+          fi
+
+          set_env_if_present DB_HOST "${DB_HOST}"
+          set_env_if_present DB_PORT "${DB_PORT}"
+          set_env_if_present DB_DATABASE "${DB_DATABASE}"
+          set_env_if_present DB_USERNAME "${DB_USERNAME}"
+          set_env_if_present DB_PASSWORD "${DB_PASSWORD}"
 
           if ! grep -q '^APP_KEY=base64:' .env; then
             php artisan key:generate --force

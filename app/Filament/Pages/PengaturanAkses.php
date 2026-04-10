@@ -37,6 +37,14 @@ class PengaturanAkses extends Page implements HasForms
     return $user && $user->hasRole('Super Admin');
   }
 
+  public static function canAccess(): bool
+  {
+    /** @var User $user */
+    $user = Auth::user();
+
+    return $user && $user->hasRole('Super Admin');
+  }
+
   public function mount(): void
   {
     /** @var User $user */

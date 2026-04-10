@@ -38,17 +38,12 @@ class PengantarBerkas extends Page implements HasTable
 
   public static function shouldRegisterNavigation(): bool
   {
-    /** @var User $user */
-    $user = Auth::user();
-    return $user && $user->role_user && $user->role_user->hasPermission('pengantar_berkas');
+    return true;
   }
 
   public static function canAccess(): bool
   {
-    /** @var User $user */
-    $user = Auth::user();
-
-    return $user && $user->role_user && $user->role_user->hasPermission('pengantar_berkas');
+    return true;
   }
 
   public function table(Table $table): Table

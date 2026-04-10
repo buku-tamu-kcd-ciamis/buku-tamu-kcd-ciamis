@@ -38,6 +38,9 @@ Route::get('/sitemap.xml', function () {
 Route::get('/', function () {
     $apkCandidates = [
         storage_path('app/public/apk/buku-tamu-kcd.apk'),
+        public_path('apk/buku-tamu-kcd.apk'),
+        public_path('apk/app-release.apk'),
+        public_path('apk/app-debug.apk'),
         base_path('android/app/build/outputs/apk/release/app-release.apk'),
         base_path('android/app/build/outputs/apk/debug/app-debug.apk'),
     ];
@@ -132,6 +135,9 @@ Route::get('/', function () {
 Route::get('/download/apk', function () {
     $apkCandidates = [
         storage_path('app/public/apk/buku-tamu-kcd.apk'),
+        public_path('apk/buku-tamu-kcd.apk'),
+        public_path('apk/app-release.apk'),
+        public_path('apk/app-debug.apk'),
         base_path('android/app/build/outputs/apk/release/app-release.apk'),
         base_path('android/app/build/outputs/apk/debug/app-debug.apk'),
     ];

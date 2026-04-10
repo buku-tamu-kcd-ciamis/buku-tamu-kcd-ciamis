@@ -10,7 +10,37 @@
 @section('seo_image_alt', 'Buku Tamu Digital KCD Ciamis')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/public/buku-tamu.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/public/buku-tamu.css') }}?v={{ filemtime(public_path('css/public/buku-tamu.css')) }}">
+    <style>
+        /* Critical fallback layout in case cached CSS fails to load correctly. */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .header > img {
+            width: 62px !important;
+            min-width: 62px;
+            max-width: 62px !important;
+            height: 62px !important;
+            max-height: 62px !important;
+            object-fit: contain;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -244,17 +274,10 @@
             <p class="apk-reminder__title">Pakai Android?</p>
             <p class="apk-reminder__desc">Gunakan aplikasi Buku Tamu KCD agar akses lebih cepat.</p>
         </div>
-        @if($apkDownloadAvailable ?? false)
-            <a class="apk-reminder__action" href="{{ route('apk.download') }}">
-                <i class="fa-solid fa-download"></i>
-                Download APK
-            </a>
-        @else
-            <span class="apk-reminder__action is-disabled">
-                <i class="fa-solid fa-circle-info"></i>
-                APK belum tersedia
-            </span>
-        @endif
+        <button type="button" class="apk-reminder__action" id="installPwaBtn">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            Install Aplikasi
+        </button>
     </div>
 
     <!-- Floating Barcode Button -->
@@ -324,6 +347,8 @@
         (function setupApkReminder() {
             const reminder = document.getElementById('apkReminder');
             const closeButton = document.getElementById('apkReminderClose');
+            const installButton = document.getElementById('installPwaBtn');
+            let deferredInstallPrompt = null;
 
             if (!reminder || !closeButton) {
                 return;
@@ -340,6 +365,43 @@
             );
             const isTrustedWebActivity = document.referrer.startsWith('android-app://');
             const isApkRuntime = isCapacitorNative || isAndroidWebView || isTrustedWebActivity;
+
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function registerPublicServiceWorkerOnce() {
+                    navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function (error) {
+                        console.warn('Service worker registration failed on public page:', error);
+                    });
+                }, { once: true });
+            }
+
+            window.addEventListener('beforeinstallprompt', (event) => {
+                event.preventDefault();
+                deferredInstallPrompt = event;
+            });
+
+            window.addEventListener('appinstalled', () => {
+                deferredInstallPrompt = null;
+                reminder.classList.remove('is-visible');
+                reminder.classList.add('is-hidden');
+            });
+
+            if (installButton) {
+                installButton.addEventListener('click', async () => {
+                    if (!deferredInstallPrompt) {
+                        return;
+                    }
+
+                    deferredInstallPrompt.prompt();
+
+                    try {
+                        await deferredInstallPrompt.userChoice;
+                    } catch (error) {
+                        console.warn('PWA install prompt failed:', error);
+                    } finally {
+                        deferredInstallPrompt = null;
+                    }
+                });
+            }
 
             if (isApkRuntime) {
                 reminder.classList.add('is-hidden');

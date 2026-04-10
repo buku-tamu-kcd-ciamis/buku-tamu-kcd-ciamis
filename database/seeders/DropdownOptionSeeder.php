@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\DropdownOption;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DropdownOptionSeeder extends Seeder
@@ -100,32 +101,38 @@ class DropdownOptionSeeder extends Seeder
     DropdownOption::clearCache();
 
     // =============================================
-    // BAGIAN YANG DITUJU (Ruangan KCD Cadisdik 13)
+    // STAFF YANG DITUJU (legacy category key: bagian_dituju)
     // =============================================
-    $bagianDitujuOptions = [
-      'Kepala Cabang Dinas',
-      'Subbag Tata Usaha',
-      'Seksi Kurikulum',
-      'Seksi Peserta Didik',
-      'Seksi Sarana dan Prasarana',
-      'Seksi Ketenagaan',
-      'Pengawas Sekolah',
-      'Operator Dapodik',
-      'Bendahara',
-      'Bagian Kepegawaian',
-      'Bagian Keuangan',
-      'Bagian Umum',
-      'Ruang Rapat',
-      'Ruang Arsip',
-      'Front Office / Resepsionis',
-      'Lainnya',
-    ];
+    $staffDitujuOptions = User::query()
+      ->whereHas('role_user', fn($query) => $query->where('name', 'Staff'))
+      ->whereNotNull('pegawai_id')
+      ->with('pegawai:id,nama,jabatan,is_active')
+      ->get()
+      ->filter(fn(User $user): bool => $user->pegawai && $user->pegawai->is_active && filled(trim((string) $user->pegawai->nama)))
+      ->map(function (User $user): array {
+        $nama = trim((string) $user->pegawai->nama);
+        $jabatan = trim((string) ($user->pegawai->jabatan ?? ''));
 
-    foreach ($bagianDitujuOptions as $i => $option) {
+        return [
+          'value' => $nama,
+          'label' => $jabatan !== '' ? ($nama . ' - ' . $jabatan) : $nama,
+        ];
+      })
+      ->unique('value')
+      ->values()
+      ->all();
+
+    if ($staffDitujuOptions === []) {
+      $staffDitujuOptions = [
+        ['value' => 'Staff Umum', 'label' => 'Staff Umum'],
+      ];
+    }
+
+    foreach ($staffDitujuOptions as $i => $option) {
       DropdownOption::updateOrCreate(
-        ['category' => DropdownOption::CATEGORY_BAGIAN_DITUJU, 'value' => $option],
+        ['category' => DropdownOption::CATEGORY_STAFF_DITUJU, 'value' => $option['value']],
         [
-          'label' => $option,
+          'label' => $option['label'],
           'metadata' => null,
           'sort_order' => $i + 1,
           'is_active' => true,
@@ -173,7 +180,7 @@ class DropdownOptionSeeder extends Seeder
     $this->command->info('- Jenis ID: ' . count($jenisIdOptions) . ' options');
     $this->command->info('- Keperluan: ' . count($keperluanOptions) . ' options');
     $this->command->info('- Kabupaten/Kota: ' . count($kabupatenKota) . ' options');
-    $this->command->info('- Bagian Dituju: ' . count($bagianDitujuOptions) . ' options');
+    $this->command->info('- Staff Yang Dituju: ' . count($staffDitujuOptions) . ' options');
     $this->command->info('- Pegawai Piket: ' . count($pegawaiPiketOptions) . ' options');
 
     activity()->enableLogging();

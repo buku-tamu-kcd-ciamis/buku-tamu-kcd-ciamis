@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 use App\Filament\Resources\DropdownOptionResource;
 use App\Models\DropdownOption;
 use App\Models\PengaturanKcd;
+use App\Models\User;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -24,6 +25,73 @@ class ListDropdownOptions extends ListRecords
       Actions\CreateAction::make()
         ->label('Tambahkan Opsi Dropdown')
         ->color('info'),
+      Actions\Action::make('sync_staff_dituju')
+        ->label('Sinkronkan Staff Dituju')
+        ->icon('heroicon-o-arrow-path')
+        ->color('success')
+        ->requiresConfirmation()
+        ->modalHeading('Sinkronkan Staff Yang Dituju')
+        ->modalDescription('Data kategori Staff Yang Dituju akan disesuaikan dengan daftar staff aktif di halaman Buku Tamu.')
+        ->modalSubmitActionLabel('Sinkronkan')
+        ->action(function (): void {
+          $staffOptions = User::query()
+            ->whereHas('role_user', fn($query) => $query->where('name', 'Staff'))
+            ->whereNotNull('pegawai_id')
+            ->with('pegawai:id,nama,jabatan,is_active')
+            ->get()
+            ->filter(fn(User $user): bool => $user->pegawai && $user->pegawai->is_active && filled(trim((string) $user->pegawai->nama)))
+            ->map(function (User $user): array {
+              $nama = trim((string) $user->pegawai->nama);
+              $jabatan = trim((string) ($user->pegawai->jabatan ?? ''));
+
+              return [
+                'value' => $nama,
+                'label' => $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama,
+              ];
+            })
+            ->unique('value')
+            ->values();
+
+          if ($staffOptions->isEmpty()) {
+            Notification::make()
+              ->warning()
+              ->title('Sinkronisasi dibatalkan')
+              ->body('Belum ada data staff aktif yang bisa disinkronkan.')
+              ->send();
+
+            return;
+          }
+
+          $category = DropdownOption::CATEGORY_STAFF_DITUJU;
+          $keepValues = [];
+
+          foreach ($staffOptions as $index => $option) {
+            DropdownOption::updateOrCreate(
+              ['category' => $category, 'value' => $option['value']],
+              [
+                'label' => $option['label'],
+                'metadata' => null,
+                'sort_order' => $index + 1,
+                'is_active' => true,
+              ],
+            );
+
+            $keepValues[] = $option['value'];
+          }
+
+          DropdownOption::query()
+            ->where('category', $category)
+            ->whereNotIn('value', $keepValues)
+            ->delete();
+
+          DropdownOption::clearCache($category);
+
+          Notification::make()
+            ->success()
+            ->title('Sinkronisasi berhasil')
+            ->body(count($keepValues) . ' staff berhasil disinkronkan ke kategori Staff Yang Dituju.')
+            ->send();
+        }),
       Actions\Action::make('ganti_barcode_skm')
         ->label('Ganti Barcode SKM')
         ->icon('heroicon-o-qr-code')
@@ -107,11 +175,11 @@ class ListDropdownOptions extends ListRecords
         ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_KABUPATEN_KOTA)->count())
         ->badgeColor('warning')
         ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_KABUPATEN_KOTA)),
-      'bagian_dituju' => Tab::make('Bagian Dituju')
+      'staff_dituju' => Tab::make('Staff Yang Dituju')
         ->icon('heroicon-o-building-office')
-        ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_BAGIAN_DITUJU)->count())
+        ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_STAFF_DITUJU)->count())
         ->badgeColor('danger')
-        ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_BAGIAN_DITUJU)),
+        ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_STAFF_DITUJU)),
     ];
   }
 

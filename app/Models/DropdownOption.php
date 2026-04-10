@@ -48,14 +48,16 @@ class DropdownOption extends Model
   public const CATEGORY_JENIS_ID = 'jenis_id';
   public const CATEGORY_KEPERLUAN = 'keperluan';
   public const CATEGORY_KABUPATEN_KOTA = 'kabupaten_kota';
-  public const CATEGORY_BAGIAN_DITUJU = 'bagian_dituju';
+  // Legacy key tetap 'bagian_dituju' agar kompatibel dengan data lama.
+  public const CATEGORY_STAFF_DITUJU = 'bagian_dituju';
+  public const CATEGORY_BAGIAN_DITUJU = self::CATEGORY_STAFF_DITUJU;
   public const CATEGORY_PEGAWAI_PIKET = 'pegawai_piket';
 
   public const CATEGORY_LABELS = [
     self::CATEGORY_JENIS_ID => 'Jenis ID',
     self::CATEGORY_KEPERLUAN => 'Keperluan',
     self::CATEGORY_KABUPATEN_KOTA => 'Kabupaten/Kota',
-    self::CATEGORY_BAGIAN_DITUJU => 'Bagian Dituju',
+    self::CATEGORY_STAFF_DITUJU => 'Staff Yang Dituju',
     self::CATEGORY_PEGAWAI_PIKET => 'Pegawai Piket',
   ];
 
@@ -133,5 +135,3 @@ class DropdownOption extends Model
     });
   }
 }
-
-

@@ -117,11 +117,11 @@ class DropdownOptionResource extends Resource
           ->label('Kategori')
           ->badge()
           ->color(fn(string $state): string => match ($state) {
-            'jenis_id' => 'info',
-            'keperluan' => 'success',
-            'kabupaten_kota' => 'warning',
-            'bagian_dituju' => 'danger',
-            'pegawai_piket' => 'primary',
+            DropdownOption::CATEGORY_JENIS_ID => 'info',
+            DropdownOption::CATEGORY_KEPERLUAN => 'success',
+            DropdownOption::CATEGORY_KABUPATEN_KOTA => 'warning',
+            DropdownOption::CATEGORY_STAFF_DITUJU => 'danger',
+            DropdownOption::CATEGORY_PEGAWAI_PIKET => 'primary',
             default => 'gray',
           })
           ->formatStateUsing(fn(string $state) => DropdownOption::CATEGORY_LABELS[$state] ?? $state)
@@ -264,11 +264,11 @@ class DropdownOptionResource extends Resource
             ->label('Kategori')
             ->badge()
             ->color(fn(string $state): string => match ($state) {
-              'jenis_id' => 'info',
-              'keperluan' => 'success',
-              'kabupaten_kota' => 'warning',
-              'bagian_dituju' => 'danger',
-              'pegawai_piket' => 'primary',
+              DropdownOption::CATEGORY_JENIS_ID => 'info',
+              DropdownOption::CATEGORY_KEPERLUAN => 'success',
+              DropdownOption::CATEGORY_KABUPATEN_KOTA => 'warning',
+              DropdownOption::CATEGORY_STAFF_DITUJU => 'danger',
+              DropdownOption::CATEGORY_PEGAWAI_PIKET => 'primary',
               default => 'gray',
             })
             ->formatStateUsing(fn(string $state) => DropdownOption::CATEGORY_LABELS[$state] ?? $state),
@@ -282,7 +282,7 @@ class DropdownOptionResource extends Resource
             ->label('Urutan')
             ->badge()
             ->color('gray')
-            ->formatStateUsing(fn($state) => '#'. $state),
+            ->formatStateUsing(fn($state) => '#' . $state),
           Infolists\Components\TextEntry::make('is_active')
             ->label('Status')
             ->badge()

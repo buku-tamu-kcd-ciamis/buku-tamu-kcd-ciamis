@@ -29,8 +29,24 @@ class ViewBukuTamu extends ViewRecord
                             Group::make([
                                 Infolists\Components\ImageEntry::make('foto_selfie')
                                     ->label('Foto selfie')
+                                    ->imageWidth('100%')
                                     ->imageHeight(260)
-                                    ->disk('public'),
+                                    ->disk('public')
+                                    ->extraImgAttributes([
+                                        'class' => 'object-cover w-full rounded-2xl shadow-lg border-2 border-white hover:scale-[1.02] transition-all duration-300 cursor-pointer',
+                                    ])
+                                    ->action(
+                                        Actions\Action::make('preview_foto_selfie')
+                                            ->label('Lihat Foto')
+                                            ->modalHeading('Preview Foto Selfie')
+                                            ->modalWidth('4xl')
+                                            ->modalSubmitAction(false)
+                                            ->modalCancelAction(false)
+                                            ->modalContent(fn($record) => view('filament.components.image-preview', [
+                                                'url' => $record->foto_selfie_url,
+                                                'name' => $record->nama_lengkap,
+                                            ]))
+                                    ),
                             ])->columnSpan(1),
                             Group::make([
                                 Infolists\Components\TextEntry::make('nama_lengkap')
@@ -126,8 +142,25 @@ class ViewBukuTamu extends ViewRecord
                 ->components([
                     Infolists\Components\ImageEntry::make('foto_penerimaan')
                         ->label('Foto penerimaan')
+                        ->imageWidth('100%')
+                        ->imageHeight(260)
                         ->disk('public')
-                        ->visible(fn(?BukuTamu $record): bool => filled($record?->foto_penerimaan)),
+                        ->extraImgAttributes([
+                            'class' => 'object-cover w-full rounded-2xl shadow-lg border-2 border-white hover:scale-[1.02] transition-all duration-300 cursor-pointer',
+                        ])
+                        ->visible(fn(?BukuTamu $record): bool => filled($record?->foto_penerimaan))
+                        ->action(
+                            Actions\Action::make('preview_foto_penerimaan')
+                                ->label('Lihat Foto')
+                                ->modalHeading('Preview Foto Penerimaan')
+                                ->modalWidth('4xl')
+                                ->modalSubmitAction(false)
+                                ->modalCancelAction(false)
+                                ->modalContent(fn($record) => view('filament.components.image-preview', [
+                                    'url' => $record->foto_penerimaan_url,
+                                    'name' => "Penerimaan - {$record->nama_lengkap}",
+                                ]))
+                        ),
                     Infolists\Components\TextEntry::make('foto_penerimaan_info')
                         ->label('Foto penerimaan')
                         ->state('Tidak ada berkas yang dikirim.')

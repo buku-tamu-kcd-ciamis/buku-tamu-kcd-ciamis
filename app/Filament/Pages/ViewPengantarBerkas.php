@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\BukuTamu;
 use App\Models\User;
+use Filament\Actions;
 use Filament\Infolists;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
@@ -89,8 +90,24 @@ class ViewPengantarBerkas extends Page implements HasInfolists
                                 Group::make([
                                     Infolists\Components\ImageEntry::make('foto_selfie')
                                         ->label('Foto selfie')
+                                        ->imageWidth('100%')
                                         ->imageHeight(260)
-                                        ->disk('public'),
+                                        ->disk('public')
+                                        ->extraImgAttributes([
+                                            'class' => 'object-cover w-full rounded-2xl shadow-lg border-2 border-white hover:scale-[1.02] transition-all duration-300 cursor-pointer',
+                                        ])
+                                        ->action(
+                                            Actions\Action::make('preview_foto_selfie')
+                                                ->label('Lihat Foto')
+                                                ->modalHeading('Preview Foto Selfie')
+                                                ->modalWidth('4xl')
+                                                ->modalSubmitAction(false)
+                                                ->modalCancelAction(false)
+                                                ->modalContent(fn($record) => view('filament.components.image-preview', [
+                                                    'url' => $record->foto_selfie_url,
+                                                    'name' => $record->nama_lengkap,
+                                                ]))
+                                        ),
                                 ])->columnSpan(1),
                                 Group::make([
                                     Infolists\Components\TextEntry::make('nama_lengkap')
@@ -188,7 +205,25 @@ class ViewPengantarBerkas extends Page implements HasInfolists
                     ->components([
                         Infolists\Components\ImageEntry::make('foto_penerimaan')
                             ->label('Foto penerimaan')
-                            ->disk('public'),
+                            ->imageWidth('100%')
+                            ->imageHeight(260)
+                            ->disk('public')
+                            ->extraImgAttributes([
+                                'class' => 'object-cover w-full rounded-2xl shadow-lg border-2 border-white hover:scale-[1.02] transition-all duration-300 cursor-pointer',
+                            ])
+                            ->visible(fn(?BukuTamu $record): bool => filled($record?->foto_penerimaan))
+                            ->action(
+                                Actions\Action::make('preview_foto_penerimaan')
+                                    ->label('Lihat Foto')
+                                    ->modalHeading('Preview Foto Penerimaan')
+                                    ->modalWidth('4xl')
+                                    ->modalSubmitAction(false)
+                                    ->modalCancelAction(false)
+                                    ->modalContent(fn($record) => view('filament.components.image-preview', [
+                                        'url' => $record->foto_penerimaan_url,
+                                        'name' => "Penerimaan - {$record->nama_lengkap}",
+                                    ]))
+                            ),
                         Infolists\Components\ImageEntry::make('tanda_tangan')
                             ->label('Tanda tangan')
                             ->disk('public')

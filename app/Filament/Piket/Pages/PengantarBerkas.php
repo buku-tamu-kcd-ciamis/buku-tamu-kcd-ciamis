@@ -92,7 +92,15 @@ class PengantarBerkas extends Page implements HasTable
         Tables\Filters\SelectFilter::make('status')
           ->options(BukuTamu::STATUS_LABELS),
       ])
-      ->recordActions([])
+      ->actions([
+        Action::make('detail')
+            ->label('Lihat Detail')
+            ->icon('heroicon-o-eye')
+            ->color('primary')
+            ->modalContent(fn($record) => view('filament.piket.pages.detail-pengantar-berkas', ['record' => $record]))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Tutup')
+      ])
       ->headerActions([])
       ->toolbarActions([]);
   }

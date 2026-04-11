@@ -82,6 +82,11 @@ class ViewRiwayatTamu extends Page
             ->paginate($this->kunjunganPerPage);
     }
 
+    public function getPageClasses(): array
+    {
+        return ['fi-page-view-riwayat-tamu'];
+    }
+
     protected function getHeaderActions(): array
     {
         return [];

@@ -1040,10 +1040,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     "autocomplete-item" +
                     (isUnavailable ? " is-disabled" : "");
                 const noteLabel = item.availability_note || "Tidak Masuk";
-                const sortNote = item.sort_note || "";
-                const metaText = isUnavailable
-                    ? (sortNote ? sortNote + " • " : "") + noteLabel
-                    : sortNote;
+                const metaText = isUnavailable ? noteLabel : "";
                 const metaHtml = metaText
                     ? '<span class="autocomplete-meta">' + metaText + "</span>"
                     : "";

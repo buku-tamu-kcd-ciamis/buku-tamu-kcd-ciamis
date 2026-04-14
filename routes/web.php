@@ -217,12 +217,11 @@ Route::get('/', function () {
 
     $staffList = $bagianDitujuOptions
         ->values()
-        ->map(function (array $option, int $index) use ($extractStaffName, $pegawaiByName, $izinByNip, $izinByName): array {
+        ->map(function (array $option) use ($extractStaffName, $pegawaiByName, $izinByNip, $izinByName): array {
             $value = trim((string) ($option['value'] ?? ''));
             $label = trim((string) ($option['label'] ?? $value));
             $staffName = $extractStaffName($value);
             $staffNameKey = mb_strtolower($staffName);
-            $visitCount = (int) ($option['visit_count'] ?? 0);
 
             $pegawaiNips = $pegawaiByName
                 ->get($staffNameKey, collect())
@@ -237,9 +236,6 @@ Route::get('/', function () {
             return [
                 'value' => $value,
                 'label' => $label,
-                'visit_count' => $visitCount,
-                'rank' => $index + 1,
-                'sort_note' => 'Urutan #' . ($index + 1) . ' • ' . $visitCount . ' kunjungan',
                 'is_unavailable' => $isUnavailable,
                 'availability_note' => $isUnavailable ? 'Tidak Masuk' : null,
             ];

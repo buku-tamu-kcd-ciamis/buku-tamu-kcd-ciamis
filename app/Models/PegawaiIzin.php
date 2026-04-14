@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class PegawaiIzin extends Model
 {
@@ -86,7 +86,7 @@ class PegawaiIzin extends Model
         'catatan_verifikasi',
       ])
       ->logOnlyDirty()
-      ->dontLogEmptyChanges()
+      ->dontSubmitEmptyLogs()
       ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
         'created' => "Membuat surat izin {$this->jenis_izin} atas nama {$this->nama_pegawai}",
         'updated' => "Memperbarui surat izin {$this->jenis_izin} atas nama {$this->nama_pegawai}",

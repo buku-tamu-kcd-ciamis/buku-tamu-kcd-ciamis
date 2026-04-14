@@ -36,17 +36,16 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'User';
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
     protected static ?int $navigationSort = 1;
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function shouldRegisterNavigation(): bool
     {
-        /** @var User $user */
-        $user = Auth::user();
-        return $user && $user->role_user && $user->role_user->hasPermission('user_management');
+        return false;
     }
 
     public static function canViewAny(): bool
     {
-        return static::shouldRegisterNavigation();
+        return false;
     }
 
     public static function canDelete($record): bool

@@ -94,6 +94,25 @@
             padding: 0.95rem;
         }
 
+        html.dark .do-content {
+            border-color: #1f2937;
+            background: #0b0b0b;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        html.dark .do-content-head {
+            border-bottom-color: #1f2937;
+            background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+        }
+
+        html.dark .do-content-title {
+            color: #e5e7eb;
+        }
+
+        html.dark .do-content-body {
+            background: #0b0b0b;
+        }
+
         .do-edit-theme-btn {
             background: linear-gradient(135deg, #0f9455 0%, #0b7a46 100%) !important;
             border-color: #0b7a46 !important;

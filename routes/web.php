@@ -63,23 +63,41 @@ Route::get('/', function () {
         return trim((string) preg_replace('/\s+#\d+$/', '', $name));
     };
 
+    $visitCountByRawStaff = BukuTamu::query()
+        ->selectRaw('staff_dituju, count(*) as total')
+        ->whereNotNull('staff_dituju')
+        ->where('staff_dituju', '!=', '')
+        ->groupBy('staff_dituju')
+        ->pluck('total', 'staff_dituju');
+
+    $visitCountByStaffName = collect($visitCountByRawStaff)
+        ->reduce(function (array $carry, int|string $count, string $staff) use ($extractStaffName): array {
+            $staffName = $extractStaffName((string) $staff);
+
+            if ($staffName === '') {
+                return $carry;
+            }
+
+            $staffNameKey = mb_strtolower($staffName);
+            $carry[$staffNameKey] = (int) ($carry[$staffNameKey] ?? 0) + (int) $count;
+
+            return $carry;
+        }, []);
+
     $bagianDitujuOptions = DropdownOption::query()
         ->where('category', DropdownOption::CATEGORY_STAFF_DITUJU)
         ->where('is_active', true)
         ->select(['value', 'label', 'sort_order'])
-        ->selectSub(
-            BukuTamu::query()
-                ->selectRaw('count(*)')
-                ->whereColumn('staff_dituju', 'dropdown_options.value'),
-            'visit_count'
-        )
-        ->orderByDesc('visit_count')
-        ->orderBy('sort_order')
-        ->orderBy('label')
         ->get()
-        ->map(function (DropdownOption $option): array {
+        ->map(function (DropdownOption $option) use ($extractStaffName, $visitCountByRawStaff, $visitCountByStaffName): array {
             $value = trim((string) ($option->value ?? ''));
             $label = trim((string) ($option->label ?? ''));
+            $staffName = $extractStaffName($value);
+            $staffNameKey = mb_strtolower($staffName);
+
+            $visitCountExact = (int) ($visitCountByRawStaff[$value] ?? 0);
+            $visitCountByName = (int) ($visitCountByStaffName[$staffNameKey] ?? 0);
+            $visitCount = max($visitCountExact, $visitCountByName);
 
             if ($value === '' && $label !== '') {
                 $value = $label;
@@ -92,33 +110,47 @@ Route::get('/', function () {
             return [
                 'value' => $value,
                 'label' => $label,
-                'visit_count' => (int) ($option->visit_count ?? 0),
+                'visit_count' => $visitCount,
+                'sort_order' => (int) ($option->sort_order ?? 0),
             ];
         })
         ->filter(fn(array $option): bool => $option['value'] !== '' && $option['label'] !== '')
         ->unique('value')
+        ->sort(function (array $a, array $b): int {
+            $visitCompare = ((int) ($b['visit_count'] ?? 0)) <=> ((int) ($a['visit_count'] ?? 0));
+
+            if ($visitCompare !== 0) {
+                return $visitCompare;
+            }
+
+            $sortCompare = ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0));
+
+            if ($sortCompare !== 0) {
+                return $sortCompare;
+            }
+
+            return strnatcasecmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
+        })
         ->values();
 
     if ($bagianDitujuOptions->isEmpty()) {
-        $visitCountByStaff = BukuTamu::query()
-            ->selectRaw('staff_dituju, count(*) as total')
-            ->whereNotNull('staff_dituju')
-            ->where('staff_dituju', '!=', '')
-            ->groupBy('staff_dituju')
-            ->pluck('total', 'staff_dituju');
-
         $bagianDitujuOptions = Pegawai::query()
             ->where('is_active', true)
             ->get(['nama', 'jabatan'])
-            ->map(function (Pegawai $pegawai) use ($visitCountByStaff): array {
+            ->map(function (Pegawai $pegawai) use ($visitCountByRawStaff, $visitCountByStaffName): array {
                 $nama = trim((string) ($pegawai->nama ?? ''));
                 $jabatan = trim((string) ($pegawai->jabatan ?? ''));
                 $display = $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama;
+                $staffNameKey = mb_strtolower($nama);
+
+                $visitCountExact = (int) ($visitCountByRawStaff[$display] ?? 0);
+                $visitCountByName = (int) ($visitCountByStaffName[$staffNameKey] ?? 0);
+                $visitCount = max($visitCountExact, $visitCountByName);
 
                 return [
                     'value' => $display,
                     'label' => $display,
-                    'visit_count' => (int) ($visitCountByStaff[$display] ?? 0),
+                    'visit_count' => $visitCount,
                 ];
             })
             ->filter(fn(array $option): bool => trim((string) $option['value']) !== '')

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\WebPushSubscriptionController;
 use App\Http\Controllers\BukuTamuController;
 use App\Http\Controllers\PegawaiIzinController;
 use App\Http\Controllers\UserManagementController;
+use App\Models\BukuTamu;
 use App\Models\DropdownOption;
 use App\Models\Pegawai;
 use App\Models\PegawaiIzin;
@@ -62,10 +63,23 @@ Route::get('/', function () {
         return trim((string) preg_replace('/\s+#\d+$/', '', $name));
     };
 
-    $bagianDitujuOptions = collect(DropdownOption::getFullOptions(DropdownOption::CATEGORY_STAFF_DITUJU))
-        ->map(function (array $option): array {
-            $value = trim((string) ($option['value'] ?? ''));
-            $label = trim((string) ($option['label'] ?? ''));
+    $bagianDitujuOptions = DropdownOption::query()
+        ->where('category', DropdownOption::CATEGORY_STAFF_DITUJU)
+        ->where('is_active', true)
+        ->select(['value', 'label', 'sort_order'])
+        ->selectSub(
+            BukuTamu::query()
+                ->selectRaw('count(*)')
+                ->whereColumn('staff_dituju', 'dropdown_options.value'),
+            'visit_count'
+        )
+        ->orderByDesc('visit_count')
+        ->orderBy('sort_order')
+        ->orderBy('label')
+        ->get()
+        ->map(function (DropdownOption $option): array {
+            $value = trim((string) ($option->value ?? ''));
+            $label = trim((string) ($option->label ?? ''));
 
             if ($value === '' && $label !== '') {
                 $value = $label;
@@ -78,6 +92,7 @@ Route::get('/', function () {
             return [
                 'value' => $value,
                 'label' => $label,
+                'visit_count' => (int) ($option->visit_count ?? 0),
             ];
         })
         ->filter(fn(array $option): bool => $option['value'] !== '' && $option['label'] !== '')
@@ -85,21 +100,38 @@ Route::get('/', function () {
         ->values();
 
     if ($bagianDitujuOptions->isEmpty()) {
+        $visitCountByStaff = BukuTamu::query()
+            ->selectRaw('staff_dituju, count(*) as total')
+            ->whereNotNull('staff_dituju')
+            ->where('staff_dituju', '!=', '')
+            ->groupBy('staff_dituju')
+            ->pluck('total', 'staff_dituju');
+
         $bagianDitujuOptions = Pegawai::query()
             ->where('is_active', true)
-            ->orderBy('nama')
             ->get(['nama', 'jabatan'])
-            ->map(function (Pegawai $pegawai): array {
+            ->map(function (Pegawai $pegawai) use ($visitCountByStaff): array {
                 $nama = trim((string) ($pegawai->nama ?? ''));
                 $jabatan = trim((string) ($pegawai->jabatan ?? ''));
+                $display = $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama;
 
                 return [
-                    'value' => $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama,
-                    'label' => $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama,
+                    'value' => $display,
+                    'label' => $display,
+                    'visit_count' => (int) ($visitCountByStaff[$display] ?? 0),
                 ];
             })
             ->filter(fn(array $option): bool => trim((string) $option['value']) !== '')
             ->unique('value')
+            ->sort(function (array $a, array $b): int {
+                $visitCompare = ((int) ($b['visit_count'] ?? 0)) <=> ((int) ($a['visit_count'] ?? 0));
+
+                if ($visitCompare !== 0) {
+                    return $visitCompare;
+                }
+
+                return strnatcasecmp((string) ($a['value'] ?? ''), (string) ($b['value'] ?? ''));
+            })
             ->values();
     }
 
@@ -152,11 +184,13 @@ Route::get('/', function () {
     }
 
     $staffList = $bagianDitujuOptions
-        ->map(function (array $option) use ($extractStaffName, $pegawaiByName, $izinByNip, $izinByName): array {
+        ->values()
+        ->map(function (array $option, int $index) use ($extractStaffName, $pegawaiByName, $izinByNip, $izinByName): array {
             $value = trim((string) ($option['value'] ?? ''));
             $label = trim((string) ($option['label'] ?? $value));
             $staffName = $extractStaffName($value);
             $staffNameKey = mb_strtolower($staffName);
+            $visitCount = (int) ($option['visit_count'] ?? 0);
 
             $pegawaiNips = $pegawaiByName
                 ->get($staffNameKey, collect())
@@ -171,6 +205,9 @@ Route::get('/', function () {
             return [
                 'value' => $value,
                 'label' => $label,
+                'visit_count' => $visitCount,
+                'rank' => $index + 1,
+                'sort_note' => 'Urutan #' . ($index + 1) . ' • ' . $visitCount . ' kunjungan',
                 'is_unavailable' => $isUnavailable,
                 'availability_note' => $isUnavailable ? 'Tidak Masuk' : null,
             ];

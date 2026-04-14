@@ -1040,6 +1040,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     "autocomplete-item" +
                     (isUnavailable ? " is-disabled" : "");
                 const noteLabel = item.availability_note || "Tidak Masuk";
+                const sortNote = item.sort_note || "";
+                const metaText = isUnavailable
+                    ? (sortNote ? sortNote + " • " : "") + noteLabel
+                    : sortNote;
+                const metaHtml = metaText
+                    ? '<span class="autocomplete-meta">' + metaText + "</span>"
+                    : "";
                 if (query) {
                     const idx = item.label.toLowerCase().indexOf(query);
                     if (idx >= 0) {
@@ -1050,30 +1057,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             "</strong>" +
                             item.label.substring(idx + query.length);
 
-                        div.innerHTML = isUnavailable
-                            ?
-                              highlightedLabel +
-                              '<span class="autocomplete-meta">' +
-                              noteLabel +
-                              "</span>"
-                            : highlightedLabel;
+                                                div.innerHTML = highlightedLabel + metaHtml;
                     } else {
-                        div.innerHTML = isUnavailable
-                            ?
-                              item.label +
-                              '<span class="autocomplete-meta">' +
-                              noteLabel +
-                              "</span>"
-                            : item.label;
+                                                div.innerHTML = item.label + metaHtml;
                     }
                 } else {
-                    div.innerHTML = isUnavailable
-                        ?
-                          item.label +
-                          '<span class="autocomplete-meta">' +
-                          noteLabel +
-                          "</span>"
-                        : item.label;
+                                        div.innerHTML = item.label + metaHtml;
                 }
                 div.dataset.value = item.value;
                 div.dataset.unavailable = isUnavailable ? "1" : "0";

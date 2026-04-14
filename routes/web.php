@@ -49,32 +49,76 @@ Route::get('/', function () {
     $apkDownloadAvailable = collect($apkCandidates)
         ->contains(fn(string $path): bool => File::exists($path));
 
-    // Primary source: pegawai linked to users with Staff role.
-    // Fallback: all active pegawai to avoid empty public dropdown when linkage is incomplete.
-    $staffPegawai = \App\Models\User::whereHas('role_user', function ($q) {
-        $q->where('name', 'Staff');
-    })->whereNotNull('pegawai_id')
-        ->with('pegawai')
-        ->get()
-        ->map(fn($u) => $u->pegawai)
-        ->filter(fn($pegawai) => $pegawai && $pegawai->is_active)
+    $extractStaffName = static function (string $selected): string {
+        $selected = trim($selected);
+
+        if ($selected === '') {
+            return '';
+        }
+
+        $parts = preg_split('/\s+[—-]\s+/', $selected, 2);
+        $name = trim((string) ($parts[0] ?? $selected));
+
+        return trim((string) preg_replace('/\s+#\d+$/', '', $name));
+    };
+
+    $bagianDitujuOptions = collect(DropdownOption::getFullOptions(DropdownOption::CATEGORY_STAFF_DITUJU))
+        ->map(function (array $option): array {
+            $value = trim((string) ($option['value'] ?? ''));
+            $label = trim((string) ($option['label'] ?? ''));
+
+            if ($value === '' && $label !== '') {
+                $value = $label;
+            }
+
+            if ($label === '' && $value !== '') {
+                $label = $value;
+            }
+
+            return [
+                'value' => $value,
+                'label' => $label,
+            ];
+        })
+        ->filter(fn(array $option): bool => $option['value'] !== '' && $option['label'] !== '')
+        ->unique('value')
         ->values();
 
-    if ($staffPegawai->isEmpty()) {
-        $staffPegawai = Pegawai::query()
+    if ($bagianDitujuOptions->isEmpty()) {
+        $bagianDitujuOptions = Pegawai::query()
             ->where('is_active', true)
             ->orderBy('nama')
-            ->get();
+            ->get(['nama', 'jabatan'])
+            ->map(function (Pegawai $pegawai): array {
+                $nama = trim((string) ($pegawai->nama ?? ''));
+                $jabatan = trim((string) ($pegawai->jabatan ?? ''));
+
+                return [
+                    'value' => $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama,
+                    'label' => $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama,
+                ];
+            })
+            ->filter(fn(array $option): bool => trim((string) $option['value']) !== '')
+            ->unique('value')
+            ->values();
     }
 
-    $staffNips = $staffPegawai
-        ->map(fn($pegawai) => trim((string) ($pegawai->nip ?? '')))
+    $staffNames = $bagianDitujuOptions
+        ->map(fn(array $option): string => $extractStaffName((string) $option['value']))
         ->filter()
         ->values();
 
-    $staffNames = $staffPegawai
-        ->map(fn($pegawai) => trim((string) ($pegawai->nama ?? '')))
+    $pegawaiByName = Pegawai::query()
+        ->select(['nama', 'nip'])
+        ->whereIn('nama', $staffNames->all())
+        ->get()
+        ->groupBy(fn(Pegawai $pegawai): string => mb_strtolower(trim((string) ($pegawai->nama ?? ''))));
+
+    $staffNips = $pegawaiByName
+        ->flatMap(fn($items) => $items->pluck('nip'))
+        ->map(fn($nip) => trim((string) $nip))
         ->filter()
+        ->unique()
         ->values();
 
     $izinByNip = collect();
@@ -107,28 +151,31 @@ Route::get('/', function () {
             ->keyBy(fn(PegawaiIzin $izin): string => mb_strtolower(trim((string) $izin->nama_pegawai)));
     }
 
-    $staffList = $staffPegawai
-        ->map(function ($pegawai) use ($izinByNip, $izinByName): array {
-            $pegawaiNip = trim((string) ($pegawai->nip ?? ''));
-            $pegawaiName = trim((string) ($pegawai->nama ?? ''));
+    $staffList = $bagianDitujuOptions
+        ->map(function (array $option) use ($extractStaffName, $pegawaiByName, $izinByNip, $izinByName): array {
+            $value = trim((string) ($option['value'] ?? ''));
+            $label = trim((string) ($option['label'] ?? $value));
+            $staffName = $extractStaffName($value);
+            $staffNameKey = mb_strtolower($staffName);
 
-            $izin = filled($pegawaiNip)
-                ? $izinByNip->get($pegawaiNip)
-                : $izinByName->get(mb_strtolower($pegawaiName));
+            $pegawaiNips = $pegawaiByName
+                ->get($staffNameKey, collect())
+                ->pluck('nip')
+                ->map(fn($nip): string => trim((string) $nip))
+                ->filter();
 
-            if (!$izin && filled($pegawaiName)) {
-                $izin = $izinByName->get(mb_strtolower($pegawaiName));
-            }
-
-            $isUnavailable = (bool) $izin;
+            $hasIzinByNip = $pegawaiNips->contains(fn(string $nip): bool => $izinByNip->has($nip));
+            $hasIzinByName = $staffName !== '' && $izinByName->has($staffNameKey);
+            $isUnavailable = $hasIzinByNip || $hasIzinByName;
 
             return [
-                'value' => $pegawaiName,
-                'label' => $pegawaiName . ($pegawai->jabatan ? ' — ' . $pegawai->jabatan : ''),
+                'value' => $value,
+                'label' => $label,
                 'is_unavailable' => $isUnavailable,
                 'availability_note' => $isUnavailable ? 'Tidak Masuk' : null,
             ];
         })
+        ->filter(fn(array $option): bool => $option['value'] !== '' && $option['label'] !== '')
         ->unique('value')
         ->values()
         ->toArray();
@@ -137,6 +184,7 @@ Route::get('/', function () {
         'jenisIdOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_JENIS_ID),
         'keperluanOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_KEPERLUAN),
         'kabupatenKotaOptions' => DropdownOption::getFullOptions(DropdownOption::CATEGORY_KABUPATEN_KOTA),
+        'bagianDitujuOptions' => $bagianDitujuOptions->values()->toArray(),
         'staffList' => $staffList,
         'apkDownloadAvailable' => $apkDownloadAvailable,
     ]);

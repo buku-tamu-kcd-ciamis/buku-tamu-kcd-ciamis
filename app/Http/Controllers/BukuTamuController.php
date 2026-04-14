@@ -320,6 +320,20 @@ class BukuTamuController extends Controller
         return preg_replace('/\D+/', '', $value) ?? '';
     }
 
+    private function extractStaffNameFromSelection(string $selected): string
+    {
+        $selected = trim($selected);
+
+        if ($selected === '') {
+            return '';
+        }
+
+        $parts = preg_split('/\s+[—-]\s+/', $selected, 2);
+        $name = trim((string) ($parts[0] ?? $selected));
+
+        return trim((string) preg_replace('/\s+#\d+$/', '', $name));
+    }
+
     public function store(Request $request)
     {
         try {
@@ -386,7 +400,8 @@ class BukuTamuController extends Controller
             ]);
 
             // Guard server-side: staff yang sedang izin terverifikasi tidak boleh dipilih.
-            $targetStaffName = trim((string) ($validatedData['staff_dituju'] ?? ''));
+            $targetStaffRaw = trim((string) ($validatedData['staff_dituju'] ?? ''));
+            $targetStaffName = $this->extractStaffNameFromSelection($targetStaffRaw);
 
             if ($targetStaffName !== '') {
                 $targetStaffNip = User::query()
@@ -444,10 +459,14 @@ class BukuTamuController extends Controller
 
             // Create staff notification
             if (!empty($validatedData['staff_dituju'])) {
+                $targetStaffName = $this->extractStaffNameFromSelection((string) $validatedData['staff_dituju']);
+
                 $staffUsers = User::whereHas('role_user', function ($q) {
                     $q->where('name', 'Staff');
                 })->whereHas('pegawai', function ($q) use ($validatedData) {
-                    $q->where('nama', $validatedData['staff_dituju']);
+                    $staffName = $this->extractStaffNameFromSelection((string) ($validatedData['staff_dituju'] ?? ''));
+
+                    $q->where('nama', $staffName !== '' ? $staffName : (string) ($validatedData['staff_dituju'] ?? ''));
                 })->get();
 
                 foreach ($staffUsers as $staffUser) {

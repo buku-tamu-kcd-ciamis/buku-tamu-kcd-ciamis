@@ -303,6 +303,7 @@ class DropdownOptionResource extends Resource
       Section::make('Informasi Opsi')
         ->icon('heroicon-o-adjustments-horizontal')
         ->description('Ringkasan data opsi dropdown yang digunakan pada form Buku Tamu.')
+        ->columnSpanFull()
         ->components([
           Infolists\Components\TextEntry::make('category')
             ->label('Kategori')
@@ -344,6 +345,7 @@ class DropdownOptionResource extends Resource
       Section::make('Konfigurasi Jenis ID')
         ->icon('heroicon-o-identification')
         ->description('Pengaturan validasi tambahan untuk opsi kategori Jenis ID.')
+        ->columnSpanFull()
         ->visible(fn(DropdownOption $record): bool => $record->category === DropdownOption::CATEGORY_JENIS_ID)
         ->components([
           Infolists\Components\TextEntry::make('metadata.id_label')

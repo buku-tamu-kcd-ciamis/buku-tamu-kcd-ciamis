@@ -74,11 +74,19 @@ class BukuTamu extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'catatan', 'nama_penerima'])
+            ->logOnly([
+                'nama_lengkap',
+                'instansi',
+                'staff_dituju',
+                'keperluan',
+                'status',
+                'catatan',
+                'nama_penerima',
+            ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
-                'created' => "Mendaftarkan tamu baru atas nama {$this->nama_lengkap}",
+                'created' => "Tamu mengisi buku tamu: {$this->nama_lengkap} | Tujuan: {$this->staff_dituju} | Keperluan: {$this->keperluan}",
                 'updated' => "Memperbarui status buku tamu atas nama {$this->nama_lengkap}",
                 'deleted' => "Menghapus data buku tamu atas nama {$this->nama_lengkap}",
                 default => "Aktivitas buku tamu: {$eventName}",

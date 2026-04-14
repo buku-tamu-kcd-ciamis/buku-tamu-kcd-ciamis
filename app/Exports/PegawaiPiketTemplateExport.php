@@ -21,8 +21,8 @@ class PegawaiPiketTemplateExport
         $sheet->setTitle('Data Pegawai Piket');
 
         // ===== HEADER ROW =====
-        $headers = ['No', 'Nama Lengkap', 'Status'];
-        $columns = ['A', 'B', 'C'];
+        $headers = ['No', 'Nama Lengkap', 'Email', 'Status'];
+        $columns = ['A', 'B', 'C', 'D'];
 
         foreach ($headers as $i => $header) {
             $cell = $columns[$i] . '1';
@@ -30,7 +30,7 @@ class PegawaiPiketTemplateExport
         }
 
         // Header styling
-        $headerRange = 'A1:C1';
+        $headerRange = 'A1:D1';
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -56,8 +56,8 @@ class PegawaiPiketTemplateExport
 
         // ===== SAMPLE DATA =====
         $sampleData = [
-            [1, 'Drs. H. Ahmad Suryadi, M.Pd.', 'Aktif'],
-            [2, 'Siti Nurhaliza, S.Pd.', 'Aktif'],
+            [1, 'Drs. H. Ahmad Suryadi, M.Pd.', 'piket.ahmad@cadisdik13.local', 'Aktif'],
+            [2, 'Siti Nurhaliza, S.Pd.', '', 'Aktif'],
         ];
 
         foreach ($sampleData as $rowIndex => $rowData) {
@@ -69,7 +69,7 @@ class PegawaiPiketTemplateExport
         }
 
         // Sample data styling
-        $sampleRange = 'A2:C3';
+        $sampleRange = 'A2:D3';
         $sheet->getStyle($sampleRange)->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -93,31 +93,33 @@ class PegawaiPiketTemplateExport
         // ===== INSTRUCTIONS =====
         $sheet->setCellValue('A5', '📌 PETUNJUK PENGISIAN:');
         $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(11);
-        $sheet->mergeCells('A5:C5');
+        $sheet->mergeCells('A5:D5');
 
         $instructions = [
             '1. Hapus baris contoh (baris 2-3) sebelum mengisi data baru.',
             '2. Kolom "Nama Lengkap" WAJIB diisi.',
-            '3. Status: isi "Aktif" atau "Nonaktif" (default: Aktif jika dikosongkan).',
-            '4. Jika nama sudah ada di database, data akan diperbarui (update).',
-            '5. Simpan file dalam format .xlsx sebelum mengimpor.',
+            '3. Kolom "Email" opsional. Jika kosong, sistem membuat email dummy dari nama.',
+            '4. Status: isi "Aktif" atau "Nonaktif" (default: Aktif jika dikosongkan).',
+            '5. Jika nama sudah ada di database, data akan diperbarui (update).',
+            '6. Simpan file dalam format .xlsx sebelum mengimpor.',
         ];
 
         foreach ($instructions as $i => $text) {
             $row = 6 + $i;
             $sheet->setCellValue("A{$row}", $text);
-            $sheet->mergeCells("A{$row}:C{$row}");
+            $sheet->mergeCells("A{$row}:D{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setSize(10)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF555555'));
         }
 
         // ===== COLUMN WIDTHS =====
         $sheet->getColumnDimension('A')->setWidth(6);   // No
         $sheet->getColumnDimension('B')->setWidth(40);   // Nama Lengkap
-        $sheet->getColumnDimension('C')->setWidth(12);   // Status
+        $sheet->getColumnDimension('C')->setWidth(32);   // Email
+        $sheet->getColumnDimension('D')->setWidth(12);   // Status
 
         // Center No and Status columns
         $sheet->getStyle('A:A')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('C:C')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('D:D')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Freeze header row
         $sheet->freezePane('A2');

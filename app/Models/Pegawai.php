@@ -37,7 +37,7 @@ class Pegawai extends Model
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()
-      ->logOnly(['nama', 'nip', 'jabatan', 'nomor_hp', 'unit_kerja', 'is_active'])
+      ->logOnly(['nama', 'nip', 'email', 'jabatan', 'nomor_hp', 'unit_kerja', 'is_active'])
       ->logOnlyDirty()
       ->dontLogEmptyChanges()
       ->useLogName('pegawai')
@@ -52,6 +52,7 @@ class Pegawai extends Model
   protected $fillable = [
     'nama',
     'nip',
+    'email',
     'jabatan',
     'nomor_hp',
     'unit_kerja',
@@ -80,5 +81,3 @@ class Pegawai extends Model
       ->toArray();
   }
 }
-
-

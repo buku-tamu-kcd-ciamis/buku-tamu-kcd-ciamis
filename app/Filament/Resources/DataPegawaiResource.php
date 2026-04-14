@@ -78,6 +78,12 @@ class DataPegawaiResource extends Resource
               $status = $length === 18 ? '✓ sesuai' : '✗ belum lengkap';
               return "{$length}/18 digit — {$status}";
             }),
+          Forms\Components\TextInput::make('email')
+            ->label('Email Login')
+            ->email()
+            ->maxLength(255)
+            ->placeholder('contoh: nama.pegawai@cadisdik13.local')
+            ->helperText('Jika kosong saat import, sistem akan membuat email dummy dari nama.'),
           Forms\Components\TextInput::make('jabatan')
             ->label('Jabatan')
             ->required()
@@ -118,6 +124,11 @@ class DataPegawaiResource extends Resource
           ->searchable()
           ->copyable()
           ->fontFamily('mono'),
+        Tables\Columns\TextColumn::make('email')
+          ->label('Email Login')
+          ->searchable()
+          ->toggleable()
+          ->copyable(),
         Tables\Columns\TextColumn::make('jabatan')
           ->label('Jabatan')
           ->searchable()

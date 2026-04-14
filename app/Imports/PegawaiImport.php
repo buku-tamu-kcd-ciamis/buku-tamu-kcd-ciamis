@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Pegawai;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Throwable;
 
@@ -11,6 +12,7 @@ class PegawaiImport
     protected array $errors = [];
     protected array $processedNips = [];
     protected array $processedRows = [];
+    protected array $reservedEmails = [];
     protected int $imported = 0;
     protected int $updated = 0;
     protected int $skipped = 0;
@@ -38,7 +40,7 @@ class PegawaiImport
         }
 
         if ($headerRowIndex === null) {
-            $this->errors[] = 'Header tidak ditemukan. Pastikan file memiliki kolom: Nama, NIP, Jabatan, Unit Kerja, Nomor HP.';
+            $this->errors[] = 'Header tidak ditemukan. Pastikan file memiliki kolom: Nama, NIP, Email, Jabatan, Unit Kerja, Nomor HP.';
             return $this;
         }
 
@@ -48,6 +50,7 @@ class PegawaiImport
             $mapped = match ($header) {
                 'nama', 'nama lengkap', 'nama_lengkap' => 'nama',
                 'nip' => 'nip',
+                'email', 'e-mail', 'email login' => 'email',
                 'jabatan' => 'jabatan',
                 'unit kerja', 'unit_kerja' => 'unit_kerja',
                 'nomor hp', 'nomor_hp', 'no. hp', 'no hp', 'hp', 'telepon', 'phone' => 'nomor_hp',
@@ -77,7 +80,7 @@ class PegawaiImport
             }
 
             // Skip empty rows
-            if (empty($data['nama']) && empty($data['nip'] ?? '')) {
+            if (empty($data['nama']) && empty($data['nip'] ?? '') && empty($data['email'] ?? '')) {
                 continue;
             }
 
@@ -93,6 +96,14 @@ class PegawaiImport
 
             if ($data['nip'] !== '' && strlen($data['nip']) !== 18) {
                 $this->errors[] = "Baris {$rowNumber}: NIP '{$data['nip']}' harus tepat 18 digit (saat ini " . strlen($data['nip']) . " digit).";
+                $this->skipped++;
+                continue;
+            }
+
+            $data['email'] = $this->normalizeEmail($data['email'] ?? null);
+
+            if ($data['email'] !== '' && ! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $this->errors[] = "Baris {$rowNumber}: Format email tidak valid.";
                 $this->skipped++;
                 continue;
             }
@@ -131,10 +142,13 @@ class PegawaiImport
                     ? 'nip:' . $data['nip']
                     : 'nama:' . strtolower((string) $data['nama']);
 
+                $resolvedEmail = $this->resolveEmailForRow($data['email'], $data['nama'], $existing?->id, $existing?->email);
+
                 if ($existing) {
                     $existing->update([
                         'nama' => $data['nama'],
                         'nip' => $data['nip'] !== '' ? $data['nip'] : $existing->nip,
+                        'email' => $resolvedEmail,
                         'jabatan' => $data['jabatan'] ?? $existing->jabatan,
                         'unit_kerja' => $data['unit_kerja'] ?? $existing->unit_kerja,
                         'nomor_hp' => !empty($data['nomor_hp']) ? $data['nomor_hp'] : $existing->nomor_hp,
@@ -146,12 +160,14 @@ class PegawaiImport
                     }
                     $this->processedRows[$rowKey] = [
                         'nip' => $data['nip'],
+                        'email' => $resolvedEmail,
                         'role_user_name' => (string) ($data['role_user_name'] ?? ''),
                     ];
                 } else {
                     Pegawai::create([
                         'nama' => $data['nama'],
                         'nip' => $data['nip'] !== '' ? $data['nip'] : null,
+                        'email' => $resolvedEmail,
                         'jabatan' => $data['jabatan'] ?? null,
                         'unit_kerja' => $data['unit_kerja'] ?? null,
                         'nomor_hp' => !empty($data['nomor_hp']) ? $data['nomor_hp'] : null,
@@ -163,6 +179,7 @@ class PegawaiImport
                     }
                     $this->processedRows[$rowKey] = [
                         'nip' => $data['nip'],
+                        'email' => $resolvedEmail,
                         'role_user_name' => (string) ($data['role_user_name'] ?? ''),
                     ];
                 }
@@ -218,5 +235,54 @@ class PegawaiImport
         if ($this->skipped > 0) $parts[] = "{$this->skipped} data dilewati";
 
         return implode(', ', $parts) ?: 'Tidak ada data yang diproses';
+    }
+
+    protected function normalizeEmail(?string $email): string
+    {
+        return strtolower(trim((string) $email));
+    }
+
+    protected function resolveEmailForRow(string $importedEmail, string $nama, ?int $ignorePegawaiId = null, ?string $existingEmail = null): string
+    {
+        if ($importedEmail !== '') {
+            return $this->ensureUniqueEmail($importedEmail, $ignorePegawaiId);
+        }
+
+        $current = $this->normalizeEmail($existingEmail);
+        if ($current !== '') {
+            $this->reservedEmails[$current] = true;
+            return $current;
+        }
+
+        $localPart = Str::slug($nama, '.');
+        $localPart = $localPart !== '' ? $localPart : 'pegawai';
+
+        return $this->ensureUniqueEmail($localPart . '@cadisdik13.local', $ignorePegawaiId);
+    }
+
+    protected function ensureUniqueEmail(string $email, ?int $ignorePegawaiId = null): string
+    {
+        $normalized = $this->normalizeEmail($email);
+        [$localPart, $domain] = array_pad(explode('@', $normalized, 2), 2, 'cadisdik13.local');
+        $localPart = $localPart !== '' ? $localPart : 'pegawai';
+        $domain = $domain !== '' ? $domain : 'cadisdik13.local';
+
+        $counter = 0;
+        do {
+            $suffix = $counter > 0 ? '.' . $counter : '';
+            $candidate = $localPart . $suffix . '@' . $domain;
+
+            $existsInImport = isset($this->reservedEmails[$candidate]);
+            $existsInDb = Pegawai::query()
+                ->when($ignorePegawaiId !== null, fn($query) => $query->where('id', '!=', $ignorePegawaiId))
+                ->where('email', $candidate)
+                ->exists();
+
+            $counter++;
+        } while ($existsInImport || $existsInDb);
+
+        $this->reservedEmails[$candidate] = true;
+
+        return $candidate;
     }
 }

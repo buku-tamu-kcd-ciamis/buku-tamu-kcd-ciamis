@@ -45,7 +45,7 @@ class ListUsers extends ListRecords
                             'application/vnd.ms-excel',
                         ])
                         ->maxSize(5120)
-                        ->helperText('Isi kolom "Role User" pada template dengan nilai: Staff, Piket, atau Kepala Cabang Dinas.')
+                        ->helperText('Isi kolom "Role User" pada template dengan nilai: Staff, Piket, atau Kepala Cabang Dinas. Kolom Email opsional, jika kosong akan dibuat otomatis.')
                         ->required(),
                 ])
                 ->action(function (array $data): void {
@@ -125,20 +125,32 @@ class ListUsers extends ListRecords
         }
 
         $rowsByNip = [];
+        $rowsByEmail = [];
+
         foreach ($rows as $row) {
             $nip = preg_replace('/[^0-9]/', '', (string) ($row['nip'] ?? ''));
+            $email = $this->normalizeEmail($row['email'] ?? null);
 
-            if ($nip === '') {
+            if ($nip === '' && $email === '') {
                 continue;
             }
 
-            $rowsByNip[$nip] = [
+            $payload = [
                 'nip' => $nip,
+                'email' => $email,
                 'role_user_name' => (string) ($row['role_user_name'] ?? ''),
             ];
+
+            if ($nip !== '') {
+                $rowsByNip[$nip] = $payload;
+            }
+
+            if ($email !== '') {
+                $rowsByEmail[$email] = $payload;
+            }
         }
 
-        if ($rowsByNip === []) {
+        if ($rowsByNip === [] && $rowsByEmail === []) {
             return [
                 'created' => 0,
                 'updated' => 0,
@@ -147,8 +159,16 @@ class ListUsers extends ListRecords
         }
 
         $pegawais = Pegawai::query()
-            ->whereIn('nip', array_keys($rowsByNip))
-            ->get(['id', 'nama', 'nip']);
+            ->where(function (Builder $query) use ($rowsByNip, $rowsByEmail): void {
+                if ($rowsByNip !== []) {
+                    $query->whereIn('nip', array_keys($rowsByNip));
+                }
+
+                if ($rowsByEmail !== []) {
+                    $query->orWhereIn('email', array_keys($rowsByEmail));
+                }
+            })
+            ->get(['id', 'nama', 'nip', 'email']);
 
         $roleNameToIdMap = $this->getRoleNameToIdMap();
         $defaultRoleId = $roleNameToIdMap[$this->normalizeRoleName('Staff')] ?? null;
@@ -168,7 +188,21 @@ class ListUsers extends ListRecords
         $kepalaCabdinBlockedCount = 0;
 
         foreach ($pegawais as $pegawai) {
-            $row = $rowsByNip[(string) $pegawai->nip] ?? [];
+            $row = [];
+            $pegawaiNip = preg_replace('/[^0-9]/', '', (string) ($pegawai->nip ?? ''));
+            $pegawaiEmail = $this->normalizeEmail($pegawai->email);
+
+            if ($pegawaiNip !== '' && isset($rowsByNip[$pegawaiNip])) {
+                $row = $rowsByNip[$pegawaiNip];
+            } elseif ($pegawaiEmail !== '' && isset($rowsByEmail[$pegawaiEmail])) {
+                $row = $rowsByEmail[$pegawaiEmail];
+            }
+
+            if ($row === []) {
+                $skipped++;
+                continue;
+            }
+
             $requestedRoleName = (string) ($row['role_user_name'] ?? '');
             $resolvedRoleId = $this->resolveRoleIdFromName($requestedRoleName, $roleNameToIdMap);
 
@@ -183,6 +217,12 @@ class ListUsers extends ListRecords
             }
 
             $user = User::query()->where('pegawai_id', $pegawai->id)->first();
+            $preferredEmail = $this->normalizeEmail($row['email'] ?? $pegawai->email);
+            $resolvedEmail = $this->resolveUniqueUserEmail(
+                $preferredEmail,
+                $pegawai->nama,
+                $user?->id
+            );
 
             // Kepala Cabang Dinas must stay unique: only one user may hold this role.
             if (
@@ -197,12 +237,10 @@ class ListUsers extends ListRecords
             }
 
             if (! $user) {
-                $email = $this->generateUniqueEmailFromName($pegawai->nama);
-
                 $newUser = User::query()->create([
                     'name' => (string) $pegawai->nama,
-                    'email' => $email,
-                    'password' => Hash::make((string) $pegawai->nip),
+                    'email' => $resolvedEmail,
+                    'password' => Hash::make($this->resolveInitialPassword($pegawai, $resolvedEmail)),
                     'role_user_id' => $resolvedRoleId,
                     'pegawai_id' => $pegawai->id,
                 ]);
@@ -218,6 +256,7 @@ class ListUsers extends ListRecords
 
             $user->update([
                 'name' => (string) ($pegawai->nama ?: $user->name),
+                'email' => $resolvedEmail,
                 'role_user_id' => $resolvedRoleId,
             ]);
 
@@ -295,7 +334,40 @@ class ListUsers extends ListRecords
         return trim((string) $normalized);
     }
 
-    protected function generateUniqueEmailFromName(?string $name): string
+    protected function normalizeEmail(?string $email): string
+    {
+        return strtolower(trim((string) $email));
+    }
+
+    protected function resolveUniqueUserEmail(?string $preferredEmail, ?string $name, ?int $ignoreUserId = null): string
+    {
+        $normalized = $this->normalizeEmail($preferredEmail);
+
+        if ($normalized === '' || ! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+            $normalized = $this->generateUniqueEmailFromName($name, $ignoreUserId);
+
+            return $normalized;
+        }
+
+        [$localPart, $domain] = array_pad(explode('@', $normalized, 2), 2, 'cadisdik13.local');
+        $localPart = $localPart !== '' ? $localPart : 'user';
+        $domain = $domain !== '' ? $domain : 'cadisdik13.local';
+
+        $counter = 0;
+        do {
+            $suffix = $counter > 0 ? '.' . $counter : '';
+            $candidate = $localPart . $suffix . '@' . $domain;
+            $exists = User::query()
+                ->when($ignoreUserId !== null, fn($query) => $query->where('id', '!=', $ignoreUserId))
+                ->where('email', $candidate)
+                ->exists();
+            $counter++;
+        } while ($exists);
+
+        return $candidate;
+    }
+
+    protected function generateUniqueEmailFromName(?string $name, ?int $ignoreUserId = null): string
     {
         $baseSlug = Str::slug((string) $name, '.');
         $baseSlug = $baseSlug !== '' ? $baseSlug : 'user';
@@ -305,11 +377,30 @@ class ListUsers extends ListRecords
         do {
             $suffix = $counter > 0 ? '.' . $counter : '';
             $candidate = $baseSlug . $suffix . '@' . $domain;
-            $exists = User::query()->where('email', $candidate)->exists();
+            $exists = User::query()
+                ->when($ignoreUserId !== null, fn($query) => $query->where('id', '!=', $ignoreUserId))
+                ->where('email', $candidate)
+                ->exists();
             $counter++;
         } while ($exists);
 
         return $candidate;
+    }
+
+    protected function resolveInitialPassword(Pegawai $pegawai, string $resolvedEmail): string
+    {
+        $nip = preg_replace('/[^0-9]/', '', (string) ($pegawai->nip ?? ''));
+        if ($nip !== '') {
+            return $nip;
+        }
+
+        $localPart = explode('@', $resolvedEmail)[0] ?? '';
+        $localPart = preg_replace('/[^a-z0-9]/i', '', (string) $localPart);
+        if ($localPart === '') {
+            return 'pegawai123';
+        }
+
+        return substr(str_pad($localPart, 8, '12345678'), 0, 8);
     }
 
     public function getTabs(): array

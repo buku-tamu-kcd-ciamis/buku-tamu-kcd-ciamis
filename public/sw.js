@@ -1,4 +1,4 @@
-const CACHE_NAME = "cadisdik-pwa-v2";
+const CACHE_NAME = "cadisdik-pwa-v3";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
     OFFLINE_URL,
@@ -170,7 +170,9 @@ self.addEventListener("push", (event) => {
 });
 
 self.addEventListener("notificationclick", (event) => {
-    const payload = normalizeNotificationPayload(event.notification?.data || {});
+    const payload = normalizeNotificationPayload(
+        event.notification?.data || {},
+    );
 
     event.notification.close();
 

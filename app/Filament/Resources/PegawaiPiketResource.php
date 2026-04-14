@@ -69,6 +69,12 @@ class PegawaiPiketResource extends Resource
                         ->maxLength(255)
                         ->placeholder('Otomatis terisi dari nama...')
                         ->helperText('ID internal untuk database. Otomatis terisi dari nama, bisa diubah jika perlu.'),
+                    Forms\Components\TextInput::make('metadata.email')
+                        ->label('Email Login')
+                        ->email()
+                        ->maxLength(255)
+                        ->placeholder('contoh: piket.nama@cadisdik13.local')
+                        ->helperText('Jika kosong saat import, sistem akan membuat email dummy dari nama.'),
                     Forms\Components\Toggle::make('is_active')
                         ->helperText('Nonaktifkan untuk menyembunyikan pegawai dari dropdown tanpa menghapus data.'),
                 ])
@@ -90,6 +96,10 @@ class PegawaiPiketResource extends Resource
                     ->searchable()
                     ->toggleable()
                     ->limit(40),
+                Tables\Columns\TextColumn::make('metadata.email')
+                    ->label('Email Login')
+                    ->toggleable()
+                    ->copyable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Status')
                     ->boolean()

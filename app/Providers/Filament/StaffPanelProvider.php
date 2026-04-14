@@ -58,13 +58,15 @@ class StaffPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 'panels::head.end',
-                fn() => '<link rel="stylesheet" href="' . asset('css/filament-custom.css') . '?v=' . filemtime(public_path('css/filament-custom.css')) . '">'
+                fn() => view('filament.partials.panel-head-assets', [
+                    'manifestUrl' => asset('manifest-staff.webmanifest'),
+                ])->render()
             )
             ->renderHook(
                 'panels::body.end',
-                fn() => request()->routeIs('filament.staff.auth.login')
-                    ? view('filament.partials.login-footer')->render()
-                    : ''
+                fn() => view('filament.partials.panel-body-end', [
+                    'showLoginFooter' => request()->routeIs('filament.staff.auth.login'),
+                ])->render()
             );
     }
 }

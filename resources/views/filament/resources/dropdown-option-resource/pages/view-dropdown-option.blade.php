@@ -204,7 +204,6 @@
             <div class="do-meta">
                 <span class="do-pill">Kategori: {{ $categoryLabel }}</span>
                 <span class="do-pill">Nilai: {{ $record->value }}</span>
-                <span class="do-pill">Urutan: #{{ $record->sort_order }}</span>
                 <span class="do-pill {{ $statusClass }}">Status: {{ $statusLabel }}</span>
             </div>
         </section>

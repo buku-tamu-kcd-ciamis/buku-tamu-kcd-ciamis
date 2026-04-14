@@ -143,8 +143,7 @@
             <p class="doc-subtitle">Buat opsi baru untuk kebutuhan form Buku Tamu dengan pengaturan yang konsisten.</p>
             <div class="doc-pills">
                 <span class="doc-pill">Kategori Dinamis</span>
-                <span class="doc-pill">Label & Value</span>
-                <span class="doc-pill">Sort Order</span>
+                <span class="doc-pill">Label Otomatis</span>
                 <span class="doc-pill">Status Aktif</span>
             </div>
         </section>

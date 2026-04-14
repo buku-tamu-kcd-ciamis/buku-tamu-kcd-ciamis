@@ -61,23 +61,23 @@ class DropdownOptionResource extends Resource
           Forms\Components\TextInput::make('label')
             ->label('Label Tampilan')
             ->required()
+            ->readOnly()
             ->maxLength(255)
-            ->helperText('Label yang ditampilkan ke pengguna (contoh: KTP, Kartu Pegawai / ASN).'),
+            ->helperText('Digenerate otomatis dari Nilai Tersimpan.'),
           Forms\Components\TextInput::make('value')
             ->label('Nilai Tersimpan')
             ->required()
+            ->live(debounce: 400)
+            ->afterStateUpdated(function ($state, callable $set): void {
+              $set('label', trim((string) $state));
+            })
             ->maxLength(255)
-            ->placeholder('Otomatis terisi dari label...')
-            ->helperText('Nilai yang disimpan ke database. Otomatis terisi dari label, bisa diubah jika perlu berbeda.')
+            ->placeholder('Masukkan nilai opsi...')
+            ->helperText('Label Tampilan akan otomatis mengikuti nilai ini.')
             ->unique(table: DropdownOption::class, column: 'value', ignoreRecord: true)
             ->validationMessages([
               'unique' => 'Nilai ini sudah ada di kategori yang sama. Gunakan nilai yang berbeda.',
             ]),
-          Forms\Components\TextInput::make('sort_order')
-            ->label('Urutan Tampil')
-            ->numeric()
-            ->placeholder('Otomatis diurutkan...')
-            ->helperText('Urutan tampil dalam dropdown (kecil = lebih atas). Otomatis terisi dengan urutan berikutnya.'),
           Forms\Components\Toggle::make('is_active')
             ->label('Status Aktif')
             ->helperText('Nonaktifkan untuk menyembunyikan opsi tanpa menghapusnya.'),
@@ -149,10 +149,6 @@ class DropdownOptionResource extends Resource
           ->label('Label Tampilan')
           ->searchable()
           ->limit(40),
-        Tables\Columns\TextColumn::make('sort_order')
-          ->label('Urutan')
-          ->sortable()
-          ->alignCenter(),
         Tables\Columns\TextColumn::make('visit_count')
           ->label('Total Didatangi')
           ->badge()
@@ -178,30 +174,6 @@ class DropdownOptionResource extends Resource
         Tables\Filters\SelectFilter::make('category')
           ->label('Kategori')
           ->options(DropdownOption::CATEGORY_LABELS),
-        Tables\Filters\SelectFilter::make('staff_sort_mode')
-          ->label('Urut Staff Dituju')
-          ->visible(fn($livewire = null): bool => (data_get($livewire, 'activeTab') ?? request()->query('tab')) === 'staff_dituju')
-          ->options([
-            'visit_desc' => 'Paling Sering Didatangi',
-            'visit_asc' => 'Paling Jarang Didatangi',
-            'manual' => 'Urutan Manual (Sort Order)',
-          ])
-          ->default('visit_desc')
-          ->selectablePlaceholder(false)
-          ->indicateUsing(static fn(): array => [])
-          ->query(function (Builder $query, array $data, $livewire = null): Builder {
-            $activeTab = data_get($livewire, 'activeTab') ?? request()->query('tab');
-
-            if ($activeTab !== 'staff_dituju') {
-              return $query;
-            }
-
-            return match ($data['value'] ?? 'visit_desc') {
-              'visit_asc' => $query->reorder('visit_count', 'asc')->orderBy('sort_order'),
-              'manual' => $query->reorder('sort_order')->orderByDesc('visit_count'),
-              default => $query->reorder('visit_count', 'desc')->orderBy('sort_order'),
-            };
-          }),
         Tables\Filters\TernaryFilter::make('is_active')
           ->label('Status'),
       ])
@@ -325,11 +297,6 @@ class DropdownOptionResource extends Resource
           Infolists\Components\TextEntry::make('value')
             ->label('Nilai Tersimpan')
             ->copyable(),
-          Infolists\Components\TextEntry::make('sort_order')
-            ->label('Urutan')
-            ->badge()
-            ->color('gray')
-            ->formatStateUsing(fn($state) => '#' . $state),
           Infolists\Components\TextEntry::make('is_active')
             ->label('Status')
             ->badge()

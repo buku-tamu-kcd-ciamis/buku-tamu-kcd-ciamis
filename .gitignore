@@ -56,3 +56,9 @@ Thumbs.db
 /android/local.properties
 /android/build/
 /android/app/build/
+!/android/app/build/
+/android/app/build/*
+!/android/app/build/outputs/
+/android/app/build/outputs/*
+!/android/app/build/outputs/apk/
+!/android/app/build/outputs/apk/**/*.apk

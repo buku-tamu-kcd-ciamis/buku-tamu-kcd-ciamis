@@ -34,7 +34,7 @@ class ListActivityLogs extends ListRecords
                 ->label('Backup Log Aktivitas')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
-                ->action(fn() => $this->exportToExcel(download: true)),
+                ->url(route('activity-logs.backup-download')),
 
             Actions\Action::make('delete_backup')
                 ->label('Hapus & Backup Log Aktivitas')

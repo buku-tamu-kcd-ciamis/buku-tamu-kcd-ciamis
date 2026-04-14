@@ -2,12 +2,108 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Resources\ActivityLogResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Color;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Options;
+use OpenSpout\Writer\XLSX\Writer;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogController extends Controller
 {
+  public function backupDownload(Request $request)
+  {
+    /** @var User|null $user */
+    $user = Auth::user();
+
+    if (! $user || ! $user->role_user || ! $user->role_user->hasPermission('activity_log')) {
+      abort(403);
+    }
+
+    $baseQuery = Activity::query()
+      ->with('causer')
+      ->orderByDesc('created_at')
+      ->orderByDesc('id');
+
+    $totalLogs = (clone $baseQuery)->count();
+
+    if ($totalLogs === 0) {
+      abort(404, 'Belum ada data log aktivitas untuk di-backup.');
+    }
+
+    $fileName = 'backup-log-aktivitas-' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+    $relativePath = 'tmp/' . $fileName;
+    $filePath = storage_path('app/' . $relativePath);
+
+    Storage::disk('local')->makeDirectory('tmp');
+
+    $options = new Options();
+    $writer = new Writer($options);
+    $writer->openToFile($filePath);
+
+    $headerStyle = (new Style())
+      ->setFontBold()
+      ->setFontSize(11)
+      ->setFontColor(Color::WHITE)
+      ->setBackgroundColor(Color::rgb(30, 64, 175));
+
+    $writer->addRow(Row::fromValues([
+      'No',
+      'Waktu',
+      'User',
+      'Modul',
+      'Aksi',
+      'Aktivitas',
+      'Model',
+      'ID Subject',
+      'Properties',
+    ], $headerStyle));
+
+    $no = 1;
+    foreach ($baseQuery->cursor() as $log) {
+      $writer->addRow(Row::fromValues([
+        $no++,
+        $log->created_at->format('d/m/Y H:i:s'),
+        $log->causer?->name ?? 'System',
+        ActivityLogResource::getLogNameLabel($log->log_name ?? ''),
+        match ($log->event) {
+          'created' => 'Dibuat',
+          'updated' => 'Diubah',
+          'deleted' => 'Dihapus',
+          default => ucfirst($log->event ?? '-'),
+        },
+        $log->description ?? '-',
+        $log->subject_type ? class_basename($log->subject_type) : '-',
+        $log->subject_id ?? '-',
+        $log->properties ? json_encode($log->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '-',
+      ]));
+    }
+
+    $writer->close();
+
+    activity('cetak')
+      ->causedBy($user)
+      ->event('created')
+      ->withProperties([
+        'jumlah' => $totalLogs,
+        'tipe' => 'backup_excel',
+        'file' => $fileName,
+        'path' => $relativePath,
+      ])
+      ->log('Backup log aktivitas ke Excel (' . $totalLogs . ' data)');
+
+    return response()
+      ->download($filePath, $fileName, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ])
+      ->deleteFileAfterSend(true);
+  }
+
   public function print(Request $request)
   {
     $query = Activity::with('causer')->orderBy('created_at', 'desc');

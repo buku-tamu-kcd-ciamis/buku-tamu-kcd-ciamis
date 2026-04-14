@@ -330,6 +330,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/print/pegawai-piket', [BukuTamuController::class, 'printPegawaiPiket'])->name('pegawai-piket.print');
     Route::get('/print/data-pegawai', [BukuTamuController::class, 'printDataPegawai'])->name('data-pegawai.print');
     Route::get('/print/activity-logs', [ActivityLogController::class, 'print'])->name('activity-logs.print');
+    Route::get('/admin/activity-logs/backup/download', [ActivityLogController::class, 'backupDownload'])->name('activity-logs.backup-download');
     Route::get('/print/users-bulk', [UserManagementController::class, 'printBulk'])->name('users.print-bulk');
 
     Route::get('/export/pegawai-excel', [UserManagementController::class, 'exportPegawaiExcel'])->name('pegawai.export-excel');

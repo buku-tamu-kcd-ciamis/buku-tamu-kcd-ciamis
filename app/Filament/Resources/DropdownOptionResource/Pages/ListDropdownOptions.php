@@ -4,8 +4,8 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 
 use App\Filament\Resources\DropdownOptionResource;
 use App\Models\DropdownOption;
+use App\Models\Pegawai;
 use App\Models\PengaturanKcd;
-use App\Models\User;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -31,18 +31,17 @@ class ListDropdownOptions extends ListRecords
         ->color('success')
         ->requiresConfirmation()
         ->modalHeading('Sinkronkan Staff Yang Dituju')
-        ->modalDescription('Data kategori Staff Yang Dituju akan disesuaikan dengan daftar staff aktif di halaman Buku Tamu.')
+        ->modalDescription('Data kategori Staff Yang Dituju akan disesuaikan dengan data pegawai aktif.')
         ->modalSubmitActionLabel('Sinkronkan')
         ->action(function (): void {
-          $staffOptions = User::query()
-            ->whereHas('role_user', fn($query) => $query->where('name', 'Staff'))
-            ->whereNotNull('pegawai_id')
-            ->with('pegawai:id,nama,jabatan,is_active')
+          $staffOptions = Pegawai::query()
+            ->where('is_active', true)
+            ->select(['nama', 'jabatan'])
             ->get()
-            ->filter(fn(User $user): bool => $user->pegawai && $user->pegawai->is_active && filled(trim((string) $user->pegawai->nama)))
-            ->map(function (User $user): array {
-              $nama = trim((string) $user->pegawai->nama);
-              $jabatan = trim((string) ($user->pegawai->jabatan ?? ''));
+            ->filter(fn(Pegawai $pegawai): bool => filled(trim((string) $pegawai->nama)))
+            ->map(function (Pegawai $pegawai): array {
+              $nama = trim((string) $pegawai->nama);
+              $jabatan = trim((string) ($pegawai->jabatan ?? ''));
 
               return [
                 'value' => $nama,
@@ -50,6 +49,7 @@ class ListDropdownOptions extends ListRecords
               ];
             })
             ->unique('value')
+            ->sortBy('value', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
 
           if ($staffOptions->isEmpty()) {

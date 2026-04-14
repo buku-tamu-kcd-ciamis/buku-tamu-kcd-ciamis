@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DropdownOptionResource\Pages;
+use App\Models\BukuTamu;
 use App\Models\DropdownOption;
 use App\Models\User;
 use Filament\Actions\ActionGroup;
@@ -19,6 +20,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class DropdownOptionResource extends Resource
@@ -116,7 +118,17 @@ class DropdownOptionResource extends Resource
 
   public static function table(Table $table): Table
   {
+    $isStaffTab = request()->query('tab') === 'staff_dituju';
+
     return $table
+      ->modifyQueryUsing(fn(Builder $query): Builder => $query
+        ->select('dropdown_options.*')
+        ->selectSub(
+          BukuTamu::query()
+            ->selectRaw('count(*)')
+            ->whereColumn('staff_dituju', 'dropdown_options.value'),
+          'visit_count'
+        ))
       ->columns([
         Tables\Columns\TextColumn::make('category')
           ->label('Kategori')
@@ -143,6 +155,13 @@ class DropdownOptionResource extends Resource
           ->label('Urutan')
           ->sortable()
           ->alignCenter(),
+        Tables\Columns\TextColumn::make('visit_count')
+          ->label('Total Didatangi')
+          ->badge()
+          ->formatStateUsing(fn($state): string => (string) ((int) ($state ?? 0)))
+          ->color(fn($state): string => ((int) ($state ?? 0)) > 0 ? 'success' : 'gray')
+          ->sortable()
+          ->alignCenter(),
         Tables\Columns\IconColumn::make('is_active')
           ->label('Aktif')
           ->boolean()
@@ -154,13 +173,33 @@ class DropdownOptionResource extends Resource
           ->tooltip(fn($record) => $record->updated_at?->format('d/m/Y H:i'))
           ->sortable(),
       ])
-      ->defaultSort('sort_order')
+      ->defaultSort($isStaffTab ? 'visit_count' : 'sort_order', $isStaffTab ? 'desc' : 'asc')
       ->defaultPaginationPageOption(25)
       ->paginationPageOptions([10, 25, 50, 100])
       ->filters([
         Tables\Filters\SelectFilter::make('category')
           ->label('Kategori')
           ->options(DropdownOption::CATEGORY_LABELS),
+        Tables\Filters\SelectFilter::make('staff_sort_mode')
+          ->label('Urut Staff Dituju')
+          ->visible(fn(): bool => request()->query('tab') === 'staff_dituju')
+          ->options([
+            'visit_desc' => 'Paling Sering Didatangi',
+            'visit_asc' => 'Paling Jarang Didatangi',
+            'manual' => 'Urutan Manual (Sort Order)',
+          ])
+          ->default('visit_desc')
+          ->query(function (Builder $query, array $data): Builder {
+            if (request()->query('tab') !== 'staff_dituju') {
+              return $query;
+            }
+
+            return match ($data['value'] ?? 'visit_desc') {
+              'visit_asc' => $query->reorder('visit_count', 'asc')->orderBy('sort_order'),
+              'manual' => $query->reorder('sort_order')->orderByDesc('visit_count'),
+              default => $query->reorder('visit_count', 'desc')->orderBy('sort_order'),
+            };
+          }),
         Tables\Filters\TernaryFilter::make('is_active')
           ->label('Status'),
       ])

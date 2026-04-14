@@ -201,7 +201,11 @@ class ListDropdownOptions extends ListRecords
         ->icon('heroicon-o-building-office')
         ->badge(DropdownOption::where('category', DropdownOption::CATEGORY_STAFF_DITUJU)->count())
         ->badgeColor('danger')
-        ->modifyQueryUsing(fn(Builder $query) => $query->where('category', DropdownOption::CATEGORY_STAFF_DITUJU)),
+        ->modifyQueryUsing(fn(Builder $query) => $query
+          ->where('category', DropdownOption::CATEGORY_STAFF_DITUJU)
+          ->orderByDesc('visit_count')
+          ->orderBy('sort_order')
+          ->orderBy('label')),
     ];
   }
 

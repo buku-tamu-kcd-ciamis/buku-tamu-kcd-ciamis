@@ -118,8 +118,6 @@ class DropdownOptionResource extends Resource
 
   public static function table(Table $table): Table
   {
-    $isStaffTab = request()->query('tab') === 'staff_dituju';
-
     return $table
       ->modifyQueryUsing(fn(Builder $query): Builder => $query
         ->select('dropdown_options.*')
@@ -173,7 +171,7 @@ class DropdownOptionResource extends Resource
           ->tooltip(fn($record) => $record->updated_at?->format('d/m/Y H:i'))
           ->sortable(),
       ])
-      ->defaultSort($isStaffTab ? 'visit_count' : 'sort_order', $isStaffTab ? 'desc' : 'asc')
+      ->defaultSort('sort_order')
       ->defaultPaginationPageOption(25)
       ->paginationPageOptions([10, 25, 50, 100])
       ->filters([
@@ -182,15 +180,19 @@ class DropdownOptionResource extends Resource
           ->options(DropdownOption::CATEGORY_LABELS),
         Tables\Filters\SelectFilter::make('staff_sort_mode')
           ->label('Urut Staff Dituju')
-          ->visible(fn(): bool => request()->query('tab') === 'staff_dituju')
+          ->visible(fn($livewire = null): bool => (data_get($livewire, 'activeTab') ?? request()->query('tab')) === 'staff_dituju')
           ->options([
             'visit_desc' => 'Paling Sering Didatangi',
             'visit_asc' => 'Paling Jarang Didatangi',
             'manual' => 'Urutan Manual (Sort Order)',
           ])
           ->default('visit_desc')
-          ->query(function (Builder $query, array $data): Builder {
-            if (request()->query('tab') !== 'staff_dituju') {
+          ->selectablePlaceholder(false)
+          ->indicateUsing(static fn(): array => [])
+          ->query(function (Builder $query, array $data, $livewire = null): Builder {
+            $activeTab = data_get($livewire, 'activeTab') ?? request()->query('tab');
+
+            if ($activeTab !== 'staff_dituju') {
               return $query;
             }
 

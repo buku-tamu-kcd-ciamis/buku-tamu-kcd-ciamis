@@ -16,6 +16,7 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
@@ -83,10 +84,15 @@ class ListUsers extends ListRecords
                                 ->send();
                         }
                     } catch (Throwable $exception) {
+                        Log::error('Import Data Pegawai (User Resource) gagal.', [
+                            'exception' => $exception,
+                            'message' => $exception->getMessage(),
+                        ]);
+
                         Notification::make()
                             ->danger()
                             ->title('Import gagal')
-                            ->body('Terjadi kesalahan saat memproses file Excel.')
+                            ->body('Gagal import. Periksa format file dan gunakan template yang disediakan.')
                             ->send();
                     } finally {
                         Storage::disk('local')->delete($relativePath);
@@ -349,7 +355,7 @@ class ListUsers extends ListRecords
                 $userQuery->whereDoesntHave('role_user', function (Builder $roleQuery): void {
                     $roleQuery->where('name', 'Super Admin');
                 })
-                ->orWhereNull('role_user_id');
+                    ->orWhereNull('role_user_id');
             });
     }
 }

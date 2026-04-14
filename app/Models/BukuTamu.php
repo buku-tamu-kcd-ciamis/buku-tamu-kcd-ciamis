@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use App\Helpers\ImageHelper;
 
 class BukuTamu extends Model
@@ -76,7 +76,7 @@ class BukuTamu extends Model
         return LogOptions::defaults()
             ->logOnly(['status', 'catatan', 'nama_penerima'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
+            ->dontLogEmptyChanges()
             ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
                 'created' => "Mendaftarkan tamu baru atas nama {$this->nama_lengkap}",
                 'updated' => "Memperbarui status buku tamu atas nama {$this->nama_lengkap}",

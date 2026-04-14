@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Faq extends Model
 {
@@ -15,7 +15,7 @@ class Faq extends Model
     return LogOptions::defaults()
       ->logOnly(['question', 'answer', 'target', 'sort_order', 'is_active'])
       ->logOnlyDirty()
-      ->dontSubmitEmptyLogs()
+      ->dontLogEmptyChanges()
       ->useLogName('faq')
       ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
         'created' => 'FAQ baru ditambahkan: ' . ($this->question ? '"' . \Illuminate\Support\Str::limit($this->question, 50) . '"' : ''),

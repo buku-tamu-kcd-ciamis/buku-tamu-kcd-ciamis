@@ -10,6 +10,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ListDataPegawai extends ListRecords
@@ -73,10 +74,15 @@ class ListDataPegawai extends ListRecords
                 ->send();
             }
           } catch (Throwable $exception) {
+            Log::error('Import Data Pegawai gagal.', [
+              'exception' => $exception,
+              'message' => $exception->getMessage(),
+            ]);
+
             Notification::make()
               ->danger()
               ->title('Import gagal')
-              ->body('Terjadi kesalahan saat memproses file Excel.')
+              ->body('Gagal import. Periksa format file dan gunakan template yang disediakan.')
               ->send();
           } finally {
             Storage::disk('local')->delete($relativePath);

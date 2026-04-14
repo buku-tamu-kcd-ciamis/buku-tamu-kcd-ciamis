@@ -22,7 +22,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: "8.4"
           extensions: mbstring, bcmath, ctype, fileinfo, intl, json, openssl, pdo_mysql, tokenizer, xml
           tools: composer:v2
           coverage: none
@@ -74,7 +74,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: "8.4"
           tools: composer:v2
           coverage: none
 
@@ -139,9 +139,26 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          KEY_MATERIAL="${DEPLOY_PRIVATE_KEY//$'\r'/}"
+          RAW_KEY_MATERIAL="${DEPLOY_PRIVATE_KEY:-}"
+          RAW_KEY_MATERIAL="${RAW_KEY_MATERIAL//$'\r'/}"
+          KEY_MATERIAL="$(printf '%s' "${RAW_KEY_MATERIAL}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+          # Support accidental surrounding quotes when pasting into GitHub Secrets.
+          first_char="${KEY_MATERIAL:0:1}"
+          last_char="${KEY_MATERIAL: -1}"
+          if { [ "${first_char}" = '"' ] && [ "${last_char}" = '"' ]; } || { [ "${first_char}" = "'" ] && [ "${last_char}" = "'" ]; }; then
+            KEY_MATERIAL="${KEY_MATERIAL:1:-1}"
+          fi
+
+          if [[ "${KEY_MATERIAL}" == PuTTY-User-Key-File-* ]]; then
+            echo "::error title=Invalid SSH private key::Format .ppk (PuTTY) tidak didukung langsung."
+            echo "Hint: convert dulu ke OpenSSH private key, lalu simpan hasilnya ke secret DEPLOY_PRIVATE_KEY."
+            exit 1
+          fi
+
           if [[ "${KEY_MATERIAL}" != *"BEGIN "*" PRIVATE KEY"* ]]; then
-            if printf '%s' "${KEY_MATERIAL}" | base64 -d > ~/.ssh/id_ed25519 2>/tmp/ssh-key-decode.err; then
+            KEY_MATERIAL_BASE64="$(printf '%s' "${KEY_MATERIAL}" | tr -d '[:space:]')"
+            if printf '%s' "${KEY_MATERIAL_BASE64}" | base64 -d > ~/.ssh/id_ed25519 2>/tmp/ssh-key-decode.err; then
               chmod 600 ~/.ssh/id_ed25519
             else
               echo "::error title=Invalid SSH private key::Secret bukan format key langsung dan gagal decode Base64."
@@ -162,6 +179,12 @@ jobs:
           if head -n 1 ~/.ssh/id_ed25519 | grep -Eq '^(ssh-rsa|ssh-ed25519|ecdsa-sha2-nistp[0-9]+) '; then
             echo "::error title=Invalid SSH private key::Terlihat seperti PUBLIC key (.pub), bukan private key."
             echo "Hint: gunakan isi file private key (contoh: ~/.ssh/haikal), bukan ~/.ssh/haikal.pub."
+            exit 1
+          fi
+
+          if grep -q "ENCRYPTED" ~/.ssh/id_ed25519; then
+            echo "::error title=Encrypted SSH key is not supported::Private key terenkripsi/passphrase tidak bisa dipakai di workflow ini."
+            echo "Hint: gunakan deploy key tanpa passphrase khusus untuk CI/CD."
             exit 1
           fi
 

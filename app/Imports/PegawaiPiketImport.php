@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\DropdownOption;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Throwable;
 
 class PegawaiPiketImport
 {
@@ -111,8 +112,8 @@ class PegawaiPiketImport
                     ]);
                     $this->imported++;
                 }
-            } catch (\Exception $e) {
-                $this->errors[] = "Baris {$rowNumber}: Gagal menyimpan data — " . $e->getMessage();
+            } catch (Throwable $e) {
+                $this->errors[] = "Baris {$rowNumber}: Gagal menyimpan data. Periksa format data dan pastikan tidak ada data duplikat.";
                 $this->skipped++;
             }
         }

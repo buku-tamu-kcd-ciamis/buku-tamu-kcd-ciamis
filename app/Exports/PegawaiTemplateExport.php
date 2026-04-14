@@ -62,7 +62,7 @@ class PegawaiTemplateExport
         // ===== SAMPLE DATA (2 rows) =====
         $sampleData = [
             [1, 'Drs. H. Ahmad Suryadi, M.Pd.', '198501012010011001', 'Kepala Cabang Dinas', 'Cadisdik Wilayah XIII', '812-3456-7890', 'Aktif', 'Kepala Cabang Dinas'],
-            [2, 'Siti Nurhaliza, S.Pd.', '199003152015012002', 'Staff Tata Usaha', 'Sub Bagian Tata Usaha', '857-1234-5678', 'Aktif', 'Staff'],
+            [2, 'Siti Nurhaliza, S.Pd.', '', 'Staff Tata Usaha', 'Sub Bagian Tata Usaha', '857-1234-5678', 'Aktif', 'Staff'],
         ];
 
         foreach ($sampleData as $rowIndex => $rowData) {
@@ -124,12 +124,12 @@ class PegawaiTemplateExport
 
         $instructions = [
             '1. Hapus baris contoh (baris 2-3) sebelum mengisi data baru.',
-            '2. Kolom "Nama" dan "NIP" WAJIB diisi.',
-            '3. NIP harus tepat 18 digit angka.',
+            '2. Kolom "Nama" wajib diisi. Kolom "NIP" opsional.',
+            '3. Jika kolom NIP diisi, nilainya harus tepat 18 digit angka.',
             '4. Nomor HP: format 8xx-xxxx-xxxx (tanpa kode +62 atau 0).',
             '5. Status: isi "Aktif" atau "Nonaktif" (default: Aktif jika dikosongkan).',
             '6. Kolom "Role User": pilih "Staff", "Piket", atau "Kepala Cabang Dinas".',
-            '7. Jika NIP sudah ada di database, data akan diperbarui (update).',
+            '7. Jika NIP diisi dan sudah ada di database, data akan diperbarui (update).',
             '8. Simpan file dalam format .xlsx sebelum mengimpor.',
         ];
 

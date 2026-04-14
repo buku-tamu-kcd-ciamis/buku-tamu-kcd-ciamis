@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Pegawai;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Throwable;
 
 class PegawaiImport
 {
@@ -59,8 +60,8 @@ class PegawaiImport
             }
         }
 
-        if (!isset(array_flip(array_values($columnMap))['nama']) || !isset(array_flip(array_values($columnMap))['nip'])) {
-            $this->errors[] = 'Kolom "Nama" dan "NIP" wajib ada di file Excel.';
+        if (!isset(array_flip(array_values($columnMap))['nama'])) {
+            $this->errors[] = 'Kolom "Nama" wajib ada di file Excel.';
             return $this;
         }
 
@@ -76,7 +77,7 @@ class PegawaiImport
             }
 
             // Skip empty rows
-            if (empty($data['nama']) && empty($data['nip'])) {
+            if (empty($data['nama']) && empty($data['nip'] ?? '')) {
                 continue;
             }
 
@@ -87,16 +88,10 @@ class PegawaiImport
                 continue;
             }
 
-            if (empty($data['nip'])) {
-                $this->errors[] = "Baris {$rowNumber}: NIP tidak boleh kosong.";
-                $this->skipped++;
-                continue;
-            }
+            // Clean NIP (optional) - remove spaces and non-numeric.
+            $data['nip'] = preg_replace('/[^0-9]/', '', (string) ($data['nip'] ?? ''));
 
-            // Clean NIP - remove spaces and non-numeric
-            $data['nip'] = preg_replace('/[^0-9]/', '', $data['nip']);
-
-            if (strlen($data['nip']) !== 18) {
+            if ($data['nip'] !== '' && strlen($data['nip']) !== 18) {
                 $this->errors[] = "Baris {$rowNumber}: NIP '{$data['nip']}' harus tepat 18 digit (saat ini " . strlen($data['nip']) . " digit).";
                 $this->skipped++;
                 continue;
@@ -121,42 +116,58 @@ class PegawaiImport
                 $data['is_active'] = true;
             }
 
-            // Upsert by NIP
+            // Upsert by NIP when present, otherwise update the same nama with empty NIP.
             try {
-                $existing = Pegawai::where('nip', $data['nip'])->first();
+                $existing = null;
+                if ($data['nip'] !== '') {
+                    $existing = Pegawai::where('nip', $data['nip'])->first();
+                } else {
+                    $existing = Pegawai::where('nama', $data['nama'])
+                        ->whereNull('nip')
+                        ->first();
+                }
+
+                $rowKey = $data['nip'] !== ''
+                    ? 'nip:' . $data['nip']
+                    : 'nama:' . strtolower((string) $data['nama']);
 
                 if ($existing) {
                     $existing->update([
                         'nama' => $data['nama'],
+                        'nip' => $data['nip'] !== '' ? $data['nip'] : $existing->nip,
                         'jabatan' => $data['jabatan'] ?? $existing->jabatan,
                         'unit_kerja' => $data['unit_kerja'] ?? $existing->unit_kerja,
                         'nomor_hp' => !empty($data['nomor_hp']) ? $data['nomor_hp'] : $existing->nomor_hp,
                         'is_active' => $data['is_active'],
                     ]);
                     $this->updated++;
-                    $this->processedNips[$data['nip']] = $data['nip'];
-                    $this->processedRows[$data['nip']] = [
+                    if ($data['nip'] !== '') {
+                        $this->processedNips[$data['nip']] = $data['nip'];
+                    }
+                    $this->processedRows[$rowKey] = [
                         'nip' => $data['nip'],
                         'role_user_name' => (string) ($data['role_user_name'] ?? ''),
                     ];
                 } else {
                     Pegawai::create([
                         'nama' => $data['nama'],
-                        'nip' => $data['nip'],
+                        'nip' => $data['nip'] !== '' ? $data['nip'] : null,
                         'jabatan' => $data['jabatan'] ?? null,
                         'unit_kerja' => $data['unit_kerja'] ?? null,
                         'nomor_hp' => !empty($data['nomor_hp']) ? $data['nomor_hp'] : null,
                         'is_active' => $data['is_active'],
                     ]);
                     $this->imported++;
-                    $this->processedNips[$data['nip']] = $data['nip'];
-                    $this->processedRows[$data['nip']] = [
+                    if ($data['nip'] !== '') {
+                        $this->processedNips[$data['nip']] = $data['nip'];
+                    }
+                    $this->processedRows[$rowKey] = [
                         'nip' => $data['nip'],
                         'role_user_name' => (string) ($data['role_user_name'] ?? ''),
                     ];
                 }
-            } catch (\Exception $e) {
-                $this->errors[] = "Baris {$rowNumber}: Gagal menyimpan data — " . $e->getMessage();
+            } catch (Throwable $e) {
+                $this->errors[] = "Baris {$rowNumber}: Gagal menyimpan data. Periksa format data dan pastikan tidak ada data duplikat.";
                 $this->skipped++;
             }
         }

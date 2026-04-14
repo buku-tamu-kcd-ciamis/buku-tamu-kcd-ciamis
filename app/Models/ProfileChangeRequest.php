@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Traits\UuidTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class ProfileChangeRequest extends Model
 {
@@ -56,7 +56,7 @@ class ProfileChangeRequest extends Model
     return LogOptions::defaults()
       ->logOnly(['status', 'reviewed_by', 'alasan_reject'])
       ->logOnlyDirty()
-      ->dontSubmitEmptyLogs()
+      ->dontLogEmptyChanges()
       ->useLogName('profil_change')
       ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
         'created' => 'Pengajuan perubahan profil oleh ' . ($this->user?->name ?? ''),

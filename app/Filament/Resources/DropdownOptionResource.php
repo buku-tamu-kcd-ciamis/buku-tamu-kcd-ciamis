@@ -153,12 +153,11 @@ class DropdownOptionResource extends Resource
         Tables\Columns\TextColumn::make('visit_count')
           ->label('Total Didatangi')
           ->badge()
-          ->formatStateUsing(fn($state, DropdownOption $record): string => $record->category === DropdownOption::CATEGORY_STAFF_DITUJU
-            ? (string) ((int) ($state ?? 0))
-            : '-')
-          ->color(fn($state, DropdownOption $record): string => $record->category === DropdownOption::CATEGORY_STAFF_DITUJU && ((int) ($state ?? 0)) > 0
+          ->formatStateUsing(fn($state): string => (string) ((int) ($state ?? 0)))
+          ->color(fn($state): string => ((int) ($state ?? 0)) > 0
             ? 'success'
             : 'gray')
+          ->visible(fn($livewire): bool => data_get($livewire, 'tableFilters.category.value') === DropdownOption::CATEGORY_STAFF_DITUJU)
           ->sortable()
           ->alignCenter(),
         Tables\Columns\IconColumn::make('is_active')

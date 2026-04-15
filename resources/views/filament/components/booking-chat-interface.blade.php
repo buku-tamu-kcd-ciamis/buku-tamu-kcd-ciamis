@@ -344,7 +344,7 @@
                     }
 
                     try {
-                        this.notificationRegistration = await navigator.serviceWorker.ready;
+                        this.notificationRegistration = await this.ensureServiceWorkerRegistration();
 
                         if (this.notificationPermission === 'granted') {
                             await this.ensureWebPushSubscription();
@@ -352,6 +352,9 @@
                     } catch (error) {
                         this.notificationRegistration = null;
                     }
+                },
+                getNormalizedVapidPublicKey() {
+                    return String(this.webPushPublicKey || '').replace(/\s+/g, '');
                 },
                 urlBase64ToUint8Array(base64String) {
                     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -371,15 +374,35 @@
                     return document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
                 },
                 isWebPushConfigured() {
-                    return this.webPushPublicKey !== ''
+                    return this.getNormalizedVapidPublicKey() !== ''
                         && this.webPushSubscribeUrl !== ''
                         && this.webPushUnsubscribeUrl !== '';
                 },
+                async ensureServiceWorkerRegistration() {
+                    if (!('serviceWorker' in navigator)) {
+                        throw new Error('SERVICE_WORKER_UNSUPPORTED');
+                    }
+
+                    const existingRegistration = await navigator.serviceWorker.getRegistration();
+
+                    if (existingRegistration) {
+                        return existingRegistration;
+                    }
+
+                    const registration = await navigator.serviceWorker.register('{{ asset('sw.js') }}');
+
+                    return registration;
+                },
                 async registerWebPushSubscription(subscription) {
                     const payload = subscription?.toJSON?.();
+                    const csrfToken = this.getCsrfToken();
 
                     if (!payload?.endpoint || !payload?.keys?.p256dh || !payload?.keys?.auth) {
                         throw new Error('INVALID_SUBSCRIPTION_PAYLOAD');
+                    }
+
+                    if (!csrfToken) {
+                        throw new Error('CSRF_TOKEN_MISSING');
                     }
 
                     const response = await fetch(this.webPushSubscribeUrl, {
@@ -388,7 +411,7 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
-                            'X-CSRF-TOKEN': this.getCsrfToken(),
+                            'X-CSRF-TOKEN': csrfToken,
                         },
                         body: JSON.stringify({
                             endpoint: payload.endpoint,
@@ -398,7 +421,19 @@
                     });
 
                     if (!response.ok) {
-                        throw new Error('REGISTER_PUSH_SUBSCRIPTION_FAILED');
+                        let errorBody = '';
+
+                        try {
+                            errorBody = await response.text();
+                        } catch (_error) {
+                            errorBody = '';
+                        }
+
+                        const responseError = new Error('REGISTER_PUSH_SUBSCRIPTION_FAILED');
+                        responseError.statusCode = response.status;
+                        responseError.responseBody = errorBody;
+
+                        throw responseError;
                     }
 
                     this.pushSubscriptionEndpoint = String(payload.endpoint);
@@ -419,6 +454,36 @@
                         body: JSON.stringify({ endpoint }),
                     });
                 },
+                describePushSyncError(error) {
+                    const statusCode = Number(error?.statusCode || 0);
+                    const messageText = String(error?.message || '').toLowerCase();
+
+                    if (statusCode === 401 || statusCode === 403) {
+                        return 'Sesi login tidak valid untuk sinkronisasi push. Silakan login ulang.';
+                    }
+
+                    if (statusCode === 419 || messageText.includes('csrf')) {
+                        return 'Token keamanan kadaluarsa. Refresh halaman lalu coba aktifkan notifikasi lagi.';
+                    }
+
+                    if (statusCode === 422) {
+                        return 'Format data push subscription tidak valid. Coba nonaktifkan lalu aktifkan lagi notifikasi browser.';
+                    }
+
+                    if (messageText.includes('invalidcharactererror') || messageText.includes('atob')) {
+                        return 'Konfigurasi VAPID public key tidak valid. Periksa WEB_PUSH_VAPID_PUBLIC_KEY di server.';
+                    }
+
+                    if (messageText.includes('notallowederror') || messageText.includes('permission denied')) {
+                        return 'Izin notifikasi diblokir browser. Aktifkan kembali dari Site Settings.';
+                    }
+
+                    if (messageText.includes('aborterror') || messageText.includes('network')) {
+                        return 'Koneksi jaringan bermasalah saat sinkronisasi push. Coba lagi beberapa saat.';
+                    }
+
+                    return 'Notifikasi push belum aktif penuh. Refresh halaman lalu coba aktifkan lagi.';
+                },
                 async ensureWebPushSubscription() {
                     if (
                         this.pushSubscriptionSyncInFlight
@@ -433,23 +498,65 @@
                     this.pushSubscriptionSyncInFlight = true;
 
                     try {
-                        const registration = this.notificationRegistration || await navigator.serviceWorker.ready;
+                        const registration = this.notificationRegistration || await this.ensureServiceWorkerRegistration();
                         this.notificationRegistration = registration;
+                        const vapidPublicKey = this.getNormalizedVapidPublicKey();
 
                         let subscription = await registration.pushManager.getSubscription();
+
+                        if (
+                            subscription
+                            && this.pushSubscriptionEndpoint !== ''
+                            && this.pushSubscriptionEndpoint !== String(subscription.endpoint || '')
+                        ) {
+                            try {
+                                await subscription.unsubscribe();
+                            } catch (_unsubscribeError) {
+                                // Ignore cleanup failure and continue to resubscribe.
+                            }
+
+                            subscription = null;
+                        }
 
                         if (!subscription) {
                             subscription = await registration.pushManager.subscribe({
                                 userVisibleOnly: true,
-                                applicationServerKey: this.urlBase64ToUint8Array(this.webPushPublicKey),
+                                applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
                             });
                         }
 
-                        await this.registerWebPushSubscription(subscription);
+                        try {
+                            await this.registerWebPushSubscription(subscription);
+                        } catch (registrationError) {
+                            const statusCode = Number(registrationError?.statusCode || 0);
+
+                            if (statusCode === 401 || statusCode === 403 || statusCode === 419) {
+                                throw registrationError;
+                            }
+
+                            // Recover from stale browser subscription by recreating once.
+                            if (subscription) {
+                                try {
+                                    await this.unregisterWebPushSubscription(subscription.endpoint);
+                                    await subscription.unsubscribe();
+                                } catch (_cleanupError) {
+                                    // Ignore cleanup failure; continue with a fresh subscribe attempt.
+                                }
+
+                                const freshSubscription = await registration.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
+                                });
+
+                                await this.registerWebPushSubscription(freshSubscription);
+                            } else {
+                                throw registrationError;
+                            }
+                        }
 
                         return true;
                     } catch (error) {
-                        this.showDropNotice('Notifikasi push belum aktif penuh. Coba refresh halaman.', 'error');
+                        this.showDropNotice(this.describePushSyncError(error), 'error');
 
                         return false;
                     } finally {

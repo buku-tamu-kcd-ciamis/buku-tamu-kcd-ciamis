@@ -5,7 +5,7 @@
                 'label' => 'Tersedia',
                 'description' => 'Siap menerima tamu',
                 'icon' => 'heroicon-o-check-circle',
-                'tone' => 'green',
+                'tone' => 'sky',
             ],
             'busy' => [
                 'label' => 'Sibuk',

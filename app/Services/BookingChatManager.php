@@ -29,17 +29,16 @@ class BookingChatManager
     {
         $rawStaffSelection = trim((string) ($booking->staff_dituju ?? ''));
         $normalizedStaffName = $this->extractStaffNameFromSelection($rawStaffSelection);
+        $lookupName = mb_strtolower(trim($normalizedStaffName !== '' ? $normalizedStaffName : $rawStaffSelection));
+
+        if ($lookupName === '') {
+            return collect();
+        }
 
         return User::query()
             ->whereHas('role_user', fn($query) => $query->where('name', 'Staff'))
-            ->whereHas('pegawai', function ($query) use ($normalizedStaffName, $rawStaffSelection): void {
-                if ($normalizedStaffName !== '') {
-                    $query->where('nama', $normalizedStaffName);
-
-                    return;
-                }
-
-                $query->where('nama', $rawStaffSelection);
+            ->whereHas('pegawai', function ($query) use ($lookupName): void {
+                $query->whereRaw('LOWER(TRIM(nama)) = ?', [$lookupName]);
             })
             ->get();
     }

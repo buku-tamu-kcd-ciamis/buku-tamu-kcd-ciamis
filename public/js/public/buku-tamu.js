@@ -12,7 +12,88 @@ document.addEventListener("DOMContentLoaded", function () {
     const nikInput = document.getElementById("nik");
     const nikIcon = document.getElementById("nik_icon");
     const namaLengkapInput = document.getElementById("nama_lengkap");
+    const instansiInput = document.getElementById("instansi");
     const emailInput = document.getElementById("email");
+
+    function normalizeSingleSpaces(value) {
+        return String(value || "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function normalizePersonName(value) {
+        const lowerCased = String(value || "").toLowerCase();
+
+        return lowerCased.replace(
+            /(^|[\s'`-])([a-z\u00c0-\u024f])/giu,
+            function (_match, prefix, letter) {
+                return prefix + letter.toUpperCase();
+            },
+        );
+    }
+
+    function normalizeInstitutionName(value) {
+        let normalized = String(value || "");
+
+        normalized = normalized.replace(
+            /\b(smkn|smk|sman|sma|smpn|smp|sdn|sd|man|ma|mts|mi|tk|kcd)\s*([0-9]{1,3})\b/giu,
+            function (_match, abbreviation, number) {
+                return abbreviation.toUpperCase() + " " + number;
+            },
+        );
+
+        const uppercaseAbbreviations = [
+            "smk",
+            "smkn",
+            "sma",
+            "sman",
+            "smp",
+            "smpn",
+            "sd",
+            "sdn",
+            "ma",
+            "mts",
+            "man",
+            "mi",
+            "pt",
+            "cv",
+            "ud",
+            "rs",
+            "uptd",
+            "kcd",
+        ];
+
+        uppercaseAbbreviations.forEach(function (abbr) {
+            const regex = new RegExp("\\b" + abbr + "\\b", "gi");
+            normalized = normalized.replace(regex, abbr.toUpperCase());
+        });
+
+        return normalized;
+    }
+
+    function applyInputFormatting(input, formatter) {
+        if (!input) {
+            return;
+        }
+
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+        const formatted = formatter(input.value || "");
+
+        if (formatted === input.value) {
+            return;
+        }
+
+        input.value = formatted;
+
+        if (
+            document.activeElement === input &&
+            selectionStart !== null &&
+            selectionEnd !== null
+        ) {
+            input.setSelectionRange(selectionStart, selectionEnd);
+        }
+    }
 
     // ===== DYNAMIC DATA FROM DATABASE =====
     const __dd = window.__dropdownData || {};
@@ -126,7 +207,10 @@ document.addEventListener("DOMContentLoaded", function () {
         jenisIdList.classList.add("show");
     }
 
-    function selectOption(opt) {
+    function selectOption(opt, options = {}) {
+        const shouldResetNik = options.resetNik !== false;
+        const shouldFocusNik = options.focusNik !== false;
+
         jenisIdInput.value = opt.label;
         jenisIdHidden.value = opt.value;
         jenisIdList.classList.remove("show");
@@ -135,7 +219,9 @@ document.addEventListener("DOMContentLoaded", function () {
         nikLabel.innerHTML = config.label + ' <span class="required">*</span>';
         nikInput.placeholder = config.placeholder;
         nikIcon.className = "fa-solid fa-id-card input-icon";
-        nikInput.value = "";
+        if (shouldResetNik) {
+            nikInput.value = "";
+        }
 
         // Update hint & maxlength
         const nikHint = document.getElementById("nik_hint");
@@ -149,7 +235,9 @@ document.addEventListener("DOMContentLoaded", function () {
             nikHint.className = "phone-hint";
         }
 
-        nikInput.focus();
+        if (shouldFocusNik) {
+            nikInput.focus();
+        }
     }
 
     jenisIdInput.addEventListener("focus", function () {
@@ -170,7 +258,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     (o) => o.label.toLowerCase() === this.value.toLowerCase(),
                 );
                 if (match) {
-                    selectOption(match);
+                    selectOption(match, {
+                        focusNik: false,
+                        resetNik: true,
+                    });
                 } else {
                     this.value = "";
                     jenisIdHidden.value = "";
@@ -207,7 +298,12 @@ document.addEventListener("DOMContentLoaded", function () {
             if (activeIndex >= 0 && items[activeIndex]) {
                 const val = items[activeIndex].dataset.value;
                 const opt = jenisIdOptions.find((o) => o.value === val);
-                if (opt) selectOption(opt);
+                if (opt) {
+                    selectOption(opt, {
+                        focusNik: true,
+                        resetNik: true,
+                    });
+                }
             }
         } else if (e.key === "Escape") {
             jenisIdList.classList.remove("show");
@@ -674,7 +770,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return formatted;
     }
 
-    function setJenisIdAndNik(jenisId, nik) {
+    function setJenisIdAndNik(jenisId, nik, options = {}) {
+        const shouldFocusNik = options.focusNik === true;
+        const shouldResetNik = options.resetNik === true;
+
         if (jenisId) {
             const jenisValue = String(jenisId).toLowerCase();
             const jenisMatch = jenisIdOptions.find(
@@ -684,7 +783,10 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             if (jenisMatch) {
-                selectOption(jenisMatch);
+                selectOption(jenisMatch, {
+                    focusNik: shouldFocusNik,
+                    resetNik: shouldResetNik,
+                });
             } else {
                 jenisIdHidden.value = jenisId;
                 jenisIdInput.value = jenisId;
@@ -700,10 +802,17 @@ document.addEventListener("DOMContentLoaded", function () {
     function applyGuestDataToForm(data, matchedBy) {
         suppressAutoLookup = true;
 
-        setJenisIdAndNik(data.jenis_id || "", data.nik || "");
+        setJenisIdAndNik(data.jenis_id || "", data.nik || "", {
+            focusNik: false,
+            resetNik: false,
+        });
 
-        namaLengkapInput.value = data.nama_lengkap || "";
-        document.getElementById("instansi").value = data.instansi || "";
+        namaLengkapInput.value = normalizePersonName(data.nama_lengkap || "");
+
+        if (instansiInput) {
+            instansiInput.value = normalizeInstitutionName(data.instansi || "");
+        }
+
         document.getElementById("jabatan").value = data.jabatan || "";
         document.getElementById("kabupaten_kota").value =
             data.kabupaten_kota || "";
@@ -894,6 +1003,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // Auto-fill by full name when user leaves the field
     if (namaLengkapInput) {
         namaLengkapInput.addEventListener("input", function () {
+            applyInputFormatting(namaLengkapInput, normalizePersonName);
+        });
+
+        namaLengkapInput.addEventListener("blur", function () {
+            this.value = normalizeSingleSpaces(
+                normalizePersonName(this.value || ""),
+            );
+        });
+
+        namaLengkapInput.addEventListener("input", function () {
             if (suppressAutoLookup) return;
 
             const namaLengkap = (this.value || "").trim();
@@ -983,6 +1102,18 @@ document.addEventListener("DOMContentLoaded", function () {
             ) {
                 hideGuestSuggestions();
             }
+        });
+    }
+
+    if (instansiInput) {
+        instansiInput.addEventListener("input", function () {
+            applyInputFormatting(instansiInput, normalizeInstitutionName);
+        });
+
+        instansiInput.addEventListener("blur", function () {
+            this.value = normalizeSingleSpaces(
+                normalizeInstitutionName(this.value || ""),
+            );
         });
     }
 

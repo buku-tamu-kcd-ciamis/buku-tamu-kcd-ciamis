@@ -18,6 +18,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class BukuTamuResource extends Resource
@@ -42,6 +44,15 @@ class BukuTamuResource extends Resource
   public static function canViewAny(): bool
   {
     return static::hasStaffPermission('buku_tamu');
+  }
+
+  public static function canView(Model $record): bool
+  {
+    if (!static::hasStaffPermission('buku_tamu')) {
+      return false;
+    }
+
+    return static::recordBelongsToCurrentStaff($record);
   }
 
   public static function form(Schema $schema): Schema
@@ -162,7 +173,7 @@ class BukuTamuResource extends Resource
   {
     return $table
       ->query(
-        BukuTamu::query()
+        static::applyCurrentStaffScope(BukuTamu::query())
           ->where(function ($q) {
             $q->where('keperluan', 'not like', '%berkas%')
               ->where('keperluan', 'not like', '%surat%')
@@ -243,10 +254,26 @@ class BukuTamuResource extends Resource
             ->icon('heroicon-o-chat-bubble-left-right')
             ->color('primary')
             ->url(function (BukuTamu $record): string {
-              $chat = $record->bookingChats()->first();
+              /** @var \App\Models\User|null $authUser */
+              $authUser = Auth::user();
+
+              if (!$authUser || !static::recordBelongsToCurrentStaff($record)) {
+                return ChatBooking::getUrl();
+              }
+
+              $chat = $record->bookingChats()
+                ->where('staff_user_id', $authUser->id)
+                ->first();
 
               if (!$chat) {
-                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+                $chat = app(BookingChatManager::class)->getOrCreateForBookingAndStaff($record, $authUser, $authUser);
+
+                if ($chat && $chat->messages()->doesntExist()) {
+                  app(BookingChatManager::class)->sendSystemMessage(
+                    $chat,
+                    "Booking baru masuk dari {$record->nama_lengkap} ({$record->instansi}). Koordinasikan alur penerimaan tamu melalui chat ini.",
+                  );
+                }
               }
 
               if (!$chat) {
@@ -281,5 +308,60 @@ class BukuTamuResource extends Resource
   public static function canCreate(): bool
   {
     return false;
+  }
+
+  private static function applyCurrentStaffScope(Builder $query): Builder
+  {
+    $staffLookup = static::getCurrentStaffLookupName();
+
+    if ($staffLookup === '') {
+      return $query->whereRaw('1 = 0');
+    }
+
+    return $query->where(function (Builder $staffQuery) use ($staffLookup): void {
+      $staffQuery
+        ->whereRaw('LOWER(TRIM(staff_dituju)) = ?', [$staffLookup])
+        ->orWhereRaw('LOWER(TRIM(staff_dituju)) like ?', [$staffLookup . ' — %'])
+        ->orWhereRaw('LOWER(TRIM(staff_dituju)) like ?', [$staffLookup . ' - %'])
+        ->orWhereRaw('LOWER(TRIM(staff_dituju)) like ?', [$staffLookup . ' #%']);
+    });
+  }
+
+  private static function recordBelongsToCurrentStaff(Model $record): bool
+  {
+    $staffLookup = static::getCurrentStaffLookupName();
+
+    if ($staffLookup === '') {
+      return false;
+    }
+
+    $assignedLookup = static::normalizeStaffLookup((string) ($record->staff_dituju ?? ''));
+
+    return $assignedLookup === $staffLookup;
+  }
+
+  private static function getCurrentStaffLookupName(): string
+  {
+    /** @var \App\Models\User|null $user */
+    $user = Auth::user();
+
+    $staffName = trim((string) ($user?->pegawai?->nama ?? $user?->name ?? ''));
+
+    return static::normalizeStaffLookup($staffName);
+  }
+
+  private static function normalizeStaffLookup(string $value): string
+  {
+    $normalized = trim((string) preg_replace('/\s+/u', ' ', $value));
+
+    if ($normalized === '') {
+      return '';
+    }
+
+    $parts = preg_split('/\s+[—-]\s+/u', $normalized, 2);
+    $normalized = trim((string) ($parts[0] ?? $normalized));
+    $normalized = trim((string) preg_replace('/\s+#\d+$/u', '', $normalized));
+
+    return mb_strtolower($normalized);
   }
 }

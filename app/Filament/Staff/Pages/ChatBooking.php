@@ -124,7 +124,7 @@ class ChatBooking extends Page
         return "{$jam} • {$pengirim} • {$infoPesan}";
     }
 
-    public function mount(): void
+    public function mount(BookingChatManager $chatManager): void
     {
         $chatId = (string) request()->query('chat', '');
         $bookingId = (int) request()->query('booking', 0);
@@ -136,7 +136,11 @@ class ChatBooking extends Page
         }
 
         if ($bookingId > 0) {
-            $this->openChatFromBooking($bookingId);
+            $this->openChatFromBooking($bookingId, $chatManager);
+        }
+
+        if (!$this->selectedChatId) {
+            $this->bootstrapMissingOpenBookingChats($chatManager);
         }
 
         $chat = $this->getSelectedChat();
@@ -973,7 +977,54 @@ class ChatBooking extends Page
         ];
     }
 
-    private function openChatFromBooking(int $bookingId): void
+    private function bootstrapMissingOpenBookingChats(BookingChatManager $chatManager): void
+    {
+        /** @var User|null $authUser */
+        $authUser = Auth::user();
+
+        if (!$authUser || !$authUser->hasRole('Staff')) {
+            return;
+        }
+
+        $normalizedCurrentStaffName = $this->normalizeStaffName((string) ($authUser->pegawai?->nama ?? $authUser->name ?? ''));
+
+        if ($normalizedCurrentStaffName === '') {
+            return;
+        }
+
+        $bookings = BukuTamu::query()
+            ->whereIn('status', [BukuTamu::STATUS_MENUNGGU, BukuTamu::STATUS_DIPROSES])
+            ->whereNotNull('staff_dituju')
+            ->where('staff_dituju', '!=', '')
+            ->with(['bookingChats:id,buku_tamu_id,staff_user_id'])
+            ->latest('created_at')
+            ->limit(50)
+            ->get(['id', 'nama_lengkap', 'instansi', 'staff_dituju', 'status', 'created_at']);
+
+        foreach ($bookings as $booking) {
+            if (!$this->isBookingAssignedToCurrentStaff($booking, $normalizedCurrentStaffName)) {
+                continue;
+            }
+
+            $alreadyHasCurrentStaffChat = $booking->bookingChats
+                ->contains(fn(BookingChat $chat): bool => (string) $chat->staff_user_id === (string) $authUser->id);
+
+            if ($alreadyHasCurrentStaffChat) {
+                continue;
+            }
+
+            $chat = $chatManager->getOrCreateForBookingAndStaff($booking, $authUser, $authUser);
+
+            if ($chat->messages()->doesntExist()) {
+                $chatManager->sendSystemMessage(
+                    $chat,
+                    "Booking baru masuk dari {$booking->nama_lengkap} ({$booking->instansi}). Koordinasikan alur penerimaan tamu melalui chat ini.",
+                );
+            }
+        }
+    }
+
+    private function openChatFromBooking(int $bookingId, BookingChatManager $chatManager): void
     {
         /** @var User $user */
         $user = Auth::user();
@@ -988,9 +1039,50 @@ class ChatBooking extends Page
             ->where('staff_user_id', $user->id)
             ->first();
 
+        if (!$chat) {
+            $normalizedCurrentStaffName = $this->normalizeStaffName((string) ($user->pegawai?->nama ?? $user->name ?? ''));
+
+            if ($this->isBookingAssignedToCurrentStaff($booking, $normalizedCurrentStaffName)) {
+                $chat = $chatManager->getOrCreateForBookingAndStaff($booking, $user, $user);
+
+                if ($chat->messages()->doesntExist()) {
+                    $chatManager->sendSystemMessage(
+                        $chat,
+                        "Booking baru masuk dari {$booking->nama_lengkap} ({$booking->instansi}). Koordinasikan alur penerimaan tamu melalui chat ini.",
+                    );
+                }
+            }
+        }
+
         if ($chat) {
             $this->selectChat($chat->id);
         }
+    }
+
+    private function normalizeStaffName(string $value): string
+    {
+        $normalized = trim((string) preg_replace('/\s+/u', ' ', $value));
+
+        if ($normalized === '') {
+            return '';
+        }
+
+        $parts = preg_split('/\s+[—-]\s+/u', $normalized, 2);
+        $normalized = trim((string) ($parts[0] ?? $normalized));
+        $normalized = trim((string) preg_replace('/\s+#\d+$/u', '', $normalized));
+
+        return mb_strtolower($normalized);
+    }
+
+    private function isBookingAssignedToCurrentStaff(BukuTamu $booking, string $normalizedCurrentStaffName): bool
+    {
+        if ($normalizedCurrentStaffName === '') {
+            return false;
+        }
+
+        $bookingStaff = $this->normalizeStaffName((string) ($booking->staff_dituju ?? ''));
+
+        return $bookingStaff !== '' && $bookingStaff === $normalizedCurrentStaffName;
     }
 
     private function findChatById(?string $chatId): ?BookingChat

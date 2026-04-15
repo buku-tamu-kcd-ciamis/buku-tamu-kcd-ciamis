@@ -157,7 +157,8 @@ class DropdownOptionResource extends Resource
           ->color(fn($state): string => ((int) ($state ?? 0)) > 0
             ? 'success'
             : 'gray')
-          ->visible(fn($livewire): bool => data_get($livewire, 'tableFilters.category.value') === DropdownOption::CATEGORY_STAFF_DITUJU)
+          ->visible(fn($livewire): bool => data_get($livewire, 'activeTab') === 'staff_dituju'
+            || data_get($livewire, 'tableFilters.category.value') === DropdownOption::CATEGORY_STAFF_DITUJU)
           ->sortable()
           ->alignCenter(),
         Tables\Columns\IconColumn::make('is_active')

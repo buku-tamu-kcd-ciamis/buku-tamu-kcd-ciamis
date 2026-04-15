@@ -588,6 +588,95 @@
                     window.localStorage.setItem(this.notificationPromptDismissStorageKey, String(Date.now()));
                     this.notificationPromptVisible = false;
                 },
+                detectBrowserFamily() {
+                    const ua = (navigator.userAgent || '').toLowerCase();
+
+                    if (ua.includes('edg/')) {
+                        return 'edge';
+                    }
+
+                    if (ua.includes('brave')) {
+                        return 'brave';
+                    }
+
+                    if (ua.includes('chrome') && !ua.includes('edg/') && !ua.includes('opr/') && !ua.includes('brave')) {
+                        return 'chrome';
+                    }
+
+                    if (ua.includes('firefox')) {
+                        return 'firefox';
+                    }
+
+                    if (ua.includes('safari') && !ua.includes('chrome')) {
+                        return 'safari';
+                    }
+
+                    return 'unknown';
+                },
+                getNotificationSettingsUrlForBrowser() {
+                    const encodedOrigin = encodeURIComponent(window.location.origin);
+                    const browser = this.detectBrowserFamily();
+
+                    if (browser === 'edge') {
+                        return `edge://settings/content/siteDetails?site=${encodedOrigin}`;
+                    }
+
+                    if (browser === 'brave') {
+                        return `brave://settings/content/siteDetails?site=${encodedOrigin}`;
+                    }
+
+                    if (browser === 'chrome') {
+                        return `chrome://settings/content/siteDetails?site=${encodedOrigin}`;
+                    }
+
+                    if (browser === 'firefox') {
+                        return 'about:preferences#privacy';
+                    }
+
+                    if (browser === 'safari') {
+                        return null;
+                    }
+
+                    return null;
+                },
+                openBrowserNotificationSettings() {
+                    const settingsUrl = this.getNotificationSettingsUrlForBrowser();
+                    const browser = this.detectBrowserFamily();
+
+                    if (settingsUrl) {
+                        let opened = false;
+
+                        try {
+                            const popup = window.open(settingsUrl, '_blank', 'noopener');
+                            opened = popup !== null;
+                        } catch (_error) {
+                            opened = false;
+                        }
+
+                        if (!opened) {
+                            try {
+                                window.location.href = settingsUrl;
+                                opened = true;
+                            } catch (_error) {
+                                opened = false;
+                            }
+                        }
+
+                        if (opened) {
+                            this.showDropNotice('Pengaturan izin notifikasi browser dibuka. Ubah izin situs ini ke Allow, lalu kembali ke chat.', 'info');
+
+                            return;
+                        }
+                    }
+
+                    if (browser === 'safari') {
+                        this.showDropNotice('Safari: buka Site Settings > Notifications untuk situs ini, lalu ubah ke Allow.', 'info');
+
+                        return;
+                    }
+
+                    this.showDropNotice('Buka pengaturan browser > Site Settings > Notifications, lalu izinkan situs ini.', 'info');
+                },
                 async requestBrowserNotificationPermission() {
                     if (!('Notification' in window)) {
                         this.showDropNotice('Browser tidak mendukung notifikasi web.', 'error');
@@ -602,7 +691,7 @@
                     }
 
                     if (this.notificationPermission === 'denied') {
-                        this.showDropNotice('Notifikasi diblokir browser. Aktifkan manual pada pengaturan site permissions.', 'error');
+                        this.openBrowserNotificationSettings();
 
                         return;
                     }

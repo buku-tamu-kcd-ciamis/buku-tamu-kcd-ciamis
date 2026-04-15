@@ -33,9 +33,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function normalizeInstitutionName(value) {
-        let normalized = normalizeSingleSpaces(String(value || "").toLowerCase());
+        const rawValue = String(value || "");
+        const hasTrailingSpace = /\s$/.test(rawValue);
 
-        if (normalized === "") {
+        let normalized = rawValue
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .replace(/^\s+/, "");
+
+        if (normalized.trim() === "") {
             return "";
         }
 
@@ -99,6 +105,10 @@ document.addEventListener("DOMContentLoaded", function () {
         normalized = normalized.replace(/\b([ivxlcdm]{3,8})\b/giu, function (match) {
             return match.toUpperCase();
         });
+
+        if (hasTrailingSpace && !/\s$/.test(normalized)) {
+            normalized += " ";
+        }
 
         return normalized;
     }

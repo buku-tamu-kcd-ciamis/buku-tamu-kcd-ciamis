@@ -15,8 +15,15 @@ class LoginResponse implements LoginResponseContract
     public function toResponse($request): RedirectResponse | Redirector
     {
         /** @var User|null $user */
-        $user = Auth::user();
-        $fallbackUrl = $user?->getDashboardRoute() ?? '/';
+        $user = Filament::auth()->user();
+
+        if (!$user instanceof User) {
+            $user = Auth::user();
+        }
+
+        $fallbackUrl = $user instanceof User
+            ? $user->getDashboardRoute()
+            : '/';
 
         $intendedUrl = (string) $request->session()->get('url.intended', '');
         $request->session()->forget('url.intended');
@@ -24,8 +31,13 @@ class LoginResponse implements LoginResponseContract
 
         if ($intendedUrl !== '' && $panelPath) {
             $normalizedPath = '/' . ltrim($panelPath, '/');
+            $intendedPath = (string) parse_url($intendedUrl, PHP_URL_PATH);
 
-            if (Str::startsWith($intendedUrl, $normalizedPath)) {
+            if ($intendedPath === '') {
+                $intendedPath = $intendedUrl;
+            }
+
+            if (Str::startsWith($intendedPath, $normalizedPath)) {
                 return redirect()->to($intendedUrl);
             }
         }

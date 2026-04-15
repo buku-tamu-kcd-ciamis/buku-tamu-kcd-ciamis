@@ -1314,6 +1314,398 @@ body {
     }
 }
 
+/* ---- HIGH-RES TALL TABLET/PHONE (1440x2304px @ 249ppi) ---- */
+/* Dioptimalkan untuk perangkat portrait dengan resolusi tinggi dan aspect ratio 5:8 */
+@media (min-width: 1400px) and (min-height: 2200px) and (orientation: portrait) {
+    body {
+        padding: 24px 32px 20px;
+        height: auto;
+        min-height: 100dvh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-items: flex-start;
+        background-color: #fafafa;
+    }
+
+    .wrapper {
+        max-width: 100%;
+        height: auto;
+        min-height: calc(100dvh - 40px);
+    }
+
+    /* ---- HEADER ---- */
+    .header {
+        padding: 28px 40px;
+        gap: 20px;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .header img {
+        width: 88px;
+        height: 88px;
+        padding: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .header-text {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .header-text h1 {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 6px;
+        letter-spacing: -0.3px;
+    }
+
+    .header-text p {
+        font-size: 16px;
+        font-weight: 400;
+        opacity: 0.95;
+        line-height: 1.4;
+    }
+
+    /* ---- FORM CONTAINER ---- */
+    .form-container {
+        padding: 28px 32px 24px;
+        border-radius: 0 0 16px 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+    }
+
+    .form-main {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* ---- FORM LEFT (INPUT FIELDS) ---- */
+    .form-left-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 20px;
+        align-content: start;
+    }
+
+    .form-group {
+        padding-bottom: 8px;
+    }
+
+    .form-group label {
+        font-size: 12.5px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: #1f2937;
+    }
+
+    .form-group label .required {
+        color: #ef4444;
+        margin-left: 3px;
+    }
+
+    .input-wrapper input,
+    .input-wrapper select,
+    .autocomplete-wrapper input {
+        padding: 12px 44px 12px 16px;
+        font-size: 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        line-height: 1.5;
+        transition: all 0.25s ease;
+    }
+
+    .input-wrapper input:hover,
+    .autocomplete-wrapper input:hover {
+        border-color: #d1d5db;
+        background-color: #fafafa;
+    }
+
+    .input-wrapper input:focus,
+    .input-wrapper select:focus,
+    .autocomplete-wrapper input:focus {
+        border-color: #0f9455;
+        box-shadow: 0 0 0 4px rgba(15, 148, 85, 0.12);
+        background-color: #fff;
+    }
+
+    .input-wrapper .input-icon {
+        font-size: 18px;
+        right: 14px;
+        color: #9ca3af;
+    }
+
+    /* ---- PHONE INPUT ---- */
+    .phone-wrapper {
+        gap: 0;
+    }
+
+    .phone-prefix {
+        padding: 12px 12px 12px 16px;
+        font-size: 15px;
+        font-weight: 700;
+        border: 2px solid #e5e7eb;
+        border-right: none;
+    }
+
+    .phone-wrapper input {
+        padding: 12px 44px 12px 12px;
+        font-size: 15px;
+        border: 2px solid #e5e7eb;
+        border-left: none;
+    }
+
+    .phone-wrapper:focus-within .phone-prefix {
+        border-color: #0f9455;
+        box-shadow: 0 0 0 4px rgba(15, 148, 85, 0.12);
+    }
+
+    .phone-wrapper:focus-within input {
+        border-color: #0f9455;
+        box-shadow: 0 0 0 4px rgba(15, 148, 85, 0.12);
+    }
+
+    .phone-hint {
+        bottom: -16px;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    /* ---- AUTOCOMPLETE ---- */
+    .autocomplete-list {
+        max-height: 280px;
+        border: 2px solid #e5e7eb;
+        border-top: none;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 10px 10px;
+    }
+
+    .autocomplete-item {
+        padding: 14px 16px;
+        font-size: 15px;
+    }
+
+    /* ---- FORM RIGHT (FOTO & TTD) ---- */
+    .form-right {
+        width: 100%;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 16px;
+    }
+
+    .form-right .foto-section {
+        grid-column: 1;
+    }
+
+    .form-right .foto-penerimaan-section {
+        grid-column: 2;
+    }
+
+    .form-right .ttd-section {
+        grid-column: 1 / 3;
+        grid-row: 2;
+    }
+
+    /* ---- FOTO BOXES ---- */
+    .foto-box,
+    .ttd-box {
+        border: 3px dashed #a7f3d0;
+        border-radius: 12px;
+        padding: 16px 12px;
+        background: linear-gradient(135deg, #f0faf4 0%, #e8f7f1 100%);
+        min-height: 200px;
+    }
+
+    .foto-box .camera-icon,
+    .ttd-box .pen-icon {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 12px;
+        font-size: 24px;
+    }
+
+    .foto-box p,
+    .ttd-box p {
+        font-size: 14px;
+        color: #047857;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .camera-controls {
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .btn-camera,
+    .btn-ttd {
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+    }
+
+    .btn-camera:hover,
+    .btn-ttd:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(15, 148, 85, 0.3);
+    }
+
+    .btn-camera:active,
+    .btn-ttd:active {
+        transform: translateY(0);
+    }
+
+    /* ---- CATATAN ---- */
+    .catatan {
+        margin-top: 16px;
+        padding: 14px 16px;
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 8px;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .catatan p:first-child {
+        font-size: 13px;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 4px;
+    }
+
+    .catatan p:last-child {
+        font-size: 13px;
+        color: #78350f;
+        font-style: normal;
+    }
+
+    /* ---- SUBMIT BUTTON ---- */
+    .btn-simpan {
+        width: 100%;
+        padding: 16px 20px;
+        margin-top: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(15, 148, 85, 0.2);
+        letter-spacing: 0.3px;
+    }
+
+    .btn-simpan:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(15, 148, 85, 0.35);
+    }
+
+    .btn-simpan:active {
+        transform: translateY(-1px);
+    }
+
+    /* ---- FOOTER ---- */
+    .public-footer {
+        margin-top: 20px;
+        padding: 8px 12px;
+    }
+
+    .public-footer__link {
+        font-size: 13px;
+        letter-spacing: 0.2px;
+    }
+
+    /* ---- MODALS ---- */
+    .barcode-modal {
+        padding: 40px;
+        border-radius: 16px;
+        max-width: 480px;
+    }
+
+    .barcode-modal h3 {
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
+
+    .barcode-modal p {
+        font-size: 15px;
+        margin-bottom: 20px;
+    }
+
+    .barcode-modal img {
+        max-width: 320px;
+        border-radius: 12px;
+    }
+
+    .modal-content {
+        padding: 40px;
+        max-width: 700px;
+        border-radius: 16px;
+    }
+
+    .modal-content h3 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .modal-content canvas {
+        height: 380px;
+        border-radius: 10px;
+    }
+
+    .modal-buttons button {
+        padding: 14px 32px;
+        font-size: 15px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    /* ---- FLOATING BUTTON ---- */
+    .floating-btn {
+        width: 72px;
+        height: 72px;
+        bottom: 40px;
+        right: 40px;
+        font-size: 32px;
+        box-shadow: 0 8px 28px rgba(15, 148, 85, 0.3);
+    }
+
+    .floating-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 12px 36px rgba(15, 148, 85, 0.4);
+    }
+
+    /* ---- APK REMINDER ---- */
+    .apk-reminder {
+        width: min(420px, 90vw);
+        padding: 20px 20px 18px;
+        border-radius: 14px;
+    }
+
+    .apk-reminder__logo {
+        width: 68px;
+        height: 68px;
+    }
+
+    .apk-reminder__title {
+        font-size: 16px;
+    }
+
+    .apk-reminder__desc {
+        font-size: 14px;
+    }
+
+    .apk-reminder__action {
+        padding: 12px 16px;
+        font-size: 14px;
+        min-width: 160px;
+    }
+}
+
 /* ---- TABLET LANDSCAPE (landscape + 768-1200px) ---- */
 /* Ini mode utama untuk loket: landscape di tablet */
 @media (max-width: 1200px) and (orientation: landscape) {
@@ -1785,27 +2177,27 @@ body {
     }
 }
 
-/* ---- TOUCH TABLET FIX (SAMSUNG TAB) ---- */
-/* Pada tablet Android tertentu, kombinasi 100vh + overflow hidden membuat area bawah
-   terpotong sehingga tombol Kirim tidak terlihat. */
-@media (pointer: coarse) and (min-width: 800px) {
+/* ---- ANDROID TOUCH FIX (PHONE + TABLET) ---- */
+/* Pada Android, kombinasi 100vh + overflow hidden bisa memotong area bawah.
+   Pakai scroll vertikal + tombol Kirim sticky supaya tetap terlihat saat form panjang. */
+@media (pointer: coarse) and (max-width: 1200px) {
     body {
         height: auto;
         min-height: 100dvh;
         overflow-y: auto;
         overflow-x: hidden;
         align-items: flex-start;
-        padding: 12px 14px;
+        padding: 10px 12px;
     }
 
     .wrapper {
         height: auto;
-        min-height: calc(100dvh - 24px);
+        min-height: calc(100dvh - 20px);
     }
 
     .form-container {
         overflow: visible;
-        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+        padding-bottom: calc(78px + env(safe-area-inset-bottom));
     }
 
     .form-container form,
@@ -1818,11 +2210,90 @@ body {
 
     .btn-simpan {
         position: sticky;
-        bottom: 0;
-        z-index: 30;
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 40;
         margin-top: 12px;
         padding: 13px;
         font-size: 15px;
         box-shadow: 0 -6px 14px rgba(15, 148, 85, 0.18);
+    }
+}
+
+@media (pointer: coarse) and (max-width: 768px) {
+    .form-container {
+        padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    }
+
+    .btn-simpan {
+        width: 100%;
+        border-radius: 10px;
+    }
+}
+
+/* ---- LANDSCAPE SAFETY (ALL DEVICES, SHORT VIEWPORT) ---- */
+/* Saat tinggi layar terbatas pada mode landscape, aktifkan scroll agar tombol Kirim tidak tertutup. */
+@media (orientation: landscape) and (max-height: 900px) {
+    body {
+        height: auto;
+        min-height: 100dvh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-items: flex-start;
+    }
+
+    .wrapper {
+        height: auto;
+        min-height: calc(100dvh - 20px);
+    }
+
+    .form-container {
+        overflow: visible;
+        padding-bottom: calc(86px + env(safe-area-inset-bottom));
+    }
+
+    .form-container form,
+    .form-main,
+    .form-left,
+    .form-left-grid,
+    .form-right {
+        min-height: unset;
+    }
+
+    .btn-simpan {
+        position: sticky;
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 45;
+        margin-top: 12px;
+    }
+}
+
+/* ---- LANDSCAPE ANDROID/TABLET FIXED SUBMIT ---- */
+/* Untuk perangkat touch di landscape, tombol Kirim dikunci di bawah layar agar selalu terlihat. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 900px) {
+    body {
+        padding-bottom: calc(98px + env(safe-area-inset-bottom));
+    }
+
+    .wrapper,
+    .form-container {
+        padding-bottom: calc(98px + env(safe-area-inset-bottom));
+    }
+
+    .btn-simpan {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        width: min(560px, calc(100vw - 24px));
+        margin: 0;
+        z-index: 120;
+        border-radius: 10px;
+        box-shadow:
+            0 -6px 14px rgba(15, 148, 85, 0.2),
+            0 8px 20px rgba(15, 148, 85, 0.25);
+    }
+
+    .floating-btn {
+        bottom: calc(96px + env(safe-area-inset-bottom));
     }
 }

@@ -354,17 +354,30 @@ class ChatBooking extends Page
 
         DB::transaction(function () use ($message, $authUser): void {
             $attachmentPath = $message->attachment_path;
+            $shouldHardDeleteImageMessage = $message->hasAttachment() && $message->isImageAttachment();
 
-            $message->forceFill([
-                'message' => '[Pesan dihapus]',
-                'attachment_path' => null,
-                'attachment_name' => null,
-                'attachment_mime' => null,
-                'attachment_size' => null,
-                'reply_to_message_id' => null,
-                'deleted_for_everyone_at' => now(),
-                'deleted_for_everyone_by' => $authUser->id,
-            ])->save();
+            if ($shouldHardDeleteImageMessage) {
+                $chat = $message->chat;
+
+                $message->delete();
+
+                if ($chat) {
+                    $chat->forceFill([
+                        'last_message_at' => $chat->messages()->max('created_at'),
+                    ])->save();
+                }
+            } else {
+                $message->forceFill([
+                    'message' => '[Pesan dihapus]',
+                    'attachment_path' => null,
+                    'attachment_name' => null,
+                    'attachment_mime' => null,
+                    'attachment_size' => null,
+                    'reply_to_message_id' => null,
+                    'deleted_for_everyone_at' => now(),
+                    'deleted_for_everyone_by' => $authUser->id,
+                ])->save();
+            }
 
             if ($attachmentPath && Storage::disk('public')->exists($attachmentPath)) {
                 Storage::disk('public')->delete($attachmentPath);

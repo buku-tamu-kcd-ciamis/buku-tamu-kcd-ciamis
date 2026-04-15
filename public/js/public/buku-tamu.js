@@ -33,12 +33,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function normalizeInstitutionName(value) {
-        let normalized = String(value || "");
+        let normalized = normalizeSingleSpaces(String(value || "").toLowerCase());
+
+        if (normalized === "") {
+            return "";
+        }
 
         normalized = normalized.replace(
-            /\b(smkn|smk|sman|sma|smpn|smp|sdn|sd|man|ma|mts|mi|tk|kcd)\s*([0-9]{1,3})\b/giu,
-            function (_match, abbreviation, number) {
-                return abbreviation.toUpperCase() + " " + number;
+            /(^|[\s'`\-\/\.])([a-z\u00c0-\u024f])/giu,
+            function (_match, prefix, letter) {
+                return prefix + letter.toUpperCase();
             },
         );
 
@@ -55,17 +59,45 @@ document.addEventListener("DOMContentLoaded", function () {
             "mts",
             "man",
             "mi",
+            "tk",
+            "paud",
             "pt",
             "cv",
             "ud",
             "rs",
+            "rsud",
+            "rsia",
+            "upt",
             "uptd",
             "kcd",
+            "dprd",
+            "bappeda",
+            "bpkad",
+            "bkpsdm",
+            "bpn",
+            "bpjs",
+            "bnn",
+            "pln",
+            "bri",
+            "bni",
+            "btn",
+            "telkom",
         ];
 
         uppercaseAbbreviations.forEach(function (abbr) {
             const regex = new RegExp("\\b" + abbr + "\\b", "gi");
             normalized = normalized.replace(regex, abbr.toUpperCase());
+        });
+
+        normalized = normalized.replace(
+            /\b(smkn|smk|sman|sma|smpn|smp|sdn|sd|man|ma|mts|mi|tk|paud|uptd|upt|kcd)\s*([0-9]{1,3})\b/giu,
+            function (_match, abbreviation, number) {
+                return abbreviation.toUpperCase() + " " + number;
+            },
+        );
+
+        normalized = normalized.replace(/\b([ivxlcdm]{3,8})\b/giu, function (match) {
+            return match.toUpperCase();
         });
 
         return normalized;

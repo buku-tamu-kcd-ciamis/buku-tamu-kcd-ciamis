@@ -49,7 +49,9 @@ class DropdownOptionResource extends Resource
 
   public static function form(Schema $schema): Schema
   {
-    return $schema->components([
+    return $schema
+      ->columns(1)
+      ->components([
       Section::make('Informasi Opsi')
         ->columnSpanFull()
         ->description('Atur data opsi dropdown yang akan ditampilkan di form buku tamu.')

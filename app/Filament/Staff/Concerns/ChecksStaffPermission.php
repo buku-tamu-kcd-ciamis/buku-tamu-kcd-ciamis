@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Concerns;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Filament\Facades\Filament;
 
 trait ChecksStaffPermission

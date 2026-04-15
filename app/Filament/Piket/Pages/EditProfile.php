@@ -2,6 +2,7 @@
 
 namespace App\Filament\Piket\Pages;
 
+use App\Models\User;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Grid;
@@ -11,10 +12,13 @@ use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class EditProfile extends BaseEditProfile
 {
+  protected ?string $previousProfilePhotoPath = null;
+
   protected string | Width | null $maxWidth = '4xl';
 
   protected static ?string $title = 'Profil';
@@ -110,6 +114,10 @@ class EditProfile extends BaseEditProfile
    */
   protected function mutateFormDataBeforeSave(array $data): array
   {
+    $this->previousProfilePhotoPath = $this->normalizeProfilePhotoPath(
+      (string) (Auth::user()?->profile_photo_path ?? '')
+    );
+
     if (blank($data['password'] ?? null)) {
       unset($data['password']);
     }
@@ -126,6 +134,8 @@ class EditProfile extends BaseEditProfile
 
   protected function afterSave(): void
   {
+    $this->deletePreviousProfilePhotoIfChanged();
+
     // Inject toast langsung via JS — paling reliable di Livewire 3
     $this->js(<<<'JS'
       (function() {
@@ -176,5 +186,45 @@ class EditProfile extends BaseEditProfile
       $this->getSaveFormAction(),
       $this->getCancelFormAction(),
     ];
+  }
+
+  protected function deletePreviousProfilePhotoIfChanged(): void
+  {
+    $oldPath = $this->previousProfilePhotoPath;
+    /** @var User|null $user */
+    $user = Auth::user();
+
+    $latestPath = $user?->getKey()
+      ? (string) (User::query()->whereKey($user->getKey())->value('profile_photo_path') ?? '')
+      : '';
+
+    $newPath = $this->normalizeProfilePhotoPath($latestPath);
+
+    if ($oldPath === null || $oldPath === '' || $oldPath === $newPath) {
+      return;
+    }
+
+    if ($oldPath === 'profile-photos/default-donut.svg') {
+      return;
+    }
+
+    if (Storage::disk('public')->exists($oldPath)) {
+      Storage::disk('public')->delete($oldPath);
+    }
+  }
+
+  protected function normalizeProfilePhotoPath(?string $path): string
+  {
+    $normalized = trim((string) $path);
+
+    if ($normalized === '') {
+      return '';
+    }
+
+    if (str_starts_with($normalized, 'storage/')) {
+      return substr($normalized, strlen('storage/'));
+    }
+
+    return ltrim($normalized, '/');
   }
 }

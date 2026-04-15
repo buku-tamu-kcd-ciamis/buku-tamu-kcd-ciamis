@@ -4,7 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DataPegawaiResource\Pages;
 use App\Models\Pegawai;
+use App\Models\RoleUser;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -17,7 +19,9 @@ use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class DataPegawaiResource extends Resource
 {
@@ -212,6 +216,33 @@ class DataPegawaiResource extends Resource
             ->label('Edit')
             ->icon('heroicon-o-pencil-square')
             ->color('warning'),
+          Action::make('reset_default_password')
+            ->label('Reset Password')
+            ->icon('heroicon-o-key')
+            ->color('warning')
+            ->requiresConfirmation()
+            ->modalHeading('Reset Password Pegawai')
+            ->modalDescription(fn(Pegawai $record) => 'Password akun login untuk ' . $record->nama . ' akan direset ke default sesuai role.')
+            ->modalSubmitActionLabel('Reset Password')
+            ->action(function (Pegawai $record): void {
+              $result = static::resetPasswordForPegawaiRecord($record);
+
+              if (! $result['updated']) {
+                Notification::make()
+                  ->warning()
+                  ->title('Reset password dibatalkan')
+                  ->body($result['message'])
+                  ->send();
+
+                return;
+              }
+
+              Notification::make()
+                ->success()
+                ->title('Password berhasil direset')
+                ->body($result['message'])
+                ->send();
+            }),
           DeleteAction::make()
             ->label('Hapus')
             ->icon('heroicon-o-trash')
@@ -273,6 +304,40 @@ class DataPegawaiResource extends Resource
                 ->send();
             })
             ->deselectRecordsAfterCompletion(),
+          BulkAction::make('bulk_reset_password_default')
+            ->label('Reset Password Terpilih')
+            ->icon('heroicon-o-key')
+            ->color('warning')
+            ->requiresConfirmation()
+            ->modalHeading('Reset Password Data Pegawai Terpilih')
+            ->modalDescription('Password akun login dari data pegawai yang dipilih akan direset ke default sesuai role masing-masing akun.')
+            ->modalSubmitActionLabel('Reset Password')
+            ->action(function (Collection $records): void {
+              $result = static::resetPasswordsForPegawaiRecords($records);
+
+              if ($result['updated'] === 0) {
+                Notification::make()
+                  ->warning()
+                  ->title('Reset password dibatalkan')
+                  ->body('Tidak ada akun yang berhasil direset. Pastikan data pegawai terhubung ke akun login.')
+                  ->send();
+
+                return;
+              }
+
+              $message = $result['updated'] . ' akun berhasil direset.';
+
+              if ($result['skipped'] > 0) {
+                $message .= ' ' . $result['skipped'] . ' data dilewati karena akun tidak ditemukan atau role tidak didukung.';
+              }
+
+              Notification::make()
+                ->success()
+                ->title('Bulk reset password selesai')
+                ->body($message)
+                ->send();
+            })
+            ->deselectRecordsAfterCompletion(),
           BulkAction::make('bulk_delete')
             ->label('Hapus Terpilih')
             ->icon('heroicon-o-trash')
@@ -294,6 +359,128 @@ class DataPegawaiResource extends Resource
             ->deselectRecordsAfterCompletion(),
         ]),
       ]);
+  }
+
+  protected static function resetPasswordForPegawaiRecord(Pegawai $record): array
+  {
+    $user = static::resolveUserFromPegawai($record);
+
+    if (! $user) {
+      return [
+        'updated' => false,
+        'message' => 'Akun login untuk pegawai ini tidak ditemukan.',
+      ];
+    }
+
+    $resolved = static::resolveDefaultCredentialByPegawai($record);
+
+    if (! $resolved['allowed']) {
+      return [
+        'updated' => false,
+        'message' => $resolved['message'],
+      ];
+    }
+
+    /** @var RoleUser|null $targetRole */
+    $targetRole = RoleUser::query()
+      ->where('name', $resolved['role_name'])
+      ->first();
+
+    if (! $targetRole) {
+      return [
+        'updated' => false,
+        'message' => 'Role ' . $resolved['role_name'] . ' tidak ditemukan. Reset password dibatalkan.',
+      ];
+    }
+
+    $user->update([
+      'password' => Hash::make($resolved['password']),
+      'role_user_id' => $targetRole->id,
+    ]);
+
+    return [
+      'updated' => true,
+      'message' => 'Akun ' . $user->email . ' diset sebagai role ' . $resolved['role_name'] . ' dengan password default ' . $resolved['password'] . '.',
+    ];
+  }
+
+  protected static function resetPasswordsForPegawaiRecords(Collection $records): array
+  {
+    $updated = 0;
+    $skipped = 0;
+
+    /** @var Pegawai $record */
+    foreach ($records as $record) {
+      $result = static::resetPasswordForPegawaiRecord($record);
+
+      if ($result['updated']) {
+        $updated++;
+      } else {
+        $skipped++;
+      }
+    }
+
+    return [
+      'updated' => $updated,
+      'skipped' => $skipped,
+    ];
+  }
+
+  protected static function resolveUserFromPegawai(Pegawai $pegawai): ?User
+  {
+    $user = User::query()
+      ->where('pegawai_id', $pegawai->id)
+      ->first();
+
+    if ($user) {
+      return $user;
+    }
+
+    $normalizedEmail = strtolower(trim((string) ($pegawai->email ?? '')));
+
+    if ($normalizedEmail !== '') {
+      return User::query()
+        ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
+        ->first();
+    }
+
+    return null;
+  }
+
+  protected static function resolveDefaultCredentialByPegawai(Pegawai $pegawai): array
+  {
+    $jabatan = strtolower(trim((string) ($pegawai->jabatan ?? '')));
+    $roleName = 'Staff';
+
+    if ($jabatan !== '' && str_contains($jabatan, 'kepala cabang')) {
+      $roleName = 'Kepala Cabang Dinas';
+    } elseif ($jabatan !== '' && str_contains($jabatan, 'piket')) {
+      $roleName = 'Piket';
+    }
+
+    return match ($roleName) {
+      'Staff' => [
+        'allowed' => true,
+        'role_name' => 'Staff',
+        'password' => 'staff123',
+      ],
+      'Piket' => [
+        'allowed' => true,
+        'role_name' => 'Piket',
+        'password' => 'piket123',
+      ],
+      'Kepala Cabang Dinas' => [
+        'allowed' => true,
+        'role_name' => 'Kepala Cabang Dinas',
+        'password' => 'kepalakcd123',
+      ],
+      default => [
+        'allowed' => false,
+        'password' => '',
+        'role_name' => '',
+        'message' => 'Role default tidak bisa ditentukan dari jabatan pegawai.',
+      ],
+    };
   }
 
   public static function getRelations(): array

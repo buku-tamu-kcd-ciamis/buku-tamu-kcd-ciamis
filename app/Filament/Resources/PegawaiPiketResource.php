@@ -4,7 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PegawaiPiketResource\Pages;
 use App\Models\DropdownOption;
+use App\Models\Pegawai;
+use App\Models\RoleUser;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -20,7 +23,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class PegawaiPiketResource extends Resource
 {
@@ -132,6 +137,33 @@ class PegawaiPiketResource extends Resource
                         ->label('Edit')
                         ->icon('heroicon-o-pencil-square')
                         ->color('warning'),
+                    Action::make('reset_default_password')
+                        ->label('Reset Password')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Reset Password Pegawai Piket')
+                        ->modalDescription(fn(DropdownOption $record) => 'Password akun login untuk ' . $record->label . ' akan direset ke default piket123.')
+                        ->modalSubmitActionLabel('Reset Password')
+                        ->action(function (DropdownOption $record): void {
+                            $result = static::resetPasswordForPiketRecord($record);
+
+                            if (! $result['updated']) {
+                                Notification::make()
+                                    ->warning()
+                                    ->title('Reset password dibatalkan')
+                                    ->body($result['message'])
+                                    ->send();
+
+                                return;
+                            }
+
+                            Notification::make()
+                                ->success()
+                                ->title('Password berhasil direset')
+                                ->body($result['message'])
+                                ->send();
+                        }),
                     DeleteAction::make()
                         ->label('Hapus')
                         ->icon('heroicon-o-trash')
@@ -193,6 +225,40 @@ class PegawaiPiketResource extends Resource
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
+                    BulkAction::make('bulk_reset_password_default')
+                        ->label('Reset Password Terpilih')
+                        ->icon('heroicon-o-key')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Reset Password Pegawai Piket Terpilih')
+                        ->modalDescription('Password akun login dari pegawai piket terpilih akan direset ke default piket123.')
+                        ->modalSubmitActionLabel('Reset Password')
+                        ->action(function (Collection $records): void {
+                            $result = static::resetPasswordsForPiketRecords($records);
+
+                            if ($result['updated'] === 0) {
+                                Notification::make()
+                                    ->warning()
+                                    ->title('Reset password dibatalkan')
+                                    ->body('Tidak ada akun yang berhasil direset. Pastikan data pegawai piket terhubung ke akun login.')
+                                    ->send();
+
+                                return;
+                            }
+
+                            $message = $result['updated'] . ' akun berhasil direset ke piket123.';
+
+                            if ($result['skipped'] > 0) {
+                                $message .= ' ' . $result['skipped'] . ' data dilewati karena akun tidak ditemukan.';
+                            }
+
+                            Notification::make()
+                                ->success()
+                                ->title('Bulk reset password selesai')
+                                ->body($message)
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     BulkAction::make('bulk_delete')
                         ->label('Hapus Terpilih')
                         ->icon('heroicon-o-trash')
@@ -214,6 +280,99 @@ class PegawaiPiketResource extends Resource
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
+    }
+
+    protected static function resetPasswordForPiketRecord(DropdownOption $record): array
+    {
+        $user = static::resolveUserFromPiketOption($record);
+
+        if (! $user) {
+            return [
+                'updated' => false,
+                'message' => 'Akun login pegawai piket ini tidak ditemukan.',
+            ];
+        }
+
+        $piketRoleId = RoleUser::query()
+            ->where('name', 'Piket')
+            ->value('id');
+
+        if (! $piketRoleId) {
+            return [
+                'updated' => false,
+                'message' => 'Role Piket tidak ditemukan. Reset password dibatalkan.',
+            ];
+        }
+
+        $user->update([
+            'role_user_id' => $piketRoleId,
+            'password' => Hash::make('piket123'),
+        ]);
+
+        return [
+            'updated' => true,
+            'message' => 'Akun ' . $user->email . ' diset sebagai role Piket dengan password default piket123.',
+        ];
+    }
+
+    protected static function resetPasswordsForPiketRecords(Collection $records): array
+    {
+        $updated = 0;
+        $skipped = 0;
+
+        /** @var DropdownOption $record */
+        foreach ($records as $record) {
+            $result = static::resetPasswordForPiketRecord($record);
+
+            if ($result['updated']) {
+                $updated++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        return [
+            'updated' => $updated,
+            'skipped' => $skipped,
+        ];
+    }
+
+    protected static function resolveUserFromPiketOption(DropdownOption $record): ?User
+    {
+        $name = trim((string) ($record->label ?? ''));
+        $metadataEmail = strtolower(trim((string) ($record->metadata['email'] ?? '')));
+
+        if ($metadataEmail !== '') {
+            $userByEmail = User::query()
+                ->whereRaw('LOWER(email) = ?', [$metadataEmail])
+                ->first();
+
+            if ($userByEmail) {
+                return $userByEmail;
+            }
+        }
+
+        if ($name !== '') {
+            $pegawai = Pegawai::query()
+                ->where('nama', $name)
+                ->first();
+
+            if ($pegawai) {
+                $userByPegawai = User::query()
+                    ->where('pegawai_id', $pegawai->id)
+                    ->first();
+
+                if ($userByPegawai) {
+                    return $userByPegawai;
+                }
+            }
+
+            return User::query()
+                ->where('name', $name)
+                ->first();
+        }
+
+        return null;
     }
 
     public static function getPages(): array

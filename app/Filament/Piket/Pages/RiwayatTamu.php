@@ -4,6 +4,7 @@ namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
 use App\Models\DropdownOption;
+use App\Services\BookingChatManager;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
@@ -108,12 +109,36 @@ class RiwayatTamu extends Page implements HasTable
       ->defaultSort('total_kunjungan', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
+      ->recordActionsColumnLabel('')
       ->recordActions([
-        Action::make('view')
-          ->label('Lihat Detail')
-          ->icon('heroicon-o-eye')
-          ->color('primary')
-          ->url(fn($record) => ViewRiwayatTamu::getUrl(['nik' => $record->nik])),
+        ActionGroup::make([
+          Action::make('chat')
+            ->label('Chat Staff')
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->color('primary')
+            ->url(function (BukuTamu $record): string {
+              $chat = $record->bookingChats()->first();
+
+              if (!$chat) {
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+              }
+
+              if (!$chat) {
+                return ChatBooking::getUrl() . '?booking=' . $record->id;
+              }
+
+              return ChatBooking::getUrl() . '?chat=' . $chat->id;
+            })
+            ->openUrlInNewTab(false),
+          Action::make('view')
+            ->label('Lihat Detail')
+            ->icon('heroicon-o-eye')
+            ->color('gray')
+            ->url(fn(BukuTamu $record) => ViewRiwayatTamu::getUrl(['nik' => $record->nik])),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
       ])
       ->headerActions([]);
   }

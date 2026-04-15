@@ -195,8 +195,8 @@
                 dropNotice: '',
                 dropNoticeType: 'info',
                 dropNoticeTimer: null,
-                allowNativeAttachmentChangeOnce: false,
-                serverSafeAttachmentMaxBytes: 900 * 1024,
+                isAttachmentUploading: false,
+                serverSafeAttachmentMaxBytes: 600 * 1024,
                 notificationPermission: 'default',
                 notificationPromptVisible: false,
                 notificationPromptDismissStorageKey: 'booking-chat-notification-dismissed',
@@ -791,12 +791,6 @@
                     }
                 },
                 async handleAttachmentInputChange(event) {
-                    if (this.allowNativeAttachmentChangeOnce) {
-                        this.allowNativeAttachmentChangeOnce = false;
-
-                        return;
-                    }
-
                     const input = event?.target;
                     const pickedFile = input?.files?.[0] || null;
 
@@ -806,6 +800,9 @@
 
                     event.preventDefault();
                     event.stopPropagation();
+                    if (typeof event.stopImmediatePropagation === 'function') {
+                        event.stopImmediatePropagation();
+                    }
 
                     const prepared = await this.prepareAttachmentFile(pickedFile);
 
@@ -815,22 +812,18 @@
                         return;
                     }
 
-                    if (!window.DataTransfer) {
-                        this.showDropNotice('Browser tidak mendukung pemrosesan lampiran otomatis.', 'error');
-                        input.value = '';
+                    const uploaded = await this.uploadPreparedAttachment(prepared.file);
 
+                    input.value = '';
+
+                    if (!uploaded) {
                         return;
                     }
 
-                    const transfer = new DataTransfer();
-                    transfer.items.add(prepared.file);
-                    input.files = transfer.files;
-
-                    this.allowNativeAttachmentChangeOnce = true;
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
-
                     if (prepared.wasCompressed) {
                         this.showDropNotice(`Gambar dikompres otomatis (${this.humanizeBytes(prepared.originalBytes)} -> ${this.humanizeBytes(prepared.file.size)}).`, 'success');
+                    } else {
+                        this.showDropNotice(`Lampiran ${prepared.file.name || ''} siap dikirim.`.trim(), 'success');
                     }
                 },
                 stopCameraStream() {
@@ -1018,21 +1011,33 @@
                     this.cameraSwitching = false;
                     this.$dispatch('booking-chat-pause-polling', { paused: false });
                 },
-                assignAttachmentFile(file) {
-                    if (!this.$refs.attachInput || !window.DataTransfer) {
-                        this.cameraError = 'Browser tidak mendukung transfer file dari kamera.';
-                        this.showDropNotice('Browser tidak mendukung transfer file otomatis.', 'error');
+                async uploadPreparedAttachment(file) {
+                    if (!this.$wire || typeof this.$wire.upload !== 'function') {
+                        this.showDropNotice('Komponen upload belum siap. Muat ulang halaman lalu coba lagi.', 'error');
 
                         return false;
                     }
 
-                    const transfer = new DataTransfer();
-                    transfer.items.add(file);
-                    this.$refs.attachInput.files = transfer.files;
-                    this.allowNativeAttachmentChangeOnce = true;
-                    this.$refs.attachInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    this.isAttachmentUploading = true;
 
-                    return true;
+                    try {
+                        await new Promise((resolve, reject) => {
+                            this.$wire.upload(
+                                'attachmentDraft',
+                                file,
+                                () => resolve(true),
+                                () => reject(new Error('LIVEWIRE_UPLOAD_FAILED')),
+                            );
+                        });
+
+                        return true;
+                    } catch (error) {
+                        this.showDropNotice('Upload lampiran gagal. Coba ulangi dengan ukuran file lebih kecil.', 'error');
+
+                        return false;
+                    } finally {
+                        this.isAttachmentUploading = false;
+                    }
                 },
                 async attachFileToComposer(file, successMessage = 'Lampiran siap dikirim.') {
                     const prepared = await this.prepareAttachmentFile(file);
@@ -1041,7 +1046,7 @@
                         return false;
                     }
 
-                    if (!this.assignAttachmentFile(prepared.file)) {
+                    if (!await this.uploadPreparedAttachment(prepared.file)) {
                         return false;
                     }
 
@@ -1877,7 +1882,6 @@
                                     <x-heroicon-o-paper-clip class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                                     <input
                                         type="file"
-                                        wire:model="attachmentDraft"
                                         wire:key="attachment-{{ $attachmentInputIteration }}"
                                         accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
                                         x-ref="attachInput"
@@ -1949,6 +1953,7 @@
                                 class="booking-chat-send-btn"
                                 wire:loading.attr="disabled"
                                 wire:target="sendMessage"
+                                x-bind:disabled="isAttachmentUploading"
                                 aria-label="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim pesan' }}"
                                 title="{{ $activeEditingMessage ? 'Simpan edit pesan' : 'Kirim' }}"
                             >

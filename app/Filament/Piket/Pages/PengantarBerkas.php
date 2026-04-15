@@ -2,11 +2,12 @@
 
 namespace App\Filament\Piket\Pages;
 
+use App\Filament\Piket\Pages\ChatBooking;
 use App\Models\BukuTamu;
 use App\Models\DropdownOption;
+use App\Services\BookingChatManager;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Support\Contracts\TranslatableContentDriver;
@@ -88,18 +89,42 @@ class PengantarBerkas extends Page implements HasTable
       ->defaultSort('created_at', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
+      ->recordActionsColumnLabel('')
       ->filters([
         Tables\Filters\SelectFilter::make('status')
           ->options(BukuTamu::STATUS_LABELS),
       ])
-      ->actions([
-        Action::make('detail')
+      ->recordActions([
+        ActionGroup::make([
+          Action::make('chat')
+            ->label('Chat Staff')
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->color('primary')
+            ->url(function (BukuTamu $record): string {
+              $chat = $record->bookingChats()->first();
+
+              if (!$chat) {
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+              }
+
+              if (!$chat) {
+                return ChatBooking::getUrl() . '?booking=' . $record->id;
+              }
+
+              return ChatBooking::getUrl() . '?chat=' . $chat->id;
+            })
+            ->openUrlInNewTab(false),
+          Action::make('detail')
             ->label('Lihat Detail')
             ->icon('heroicon-o-eye')
-            ->color('primary')
-            ->modalContent(fn($record) => view('filament.piket.pages.detail-pengantar-berkas', ['record' => $record]))
+            ->color('gray')
+            ->modalContent(fn(BukuTamu $record) => view('filament.piket.pages.detail-pengantar-berkas', ['record' => $record]))
             ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Tutup')
+            ->modalCancelActionLabel('Tutup'),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
       ])
       ->headerActions([])
       ->toolbarActions([]);

@@ -90,16 +90,18 @@ class RiwayatKunjungan extends Page implements HasTable
                         return '+62' . $cleaned;
                     })
                     ->toggleable(),
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(fn($state) => BukuTamu::STATUS_LABELS[$state] ?? $state)
-                    ->colors([
-                        'warning' => 'menunggu',
-                        'primary' => 'diproses',
-                        'success' => 'selesai',
-                        'danger' => 'ditolak',
-                        'gray' => 'dibatalkan',
-                    ]),
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        BukuTamu::STATUS_MENUNGGU => 'warning',
+                        BukuTamu::STATUS_DIPROSES => 'primary',
+                        BukuTamu::STATUS_SELESAI => 'success',
+                        BukuTamu::STATUS_DITOLAK => 'danger',
+                        BukuTamu::STATUS_DIBATALKAN => 'gray',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Waktu Kunjungan')
                     ->dateTime('d/m/Y H:i')
@@ -129,7 +131,7 @@ class RiwayatKunjungan extends Page implements HasTable
                     ->color('success')
                     ->modalHeading('Export Riwayat Kunjungan')
                     ->modalDescription('Filter data yang ingin diunduh.')
-                    ->form([
+                    ->schema([
                         DatePicker::make('tanggal_mulai')
                             ->label('Tanggal Mulai')
                             ->default($dateRangeDefaults['mulai'])
@@ -155,7 +157,7 @@ class RiwayatKunjungan extends Page implements HasTable
                     ])
                     ->action(fn(array $data) => $this->exportCsv($data)),
             ])
-            ->actions([
+            ->recordActions([
                 ActionGroup::make([
                     Action::make('status_menunggu')
                         ->label('Menunggu')

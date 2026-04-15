@@ -424,6 +424,10 @@ class BukuTamuController extends Controller
             $targetStaffName = $this->extractStaffNameFromSelection($targetStaffRaw);
 
             if ($targetStaffName !== '') {
+                $validatedData['staff_dituju'] = $targetStaffName;
+            }
+
+            if ($targetStaffName !== '') {
                 $targetStaffNip = User::query()
                     ->whereHas('role_user', fn($q) => $q->where('name', 'Staff'))
                     ->whereHas('pegawai', fn($q) => $q->where('nama', $targetStaffName))

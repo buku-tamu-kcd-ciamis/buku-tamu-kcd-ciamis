@@ -27,10 +27,35 @@ class BookingChatManager
 
     public function resolveStaffUsersForBooking(BukuTamu $booking): Collection
     {
+        $rawStaffSelection = trim((string) ($booking->staff_dituju ?? ''));
+        $normalizedStaffName = $this->extractStaffNameFromSelection($rawStaffSelection);
+
         return User::query()
             ->whereHas('role_user', fn($query) => $query->where('name', 'Staff'))
-            ->whereHas('pegawai', fn($query) => $query->where('nama', $booking->staff_dituju))
+            ->whereHas('pegawai', function ($query) use ($normalizedStaffName, $rawStaffSelection): void {
+                if ($normalizedStaffName !== '') {
+                    $query->where('nama', $normalizedStaffName);
+
+                    return;
+                }
+
+                $query->where('nama', $rawStaffSelection);
+            })
             ->get();
+    }
+
+    private function extractStaffNameFromSelection(string $selected): string
+    {
+        $selected = trim($selected);
+
+        if ($selected === '') {
+            return '';
+        }
+
+        $parts = preg_split('/\s+[—-]\s+/u', $selected, 2);
+        $name = trim((string) ($parts[0] ?? $selected));
+
+        return trim((string) preg_replace('/\s+#\d+$/u', '', $name));
     }
 
     public function getOrCreateForBookingAndStaff(BukuTamu $booking, User $staffUser, ?User $creator = null): BookingChat

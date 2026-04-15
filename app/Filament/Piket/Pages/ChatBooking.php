@@ -122,10 +122,37 @@ class ChatBooking extends Page
             }
         }
 
+        if (! $this->selectedChatId) {
+            $this->bootstrapMissingOpenBookingChats($chatManager);
+        }
+
         $chat = $this->getSelectedChat();
 
         if ($chat) {
             $this->touchPresence($chat);
+        }
+    }
+
+    private function bootstrapMissingOpenBookingChats(BookingChatManager $chatManager): void
+    {
+        /** @var User|null $authUser */
+        $authUser = Auth::user();
+
+        if (! $authUser || ! $authUser->hasRole('Piket')) {
+            return;
+        }
+
+        $bookingsWithoutChat = BukuTamu::query()
+            ->whereIn('status', [BukuTamu::STATUS_MENUNGGU, BukuTamu::STATUS_DIPROSES])
+            ->whereNotNull('staff_dituju')
+            ->where('staff_dituju', '!=', '')
+            ->whereDoesntHave('bookingChats')
+            ->latest('created_at')
+            ->limit(25)
+            ->get(['id', 'nama_lengkap', 'instansi', 'staff_dituju', 'status', 'created_at']);
+
+        foreach ($bookingsWithoutChat as $booking) {
+            $chatManager->bootstrapForBooking($booking, $authUser);
         }
     }
 
@@ -402,10 +429,10 @@ class ChatBooking extends Page
     {
         $this->validate([
             'messageDraft' => ['nullable', 'string', 'max:2000'],
-            'attachmentDraft' => ['nullable', 'file', 'max:900', 'mimes:jpg,jpeg,png,gif,webp,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar'],
+            'attachmentDraft' => ['nullable', 'file', 'max:600', 'mimes:jpg,jpeg,png,gif,webp,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar'],
         ], [
             'messageDraft.max' => 'Pesan maksimal 2000 karakter.',
-            'attachmentDraft.max' => 'Ukuran berkas maksimal 900 KB untuk server online.',
+            'attachmentDraft.max' => 'Ukuran berkas maksimal 600 KB untuk server online.',
             'attachmentDraft.mimes' => 'Format berkas tidak didukung.',
         ]);
 

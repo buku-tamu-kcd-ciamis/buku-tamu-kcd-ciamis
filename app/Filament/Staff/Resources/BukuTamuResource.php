@@ -7,6 +7,7 @@ use App\Filament\Staff\Pages\ChatBooking;
 use App\Models\BukuTamu;
 use App\Services\BookingChatManager;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Infolists;
@@ -230,27 +231,35 @@ class BukuTamuResource extends Resource
           }),
       ])
       ->recordActionsAlignment('center')
-      ->recordActionsColumnLabel('Aksi')
+      ->recordActionsColumnLabel('')
       ->recordActions([
-        ViewAction::make(),
-        Action::make('chat')
-          ->label('Chat Piket')
-          ->icon('heroicon-o-chat-bubble-left-right')
-          ->color('primary')
-          ->url(function (BukuTamu $record): string {
-            $chat = $record->bookingChats()->first();
+        ActionGroup::make([
+          ViewAction::make()
+            ->label('Lihat Detail')
+            ->icon('heroicon-o-eye')
+            ->color('gray'),
+          Action::make('chat')
+            ->label('Chat Piket')
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->color('primary')
+            ->url(function (BukuTamu $record): string {
+              $chat = $record->bookingChats()->first();
 
-            if (!$chat) {
-              $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
-            }
+              if (!$chat) {
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+              }
 
-            if (!$chat) {
-              return ChatBooking::getUrl() . '?booking=' . $record->id;
-            }
+              if (!$chat) {
+                return ChatBooking::getUrl() . '?booking=' . $record->id;
+              }
 
-            return ChatBooking::getUrl() . '?chat=' . $chat->id;
-          })
-          ->openUrlInNewTab(false),
+              return ChatBooking::getUrl() . '?chat=' . $chat->id;
+            })
+            ->openUrlInNewTab(false),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
       ])
       ->headerActions([])
       ->toolbarActions([]);

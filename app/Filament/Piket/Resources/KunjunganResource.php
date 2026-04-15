@@ -8,6 +8,7 @@ use App\Filament\Piket\Pages\ChatBooking;
 use App\Models\BukuTamu;
 use App\Services\BookingChatManager;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -123,26 +124,37 @@ class KunjunganResource extends Resource
           }),
       ])
       ->recordActionsAlignment('center')
-      ->recordActionsColumnLabel('Aksi')
+      ->recordActionsColumnLabel('')
       ->recordActions([
-        Action::make('chat')
-          ->label('Chat Staff')
-          ->icon('heroicon-o-chat-bubble-left-right')
-          ->color('primary')
-          ->url(function (BukuTamu $record): string {
-            $chat = $record->bookingChats()->first();
+        ActionGroup::make([
+          Action::make('chat')
+            ->label('Chat Staff')
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->color('primary')
+            ->url(function (BukuTamu $record): string {
+              $chat = $record->bookingChats()->first();
 
-            if (!$chat) {
-              $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
-            }
+              if (!$chat) {
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+              }
 
-            if (!$chat) {
-              return ChatBooking::getUrl() . '?booking=' . $record->id;
-            }
+              if (!$chat) {
+                return ChatBooking::getUrl() . '?booking=' . $record->id;
+              }
 
-            return ChatBooking::getUrl() . '?chat=' . $chat->id;
-          })
-          ->openUrlInNewTab(false),
+              return ChatBooking::getUrl() . '?chat=' . $chat->id;
+            })
+            ->openUrlInNewTab(false),
+          Action::make('detail')
+            ->label('Lihat Detail')
+            ->icon('heroicon-o-eye')
+            ->color('gray')
+            ->url(fn(BukuTamu $record): string => Pages\ViewKunjungan::getUrl(['record' => $record]))
+            ->openUrlInNewTab(false),
+        ])
+          ->label(false)
+          ->icon('heroicon-m-ellipsis-vertical')
+          ->color('gray'),
       ])
       ->headerActions([])
       ->toolbarActions([]);

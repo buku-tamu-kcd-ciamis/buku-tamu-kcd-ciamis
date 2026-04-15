@@ -1789,6 +1789,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function capturePhoto(video, isFrontCamera) {
+        // Canvas at original resolution for face/liveness detection accuracy
         const canvas = document.createElement("canvas");
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -1799,7 +1800,27 @@ document.addEventListener("DOMContentLoaded", function () {
             ctx2.scale(-1, 1);
         }
         ctx2.drawImage(video, 0, 0);
-        return { dataUrl: canvas.toDataURL("image/png"), canvas: canvas };
+
+        // Compressed canvas for form submission (prevents nginx 413 error)
+        // Resize to max 1280px width and encode as JPEG 0.7 quality
+        // This reduces each photo from ~5MB PNG to ~150-300KB JPEG
+        var maxW = 1280;
+        var origW = canvas.width;
+        var origH = canvas.height;
+        var outW = origW;
+        var outH = origH;
+        if (origW > maxW) {
+            outW = maxW;
+            outH = Math.round(origH * (maxW / origW));
+        }
+        var compressedCanvas = document.createElement("canvas");
+        compressedCanvas.width = outW;
+        compressedCanvas.height = outH;
+        var compCtx = compressedCanvas.getContext("2d");
+        compCtx.drawImage(canvas, 0, 0, outW, outH);
+        var dataUrl = compressedCanvas.toDataURL("image/jpeg", 0.7);
+
+        return { dataUrl: dataUrl, canvas: canvas };
     }
 
     function createVideoElement(mediaStream, isFrontCamera) {
@@ -3257,7 +3278,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     btnSaveTtd.addEventListener("click", function () {
-        const imageData = signatureCanvas.toDataURL("image/png");
+        // Compress signature: resize to max 600px width to reduce base64 payload
+        var maxSigW = 600;
+        var sigW = signatureCanvas.width;
+        var sigH = signatureCanvas.height;
+        var outSigW = sigW;
+        var outSigH = sigH;
+        if (sigW > maxSigW) {
+            outSigW = maxSigW;
+            outSigH = Math.round(sigH * (maxSigW / sigW));
+        }
+        var sigCompCanvas = document.createElement("canvas");
+        sigCompCanvas.width = outSigW;
+        sigCompCanvas.height = outSigH;
+        var sigCompCtx = sigCompCanvas.getContext("2d");
+        sigCompCtx.drawImage(signatureCanvas, 0, 0, outSigW, outSigH);
+        const imageData = sigCompCanvas.toDataURL("image/png");
         ttdInput.value = imageData;
 
         ttdBox.innerHTML = "";

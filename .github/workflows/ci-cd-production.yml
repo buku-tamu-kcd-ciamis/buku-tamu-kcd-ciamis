@@ -308,4 +308,37 @@ jobs:
           php artisan queue:restart || true
 
           chmod -R ug+rwx storage bootstrap/cache
+
+          # === Fix 413 Request Entity Too Large (nginx) ===
+          # Increase nginx client_max_body_size and PHP post limits
+          # so that photo/file uploads are not rejected by the server.
+          NGINX_CONF_DIR="/etc/nginx/conf.d"
+          NGINX_SITE_CONF="/etc/nginx/sites-available"
+          PHP_INI_SCAN="/etc/php/8.4/fpm/conf.d"
+          PHP_INI_SCAN_ALT="/etc/php/8.2/fpm/conf.d"
+
+          # Try to set nginx client_max_body_size globally
+          if [ -d "${NGINX_CONF_DIR}" ]; then
+            echo 'client_max_body_size 25M;' | sudo tee "${NGINX_CONF_DIR}/upload-limit.conf" > /dev/null 2>&1 || true
+          fi
+
+          # Also try to patch the site-specific nginx config if it exists
+          for SITE_CONF in "${NGINX_SITE_CONF}/default" "${NGINX_SITE_CONF}/etamu-kcd.smkn1ciamis.id" "${NGINX_SITE_CONF}/etamu-kcd"; do
+            if [ -f "${SITE_CONF}" ] && ! grep -q 'client_max_body_size' "${SITE_CONF}"; then
+              sudo sed -i '/server {/a\    client_max_body_size 25M;' "${SITE_CONF}" 2>/dev/null || true
+            fi
+          done
+
+          # Set PHP post_max_size and upload_max_filesize
+          for PHP_DIR in "${PHP_INI_SCAN}" "${PHP_INI_SCAN_ALT}"; do
+            if [ -d "${PHP_DIR}" ]; then
+              printf 'upload_max_filesize = 25M\npost_max_size = 30M\n' | sudo tee "${PHP_DIR}/99-upload-limit.ini" > /dev/null 2>&1 || true
+            fi
+          done
+
+          # Reload nginx and PHP-FPM (ignore errors if services not found)
+          sudo nginx -t 2>/dev/null && sudo systemctl reload nginx 2>/dev/null || true
+          sudo systemctl reload php*-fpm 2>/dev/null || true
+
+          echo "Upload limits configured: nginx=25M, PHP post=30M"
           EOSSH

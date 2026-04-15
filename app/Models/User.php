@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
@@ -26,7 +26,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return LogOptions::defaults()
             ->logOnly(['name', 'email', 'role_user_id'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
+            ->dontLogEmptyChanges()
             ->useLogName('user')
             ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
                 'created' => "User baru '{$this->name}' berhasil dibuat",

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Cache;
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class DropdownOption extends Model
@@ -17,7 +17,7 @@ class DropdownOption extends Model
     return LogOptions::defaults()
       ->logOnly(['category', 'label', 'value', 'is_active', 'sort_order'])
       ->logOnlyDirty()
-      ->dontSubmitEmptyLogs()
+      ->dontLogEmptyChanges()
       ->useLogName('dropdown_option')
       ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
         'created' => "Opsi dropdown '{$this->label}' (" . (self::CATEGORY_LABELS[$this->category] ?? $this->category) . ") ditambahkan",

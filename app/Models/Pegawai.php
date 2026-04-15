@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Services\StaffDitujuSyncService;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Pegawai extends Model
@@ -51,7 +51,7 @@ class Pegawai extends Model
     return LogOptions::defaults()
       ->logOnly(['nama', 'nip', 'email', 'jabatan', 'nomor_hp', 'unit_kerja', 'is_active'])
       ->logOnlyDirty()
-      ->dontSubmitEmptyLogs()
+      ->dontLogEmptyChanges()
       ->useLogName('pegawai')
       ->setDescriptionForEvent(fn(string $eventName) => match ($eventName) {
         'created' => "Data pegawai '{$this->nama}' ditambahkan",

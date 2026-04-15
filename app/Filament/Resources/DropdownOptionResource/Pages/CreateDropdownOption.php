@@ -5,10 +5,16 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 use App\Filament\Resources\DropdownOptionResource;
 use App\Models\DropdownOption;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Enums\Width;
 
 class CreateDropdownOption extends CreateRecord
 {
   protected static string $resource = DropdownOptionResource::class;
+
+  public function getMaxContentWidth(): Width | string | null
+  {
+    return Width::Full;
+  }
 
   protected string $view = 'filament.resources.dropdown-option-resource.pages.create-dropdown-option';
 

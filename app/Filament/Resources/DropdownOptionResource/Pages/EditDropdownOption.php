@@ -5,10 +5,16 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 use App\Filament\Resources\DropdownOptionResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Enums\Width;
 
 class EditDropdownOption extends EditRecord
 {
   protected static string $resource = DropdownOptionResource::class;
+
+  public function getMaxContentWidth(): Width | string | null
+  {
+    return Width::Full;
+  }
 
   protected function mutateFormDataBeforeSave(array $data): array
   {

@@ -51,6 +51,7 @@ class DropdownOptionResource extends Resource
   {
     return $schema->components([
       Section::make('Informasi Opsi')
+        ->columnSpanFull()
         ->description('Atur data opsi dropdown yang akan ditampilkan di form buku tamu.')
         ->schema([
           Forms\Components\Select::make('category')
@@ -85,6 +86,7 @@ class DropdownOptionResource extends Resource
         ->columns(2),
 
       Section::make('Konfigurasi Jenis ID')
+        ->columnSpanFull()
         ->description('Pengaturan tambahan khusus untuk opsi Jenis ID.')
         ->schema([
           Forms\Components\TextInput::make('metadata.id_label')

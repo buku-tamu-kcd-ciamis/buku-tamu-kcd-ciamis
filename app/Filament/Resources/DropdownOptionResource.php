@@ -142,10 +142,6 @@ class DropdownOptionResource extends Resource
           })
           ->formatStateUsing(fn(string $state) => DropdownOption::CATEGORY_LABELS[$state] ?? $state)
           ->sortable(),
-        Tables\Columns\TextColumn::make('value')
-          ->label('Nilai')
-          ->searchable()
-          ->limit(40),
         Tables\Columns\TextColumn::make('label')
           ->label('Label Tampilan')
           ->searchable()

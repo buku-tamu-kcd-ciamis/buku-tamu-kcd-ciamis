@@ -124,7 +124,8 @@ class DropdownOptionResource extends Resource
         ->selectSub(
           BukuTamu::query()
             ->selectRaw('count(*)')
-            ->whereColumn('staff_dituju', 'dropdown_options.value'),
+            ->whereColumn('staff_dituju', 'dropdown_options.value')
+            ->whereRaw('dropdown_options.category = ?', [DropdownOption::CATEGORY_STAFF_DITUJU]),
           'visit_count'
         ))
       ->columns([
@@ -152,8 +153,12 @@ class DropdownOptionResource extends Resource
         Tables\Columns\TextColumn::make('visit_count')
           ->label('Total Didatangi')
           ->badge()
-          ->formatStateUsing(fn($state): string => (string) ((int) ($state ?? 0)))
-          ->color(fn($state): string => ((int) ($state ?? 0)) > 0 ? 'success' : 'gray')
+          ->formatStateUsing(fn($state, DropdownOption $record): string => $record->category === DropdownOption::CATEGORY_STAFF_DITUJU
+            ? (string) ((int) ($state ?? 0))
+            : '-')
+          ->color(fn($state, DropdownOption $record): string => $record->category === DropdownOption::CATEGORY_STAFF_DITUJU && ((int) ($state ?? 0)) > 0
+            ? 'success'
+            : 'gray')
           ->sortable()
           ->alignCenter(),
         Tables\Columns\IconColumn::make('is_active')

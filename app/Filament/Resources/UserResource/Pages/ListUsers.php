@@ -9,6 +9,7 @@ use App\Filament\Resources\UserResource;
 use App\Models\Pegawai;
 use App\Models\RoleUser;
 use App\Models\User;
+use App\Support\LoginEmailNormalizer;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -18,7 +19,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Throwable;
 
 class ListUsers extends ListRecords
@@ -356,12 +356,12 @@ class ListUsers extends ListRecords
 
     protected function normalizeEmail(?string $email): string
     {
-        return strtolower(trim((string) $email));
+        return LoginEmailNormalizer::normalizeEmail($email);
     }
 
     protected function resolveUniqueUserEmail(?string $preferredEmail, ?string $name, ?int $ignoreUserId = null): string
     {
-        $normalized = $this->normalizeEmail($preferredEmail);
+        $normalized = LoginEmailNormalizer::sanitizePreferredEmail($preferredEmail, $name, 'user');
 
         if ($normalized === '' || ! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
             $normalized = $this->generateUniqueEmailFromName($name, $ignoreUserId);
@@ -389,8 +389,7 @@ class ListUsers extends ListRecords
 
     protected function generateUniqueEmailFromName(?string $name, ?int $ignoreUserId = null): string
     {
-        $baseSlug = Str::slug((string) $name, '.');
-        $baseSlug = $baseSlug !== '' ? $baseSlug : 'user';
+        $baseSlug = LoginEmailNormalizer::localPartFromName($name, 'user');
         $domain = 'cadisdik13.local';
         $counter = 0;
 

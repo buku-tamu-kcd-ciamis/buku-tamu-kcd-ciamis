@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class NomorSuratSetting extends Model
 {
@@ -92,5 +92,3 @@ class NomorSuratSetting extends Model
     return self::where('jenis_surat', $jenis)->where('is_active', true)->first();
   }
 }
-
-

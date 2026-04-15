@@ -410,10 +410,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 return { found: false, suggestions: [] };
             }
 
-            const response = await fetch(`/api/guest-by-nik?${params.toString()}`);
+            const response = await fetch(
+                `/api/guest-by-nik?${params.toString()}`,
+            );
 
             if (!response.ok) {
-                throw new Error(`Guest lookup failed with status ${response.status}`);
+                throw new Error(
+                    `Guest lookup failed with status ${response.status}`,
+                );
             }
 
             return response.json();
@@ -686,7 +690,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to fetch guest data by NIK / name / phone
     async function fetchGuestData(criteria) {
-        if (!criteria.nik && !criteria.namaLengkap && !criteria.nomorHp && !criteria.email) {
+        if (
+            !criteria.nik &&
+            !criteria.namaLengkap &&
+            !criteria.nomorHp &&
+            !criteria.email
+        ) {
             return;
         }
 
@@ -1037,8 +1046,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const div = document.createElement("div");
                 const isUnavailable = Boolean(item.is_unavailable);
                 div.className =
-                    "autocomplete-item" +
-                    (isUnavailable ? " is-disabled" : "");
+                    "autocomplete-item" + (isUnavailable ? " is-disabled" : "");
                 const noteLabel = item.availability_note || "Tidak Masuk";
                 const metaText = isUnavailable ? noteLabel : "";
                 const metaHtml = metaText
@@ -1054,12 +1062,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             "</strong>" +
                             item.label.substring(idx + query.length);
 
-                                                div.innerHTML = highlightedLabel + metaHtml;
+                        div.innerHTML = highlightedLabel + metaHtml;
                     } else {
-                                                div.innerHTML = item.label + metaHtml;
+                        div.innerHTML = item.label + metaHtml;
                     }
                 } else {
-                                        div.innerHTML = item.label + metaHtml;
+                    div.innerHTML = item.label + metaHtml;
                 }
                 div.dataset.value = item.value;
                 div.dataset.unavailable = isUnavailable ? "1" : "0";
@@ -3156,9 +3164,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== FORM SUBMIT VALIDATION =====
     if (bukuTamuForm) {
         bukuTamuForm.addEventListener("submit", function (e) {
-            // Check NIK validity (no repeated digits more than 3 times)
+            // Check NIK validity
             const selectedId = jenisIdHidden.value;
             const config = idConfig[selectedId] || idConfig[""];
+
+            // Check NIK validity (no repeated digits more than 3 times)
             if (
                 config.digits &&
                 nikInput.value &&

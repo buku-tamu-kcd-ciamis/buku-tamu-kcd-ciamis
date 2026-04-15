@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Pegawai;
-use Illuminate\Support\Str;
+use App\Support\LoginEmailNormalizer;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Throwable;
 
@@ -312,25 +312,27 @@ class PegawaiImport
 
     protected function normalizeEmail(?string $email): string
     {
-        return strtolower(trim((string) $email));
+        return LoginEmailNormalizer::normalizeEmail($email);
     }
 
     protected function resolveEmailForRow(string $importedEmail, string $nama, ?int $ignorePegawaiId = null, ?string $existingEmail = null): string
     {
         if ($importedEmail !== '') {
-            return $this->ensureUniqueEmail($importedEmail, $ignorePegawaiId);
+            $preferredEmail = LoginEmailNormalizer::sanitizePreferredEmail($importedEmail, $nama, 'pegawai');
+
+            return $this->ensureUniqueEmail($preferredEmail, $ignorePegawaiId);
         }
 
         $current = $this->normalizeEmail($existingEmail);
         if ($current !== '') {
-            $this->reservedEmails[$current] = true;
-            return $current;
+            $preferredEmail = LoginEmailNormalizer::sanitizePreferredEmail($current, $nama, 'pegawai');
+
+            return $this->ensureUniqueEmail($preferredEmail, $ignorePegawaiId);
         }
 
-        $localPart = Str::slug($nama, '.');
-        $localPart = $localPart !== '' ? $localPart : 'pegawai';
+        $generatedEmail = LoginEmailNormalizer::sanitizePreferredEmail('', $nama, 'pegawai');
 
-        return $this->ensureUniqueEmail($localPart . '@cadisdik13.local', $ignorePegawaiId);
+        return $this->ensureUniqueEmail($generatedEmail, $ignorePegawaiId);
     }
 
     protected function ensureUniqueEmail(string $email, ?int $ignorePegawaiId = null): string

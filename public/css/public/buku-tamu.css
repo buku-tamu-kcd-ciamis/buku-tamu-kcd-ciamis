@@ -79,7 +79,9 @@ body {
     opacity: 0;
     transform: translate(-50%, calc(-50% + 12px));
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .apk-reminder.is-visible {
@@ -1193,7 +1195,8 @@ body {
         padding-bottom: 6px;
         font-size: 13px;
     }
-    .foto-box, .ttd-box {
+    .foto-box,
+    .ttd-box {
         padding: 8px 6px;
     }
     .btn-simpan {
@@ -1202,7 +1205,6 @@ body {
         margin-top: 4px;
     }
 }
-
 
 /* ---- LARGE DESKTOP (24-inch and wider) ---- */
 @media (min-width: 1500px) {
@@ -1277,13 +1279,51 @@ body {
     }
 }
 
+/* ---- TABLET LANDSCAPE SCROLL SAFETY (up to 1366px) ---- */
+@media (max-width: 1366px) and (orientation: landscape) {
+    body {
+        height: auto;
+        min-height: 100dvh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-items: flex-start;
+    }
+
+    .wrapper {
+        height: auto;
+        min-height: calc(100dvh - 32px);
+    }
+
+    .form-container {
+        overflow: visible;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .form-container form,
+    .form-main,
+    .form-left,
+    .form-left-grid,
+    .form-right {
+        min-height: unset;
+    }
+
+    .btn-simpan {
+        position: sticky;
+        bottom: 0;
+        z-index: 30;
+    }
+}
+
 /* ---- TABLET LANDSCAPE (landscape + 768-1200px) ---- */
 /* Ini mode utama untuk loket: landscape di tablet */
 @media (max-width: 1200px) and (orientation: landscape) {
     body {
         padding: 8px 14px;
-        height: 100vh;
-        overflow: hidden;
+        height: auto;
+        min-height: 100dvh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-items: flex-start;
     }
     .header {
         padding: 12px 25px;
@@ -1742,5 +1782,47 @@ body {
 
     .public-footer__link {
         font-size: 10.5px;
+    }
+}
+
+/* ---- TOUCH TABLET FIX (SAMSUNG TAB) ---- */
+/* Pada tablet Android tertentu, kombinasi 100vh + overflow hidden membuat area bawah
+   terpotong sehingga tombol Kirim tidak terlihat. */
+@media (pointer: coarse) and (min-width: 800px) {
+    body {
+        height: auto;
+        min-height: 100dvh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        align-items: flex-start;
+        padding: 12px 14px;
+    }
+
+    .wrapper {
+        height: auto;
+        min-height: calc(100dvh - 24px);
+    }
+
+    .form-container {
+        overflow: visible;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .form-container form,
+    .form-main,
+    .form-left,
+    .form-left-grid,
+    .form-right {
+        min-height: unset;
+    }
+
+    .btn-simpan {
+        position: sticky;
+        bottom: 0;
+        z-index: 30;
+        margin-top: 12px;
+        padding: 13px;
+        font-size: 15px;
+        box-shadow: 0 -6px 14px rgba(15, 148, 85, 0.18);
     }
 }

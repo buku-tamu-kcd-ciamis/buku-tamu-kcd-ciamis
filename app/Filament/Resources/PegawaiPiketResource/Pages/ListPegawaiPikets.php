@@ -8,6 +8,7 @@ use App\Imports\PegawaiPiketImport;
 use App\Models\Pegawai;
 use App\Models\RoleUser;
 use App\Models\User;
+use App\Support\LoginEmailNormalizer;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -227,16 +228,15 @@ class ListPegawaiPikets extends ListRecords
 
     protected function normalizeEmail(?string $email): string
     {
-        return strtolower(trim((string) $email));
+        return LoginEmailNormalizer::normalizeEmail($email);
     }
 
     protected function resolveUniquePiketEmail(?string $preferredEmail, ?string $name, ?int $ignoreUserId = null): string
     {
-        $normalized = $this->normalizeEmail($preferredEmail);
+        $normalized = LoginEmailNormalizer::sanitizePreferredEmail($preferredEmail, $name, 'piket');
 
         if ($normalized === '' || ! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
-            $base = Str::slug((string) $name, '.');
-            $base = $base !== '' ? $base : 'piket';
+            $base = LoginEmailNormalizer::localPartFromName($name, 'piket');
             $normalized = $base . '@cadisdik13.local';
         }
 

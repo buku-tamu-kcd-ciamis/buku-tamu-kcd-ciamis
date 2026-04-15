@@ -5,7 +5,7 @@ namespace App\Imports;
 use App\Models\DropdownOption;
 use App\Models\Pegawai;
 use App\Models\User;
-use Illuminate\Support\Str;
+use App\Support\LoginEmailNormalizer;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Throwable;
 
@@ -104,7 +104,7 @@ class PegawaiPiketImport
                 if (! $existing) {
                     $existing = DropdownOption::query()
                         ->where('category', DropdownOption::CATEGORY_PEGAWAI_PIKET)
-                    ->where('label', $data['label'])
+                        ->where('label', $data['label'])
                         ->first();
                 }
 
@@ -229,7 +229,7 @@ class PegawaiPiketImport
 
     protected function normalizeEmail(?string $email): string
     {
-        return strtolower(trim((string) $email));
+        return LoginEmailNormalizer::normalizeEmail($email);
     }
 
     private function detectColumnMap(array $rows): array
@@ -362,25 +362,28 @@ class PegawaiPiketImport
     protected function resolveEmailForRow(string $importedEmail, string $label, ?string $existingEmail = null, ?string $pegawaiEmail = null): string
     {
         if ($importedEmail !== '') {
-            return $this->ensureUniqueEmail($importedEmail, $existingEmail);
+            $preferredEmail = LoginEmailNormalizer::sanitizePreferredEmail($importedEmail, $label, 'piket');
+
+            return $this->ensureUniqueEmail($preferredEmail, $existingEmail);
         }
 
         $pegawaiEmail = $this->normalizeEmail($pegawaiEmail);
         if ($pegawaiEmail !== '' && filter_var($pegawaiEmail, FILTER_VALIDATE_EMAIL)) {
-            return $this->ensureUniqueEmail($pegawaiEmail, $existingEmail);
+            $preferredEmail = LoginEmailNormalizer::sanitizePreferredEmail($pegawaiEmail, $label, 'piket');
+
+            return $this->ensureUniqueEmail($preferredEmail, $existingEmail);
         }
 
         $current = $this->normalizeEmail($existingEmail);
         if ($current !== '') {
-            $this->reservedEmails[$current] = true;
+            $preferredEmail = LoginEmailNormalizer::sanitizePreferredEmail($current, $label, 'piket');
 
-            return $current;
+            return $this->ensureUniqueEmail($preferredEmail, $existingEmail);
         }
 
-        $localPart = Str::slug($label, '.');
-        $localPart = $localPart !== '' ? $localPart : 'piket';
+        $generatedEmail = LoginEmailNormalizer::sanitizePreferredEmail('', $label, 'piket');
 
-        return $this->ensureUniqueEmail($localPart . '@cadisdik13.local');
+        return $this->ensureUniqueEmail($generatedEmail);
     }
 
     protected function ensureUniqueEmail(string $email, ?string $existingEmail = null): string

@@ -6,7 +6,7 @@ use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\VisitChart;
 use App\Models\User;
 use Filament\Pages\Dashboard as BaseDashboard;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class Dashboard extends BaseDashboard
 {
@@ -17,7 +17,7 @@ class Dashboard extends BaseDashboard
   public function getWidgets(): array
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     // Kepala Cabang Dinas melihat dashboard seperti Piket (hanya monitoring)
     if ($user && $user->hasRole('Kepala Cabang Dinas')) {

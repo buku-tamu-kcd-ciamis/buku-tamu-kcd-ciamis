@@ -16,7 +16,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RiwayatKunjungan extends Page implements HasTable
@@ -354,7 +354,7 @@ class RiwayatKunjungan extends Page implements HasTable
     private function getStaffNama(): string
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $pegawai = $user->pegawai;
 
         return $pegawai?->nama ?? $user->name;

@@ -21,7 +21,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class PegawaiIzinResource extends Resource
 {
@@ -38,7 +38,7 @@ class PegawaiIzinResource extends Resource
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }
 
@@ -70,7 +70,7 @@ class PegawaiIzinResource extends Resource
   protected static function canVerifyByCurrentUser(): bool
   {
     /** @var User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     return (bool) $user && $user->hasAnyRole(['Kepala Cabang Dinas', 'Super Admin']);
   }
@@ -355,7 +355,7 @@ class PegawaiIzinResource extends Resource
 
               $record->update([
                 'status' => $statusSetelahVerifikasi,
-                'diverifikasi_oleh' => Auth::user()?->name,
+                'diverifikasi_oleh' => Filament::auth()->user()?->name,
                 'diverifikasi_pada' => now(),
                 'catatan_verifikasi' => blank($data['catatan_verifikasi'] ?? null)
                   ? null
@@ -397,7 +397,7 @@ class PegawaiIzinResource extends Resource
 
               $record->update([
                 'status' => PegawaiIzin::STATUS_DITOLAK,
-                'diverifikasi_oleh' => Auth::user()?->name,
+                'diverifikasi_oleh' => Filament::auth()->user()?->name,
                 'diverifikasi_pada' => now(),
                 'catatan_verifikasi' => $data['catatan_verifikasi'],
               ]);

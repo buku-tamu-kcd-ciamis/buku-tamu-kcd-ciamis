@@ -12,7 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class PengaturanAkses extends Page implements HasForms
 {
@@ -33,14 +33,14 @@ class PengaturanAkses extends Page implements HasForms
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->hasRole('Super Admin');
   }
 
   public static function canAccess(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     return $user && $user->hasRole('Super Admin');
   }
@@ -48,7 +48,7 @@ class PengaturanAkses extends Page implements HasForms
   public function mount(): void
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     if (!$user || !$user->hasRole('Super Admin')) {
       abort(403);
     }
@@ -164,7 +164,7 @@ class PengaturanAkses extends Page implements HasForms
     ]);
 
     activity()
-      ->causedBy(Auth::user())
+      ->causedBy(Filament::auth()->user())
       ->useLog('pengaturan_akses')
       ->event('updated')
       ->log('Pengaturan akses role diperbarui');

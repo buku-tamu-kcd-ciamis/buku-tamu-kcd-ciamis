@@ -13,7 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Spatie\Activitylog\Models\Activity;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
 
@@ -31,14 +31,14 @@ class ActivityLogResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         return $user && $user->role_user && $user->role_user->hasPermission('activity_log');
     }
 
     public static function canViewAny(): bool
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         return $user && $user->role_user && $user->role_user->hasPermission('activity_log');
     }
 

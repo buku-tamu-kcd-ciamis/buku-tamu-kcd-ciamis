@@ -18,7 +18,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -42,7 +42,7 @@ class RiwayatTamu extends Page implements HasTable
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     if (!$user)
       return false;
     if ($user->hasRole('Super Admin'))
@@ -341,7 +341,7 @@ class RiwayatTamu extends Page implements HasTable
   protected static function hasDeletePasswordVerification(): bool
   {
     /** @var User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     if (! $user) {
       return false;
@@ -353,7 +353,7 @@ class RiwayatTamu extends Page implements HasTable
   protected static function verifyDeletePasswordForSession(array $data): void
   {
     /** @var User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     if (! $user) {
       throw ValidationException::withMessages([

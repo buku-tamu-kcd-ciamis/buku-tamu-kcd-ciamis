@@ -7,7 +7,7 @@ use App\Models\DropdownOption;
 use App\Models\PegawaiIzin;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class StaffOverviewWidget extends BaseWidget
 {
@@ -18,7 +18,7 @@ class StaffOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $pegawai = $user->pegawai;
         $pegawaiNama = $pegawai?->nama ?? $user->name;
 

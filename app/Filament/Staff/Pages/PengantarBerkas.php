@@ -14,7 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class PengantarBerkas extends Page implements HasTable
 {
@@ -103,7 +103,7 @@ class PengantarBerkas extends Page implements HasTable
                             $chat = $record->bookingChats()->first();
 
                             if (! $chat) {
-                                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+                                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Filament::auth()->user())->first();
                             }
 
                             if (! $chat) {
@@ -132,7 +132,7 @@ class PengantarBerkas extends Page implements HasTable
     private function getStaffNama(): string
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         $nama = trim((string) ($user?->pegawai?->nama ?? ''));
 

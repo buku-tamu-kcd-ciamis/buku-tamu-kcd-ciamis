@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use App\Models\User;
 
 class PengantarBerkas extends Page implements HasTable
@@ -104,7 +104,7 @@ class PengantarBerkas extends Page implements HasTable
               $chat = $record->bookingChats()->first();
 
               if (!$chat) {
-                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Filament::auth()->user())->first();
               }
 
               if (!$chat) {

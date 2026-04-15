@@ -10,7 +10,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Notifications\Notification;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
@@ -82,7 +82,7 @@ class EditProfile extends BaseEditProfile
                   ->required(fn(callable $get) => filled($get('password')))
                   ->rules([
                     fn() => function (string $attribute, $value, $fail) {
-                      $user = Auth::user();
+                      $user = Filament::auth()->user();
 
                       if ($user && !Hash::check((string) $value, $user->password)) {
                         $fail('Password saat ini tidak sesuai.');
@@ -115,7 +115,7 @@ class EditProfile extends BaseEditProfile
   protected function mutateFormDataBeforeSave(array $data): array
   {
     $this->previousProfilePhotoPath = $this->normalizeProfilePhotoPath(
-      (string) (Auth::user()?->profile_photo_path ?? '')
+      (string) (Filament::auth()->user()?->profile_photo_path ?? '')
     );
 
     if (blank($data['password'] ?? null)) {
@@ -192,7 +192,7 @@ class EditProfile extends BaseEditProfile
   {
     $oldPath = $this->previousProfilePhotoPath;
     /** @var User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     $latestPath = $user?->getKey()
       ? (string) (User::query()->whereKey($user->getKey())->value('profile_photo_path') ?? '')

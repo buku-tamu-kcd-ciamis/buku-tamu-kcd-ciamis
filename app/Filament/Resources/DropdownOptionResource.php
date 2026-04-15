@@ -21,7 +21,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class DropdownOptionResource extends Resource
 {
@@ -38,7 +38,7 @@ class DropdownOptionResource extends Resource
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->role_user && $user->role_user->hasPermission('dropdown_options');
   }
 

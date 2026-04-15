@@ -135,7 +135,7 @@ class KunjunganResource extends Resource
               $chat = $record->bookingChats()->first();
 
               if (!$chat) {
-                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, \Filament\Facades\Filament::auth()->user())->first();
               }
 
               if (!$chat) {

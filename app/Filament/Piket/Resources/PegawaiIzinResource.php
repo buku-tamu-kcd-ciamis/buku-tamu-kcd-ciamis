@@ -12,7 +12,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use App\Models\User;
 
 class PegawaiIzinResource extends Resource
@@ -30,14 +30,14 @@ class PegawaiIzinResource extends Resource
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }
 
   public static function canViewAny(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     return $user && $user->role_user && $user->role_user->hasPermission('pegawai_izin');
   }

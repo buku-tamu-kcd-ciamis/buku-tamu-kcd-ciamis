@@ -20,7 +20,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 
 class DataPegawaiResource extends Resource
@@ -38,7 +38,7 @@ class DataPegawaiResource extends Resource
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->role_user && $user->role_user->hasPermission('data_pegawai');
   }
 

@@ -7,7 +7,7 @@ use App\Models\User;
 use Filament\Panel;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Livewire\WithPagination;
 
 class ViewRiwayatTamu extends Page
@@ -33,7 +33,7 @@ class ViewRiwayatTamu extends Page
     public static function canAccess(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user && $user->hasRole('Piket'));
     }

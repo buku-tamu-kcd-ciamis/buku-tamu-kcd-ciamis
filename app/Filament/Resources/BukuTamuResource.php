@@ -26,7 +26,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
@@ -47,7 +47,7 @@ class BukuTamuResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         return $user && $user->role_user && $user->role_user->hasPermission('buku_tamu');
     }
 
@@ -787,7 +787,7 @@ class BukuTamuResource extends Resource
     protected static function canChangeStatus(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user && $user->role_user && $user->role_user->hasPermission('can_change_status'));
     }
@@ -795,7 +795,7 @@ class BukuTamuResource extends Resource
     protected static function canPrint(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user && $user->role_user && $user->role_user->hasPermission('can_print'));
     }
@@ -803,7 +803,7 @@ class BukuTamuResource extends Resource
     protected static function isSuperAdmin(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user?->hasRole('Super Admin'));
     }
@@ -816,7 +816,7 @@ class BukuTamuResource extends Resource
     protected static function hasDeletePasswordVerification(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (! $user) {
             return false;
@@ -828,7 +828,7 @@ class BukuTamuResource extends Resource
     protected static function verifyDeletePasswordForSession(array $data): void
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (! $user) {
             throw ValidationException::withMessages([

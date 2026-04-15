@@ -8,7 +8,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Notifications\Notification;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -61,7 +61,7 @@ class EditProfile extends BaseEditProfile
               ->required(fn(callable $get) => filled($get('password')))
               ->rules([
                 fn() => function (string $attribute, $value, $fail) {
-                  $user = Auth::user();
+                  $user = Filament::auth()->user();
                   if ($user && ! Hash::check($value, $user->password)) {
                     $fail('Password saat ini tidak sesuai.');
                   }
@@ -112,7 +112,7 @@ class EditProfile extends BaseEditProfile
   protected function afterSave(): void
   {
     /** @var \App\Models\User $user */
-    $user = \Illuminate\Support\Facades\Auth::user();
+    $user = \Illuminate\Support\Facades\Filament::auth()->user();
 
     if ($user) {
       activity()

@@ -20,7 +20,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class BukuTamuResource extends Resource
 {
@@ -255,7 +255,7 @@ class BukuTamuResource extends Resource
             ->color('primary')
             ->url(function (BukuTamu $record): string {
               /** @var \App\Models\User|null $authUser */
-              $authUser = Auth::user();
+              $authUser = Filament::auth()->user();
 
               if (!$authUser || !static::recordBelongsToCurrentStaff($record)) {
                 return ChatBooking::getUrl();
@@ -343,7 +343,7 @@ class BukuTamuResource extends Resource
   private static function getCurrentStaffLookupName(): string
   {
     /** @var \App\Models\User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     $staffName = trim((string) ($user?->pegawai?->nama ?? $user?->name ?? ''));
 

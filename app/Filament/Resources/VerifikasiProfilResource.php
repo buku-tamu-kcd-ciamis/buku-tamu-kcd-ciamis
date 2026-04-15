@@ -9,7 +9,7 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class VerifikasiProfilResource extends Resource
 {
@@ -26,7 +26,7 @@ class VerifikasiProfilResource extends Resource
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->hasRole('Super Admin');
   }
 

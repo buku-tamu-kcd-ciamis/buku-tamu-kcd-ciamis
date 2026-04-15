@@ -3,14 +3,14 @@
 namespace App\Filament\Staff\Concerns;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 trait ChecksStaffPermission
 {
     protected static function hasStaffPermission(string $permission): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user || !$user->hasRole('Staff')) {
             return false;
@@ -25,7 +25,7 @@ trait ChecksStaffPermission
     protected static function hasAnyStaffPermission(array $permissions): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user || !$user->hasRole('Staff') || !$user->role_user) {
             return false;

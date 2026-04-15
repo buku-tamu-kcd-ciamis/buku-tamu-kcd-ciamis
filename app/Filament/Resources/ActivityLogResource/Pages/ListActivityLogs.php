@@ -10,7 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -71,7 +71,7 @@ class ListActivityLogs extends ListRecords
                     Activity::query()->delete();
 
                     activity('activity_log')
-                        ->causedBy(Auth::user())
+                        ->causedBy(Filament::auth()->user())
                         ->event('deleted')
                         ->withProperties([
                             'jumlah_dihapus' => $deletedCount,
@@ -100,7 +100,7 @@ class ListActivityLogs extends ListRecords
     protected function isCurrentUserSuperAdmin(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user && $user->hasRole('Super Admin'));
     }
@@ -184,7 +184,7 @@ class ListActivityLogs extends ListRecords
 
         // Log this backup action
         activity('cetak')
-            ->causedBy(Auth::user())
+            ->causedBy(Filament::auth()->user())
             ->event('created')
             ->withProperties([
                 'jumlah' => $totalLogs,
@@ -209,7 +209,7 @@ class ListActivityLogs extends ListRecords
     protected function verifySuperAdminPassword(array $data): void
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (! $user || ! $user->hasRole('Super Admin')) {
             throw ValidationException::withMessages([

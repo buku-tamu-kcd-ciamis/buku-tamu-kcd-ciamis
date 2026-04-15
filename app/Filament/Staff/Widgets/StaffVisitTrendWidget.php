@@ -5,7 +5,7 @@ namespace App\Filament\Staff\Widgets;
 use App\Models\BukuTamu;
 use App\Models\StaffNotification;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 
 class StaffVisitTrendWidget extends ChartWidget
@@ -17,7 +17,7 @@ class StaffVisitTrendWidget extends ChartWidget
     protected function getData(): array
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user) {
             return [

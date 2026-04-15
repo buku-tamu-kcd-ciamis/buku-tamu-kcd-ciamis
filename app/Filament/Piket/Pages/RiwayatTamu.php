@@ -14,7 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use App\Models\User;
@@ -120,7 +120,7 @@ class RiwayatTamu extends Page implements HasTable
               $chat = $record->bookingChats()->first();
 
               if (!$chat) {
-                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Auth::user())->first();
+                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Filament::auth()->user())->first();
               }
 
               if (!$chat) {

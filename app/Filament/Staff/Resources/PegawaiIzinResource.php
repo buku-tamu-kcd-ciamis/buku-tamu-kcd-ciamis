@@ -46,7 +46,7 @@ class PegawaiIzinResource extends Resource
     public static function resolveIdentityData(?User $user = null): array
     {
         /** @var User|null $user */
-        $user = $user ?? Auth::user();
+        $user = $user ?? Filament::auth()->user();
         $pegawai = $user?->pegawai;
 
         return [
@@ -139,7 +139,7 @@ class PegawaiIzinResource extends Resource
     public static function table(Table $table): Table
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $identityData = static::resolveIdentityData($user);
 
         return $table

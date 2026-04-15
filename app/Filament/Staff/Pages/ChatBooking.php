@@ -12,7 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -54,7 +54,7 @@ class ChatBooking extends Page
     public static function getNavigationBadge(): ?string
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user) {
             return null;
@@ -84,7 +84,7 @@ class ChatBooking extends Page
     public static function getNavigationBadgeTooltip(): ?string
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user) {
             return null;
@@ -155,7 +155,7 @@ class ChatBooking extends Page
         $chat = $this->getSelectedChat();
 
         if ($chat) {
-            $chat->markMessagesAsReadFor(Auth::user());
+            $chat->markMessagesAsReadFor(Filament::auth()->user());
             $this->touchPresence($chat);
         }
 
@@ -173,7 +173,7 @@ class ChatBooking extends Page
         $this->selectedChatId = $chat->id;
         $this->replyToMessageId = null;
         $this->editingMessageId = null;
-        $chat->markMessagesAsReadFor(Auth::user());
+        $chat->markMessagesAsReadFor(Filament::auth()->user());
         $this->touchPresence($chat);
         $this->dispatch('booking-chat-scroll-bottom');
     }
@@ -182,7 +182,7 @@ class ChatBooking extends Page
     {
         $chat = $this->getSelectedChat();
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         if (!$chat) {
             return;
@@ -207,7 +207,7 @@ class ChatBooking extends Page
     {
         $chat = $this->getSelectedChat();
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         if (!$chat) {
             return;
@@ -287,7 +287,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         $message = $chat->messages()
             ->where('is_system', false)
@@ -325,7 +325,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         $message = $chat->messages()
             ->where('is_system', false)
@@ -414,7 +414,7 @@ class ChatBooking extends Page
             return;
         }
 
-        $chat->markTypingFor(Auth::user());
+        $chat->markTypingFor(Filament::auth()->user());
         $this->touchPresence($chat);
         $this->dispatch('booking-chat-reset-input');
     }
@@ -465,7 +465,7 @@ class ChatBooking extends Page
             }
 
             try {
-                $chatManager->editMessage($chat, Auth::user(), $this->editingMessageId, $messageText);
+                $chatManager->editMessage($chat, Filament::auth()->user(), $this->editingMessageId, $messageText);
             } catch (\InvalidArgumentException $exception) {
                 Notification::make()
                     ->title('Tidak bisa mengedit pesan')
@@ -483,7 +483,7 @@ class ChatBooking extends Page
             $this->messageDraft = '';
             $this->editingMessageId = null;
             $this->replyToMessageId = null;
-            $chat->markMessagesAsReadFor(Auth::user());
+            $chat->markMessagesAsReadFor(Filament::auth()->user());
             $this->touchPresence($chat->fresh());
             $this->dispatch('booking-chat-scroll-bottom');
             $this->dispatch('booking-chat-reset-input');
@@ -520,7 +520,7 @@ class ChatBooking extends Page
         }
 
         try {
-            $chatManager->sendMessage($chat, Auth::user(), $messageText, $attachmentPayload, $this->replyToMessageId);
+            $chatManager->sendMessage($chat, Filament::auth()->user(), $messageText, $attachmentPayload, $this->replyToMessageId);
         } catch (\InvalidArgumentException $exception) {
             Notification::make()
                 ->title('Tidak bisa mengirim pesan')
@@ -539,7 +539,7 @@ class ChatBooking extends Page
         $this->replyToMessageId = null;
         $this->attachmentDraft = null;
         $this->attachmentInputIteration++;
-        $chat->markMessagesAsReadFor(Auth::user());
+        $chat->markMessagesAsReadFor(Filament::auth()->user());
         $this->touchPresence($chat->fresh());
         $this->dispatch('booking-chat-scroll-bottom');
         $this->dispatch('booking-chat-reset-input');
@@ -570,7 +570,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         $messages = $chat->messages()
             ->visibleForUser($authUser)
@@ -669,7 +669,7 @@ class ChatBooking extends Page
     public function getChats(): Collection
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $searchKeyword = trim($this->search);
         $searchTerm = $searchKeyword !== '' ? '%' . $searchKeyword . '%' : null;
 
@@ -783,7 +783,7 @@ class ChatBooking extends Page
     {
         $chat = $this->getSelectedChat();
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         if (!$chat) {
             return collect();
@@ -809,7 +809,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         $chat ??= $this->getSelectedChat();
 
@@ -839,7 +839,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         $chat ??= $this->getSelectedChat();
 
@@ -872,7 +872,7 @@ class ChatBooking extends Page
     public function getCounterpartState(?BookingChat $chat): array
     {
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         if (!$chat) {
             return [
@@ -916,7 +916,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         $counterpart = $chat->staff_user_id === $authUser->id ? $chat->piketUser : $chat->staffUser;
         $counterpartAvatar = $this->resolveUserAvatarUrl($counterpart, false);
@@ -980,7 +980,7 @@ class ChatBooking extends Page
     private function bootstrapMissingOpenBookingChats(BookingChatManager $chatManager): void
     {
         /** @var User|null $authUser */
-        $authUser = Auth::user();
+        $authUser = Filament::auth()->user();
 
         if (!$authUser || !$authUser->hasRole('Staff')) {
             return;
@@ -1027,7 +1027,7 @@ class ChatBooking extends Page
     private function openChatFromBooking(int $bookingId, BookingChatManager $chatManager): void
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $booking = BukuTamu::query()->find($bookingId);
 
         if (!$booking) {
@@ -1092,7 +1092,7 @@ class ChatBooking extends Page
         }
 
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         $chat = BookingChat::query()
             ->where('id', $chatId)
@@ -1114,7 +1114,7 @@ class ChatBooking extends Page
     private function touchPresence(BookingChat $chat): void
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         $lastSeen = $user->id === $chat->staff_user_id ? $chat->staff_last_seen_at : $chat->piket_last_seen_at;
 

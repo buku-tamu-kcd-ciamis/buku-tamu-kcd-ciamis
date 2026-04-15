@@ -15,7 +15,7 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class ViewPengantarBerkas extends Page implements HasInfolists
 {
@@ -53,7 +53,7 @@ class ViewPengantarBerkas extends Page implements HasInfolists
     public function mount(): void
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (! $user || ! $user->hasRole('Super Admin')) {
             abort(403);

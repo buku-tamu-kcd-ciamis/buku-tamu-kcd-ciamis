@@ -12,7 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Livewire\WithPagination;
 
 class ProfilKepalaCabdin extends Page implements HasForms
@@ -37,7 +37,7 @@ class ProfilKepalaCabdin extends Page implements HasForms
     public function mount(): void
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         if (!$user) abort(403);
 
         $isSuperAdmin = $user->hasRole('Super Admin');
@@ -92,7 +92,7 @@ class ProfilKepalaCabdin extends Page implements HasForms
         $formData = $this->form->getState();
 
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $settings = PengaturanKcd::getSettings();
 
         // Super Admin → langsung simpan tanpa verifikasi
@@ -172,7 +172,7 @@ class ProfilKepalaCabdin extends Page implements HasForms
     public function getPendingRequest(): ?ProfileChangeRequest
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         if (!$user || $user->hasRole('Super Admin')) return null;
 
         return ProfileChangeRequest::where('user_id', $user->id)
@@ -187,7 +187,7 @@ class ProfilKepalaCabdin extends Page implements HasForms
     public function getLatestRequests()
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         if (!$user) return collect();
 
         return ProfileChangeRequest::where('user_id', $user->id)
@@ -201,7 +201,7 @@ class ProfilKepalaCabdin extends Page implements HasForms
     public function getIsSuperAdminProperty(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         return $user?->hasRole('Super Admin') ?? false;
     }
 }

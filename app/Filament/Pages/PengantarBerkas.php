@@ -17,7 +17,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -40,14 +40,14 @@ class PengantarBerkas extends Page implements HasTable
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->hasRole('Super Admin');
   }
 
   public static function canAccess(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     return $user && $user->hasRole('Super Admin');
   }
@@ -244,7 +244,7 @@ class PengantarBerkas extends Page implements HasTable
   protected static function hasDeletePasswordVerification(): bool
   {
     /** @var User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     if (! $user) {
       return false;
@@ -256,7 +256,7 @@ class PengantarBerkas extends Page implements HasTable
   protected static function verifyDeletePasswordForSession(array $data): void
   {
     /** @var User|null $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
 
     if (! $user) {
       throw ValidationException::withMessages([

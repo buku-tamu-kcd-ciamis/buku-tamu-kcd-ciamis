@@ -6,7 +6,7 @@ use App\Filament\Staff\Concerns\ChecksStaffPermission;
 use App\Models\Pegawai;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class KetersediaanStatus extends Page
 {
@@ -34,7 +34,7 @@ class KetersediaanStatus extends Page
     public function mount(): void
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $pegawai = $user->pegawai;
         $allowedStatuses = array_keys(Pegawai::AVAILABILITY_LABELS);
 
@@ -52,7 +52,7 @@ class KetersediaanStatus extends Page
     public function updateStatus(string $status): void
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $pegawai = $user->pegawai;
         $allowedStatuses = array_keys(Pegawai::AVAILABILITY_LABELS);
 

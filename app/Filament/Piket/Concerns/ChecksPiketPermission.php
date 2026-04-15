@@ -3,14 +3,14 @@
 namespace App\Filament\Piket\Concerns;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 trait ChecksPiketPermission
 {
     protected static function hasPiketPermission(string $permission): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user || !$user->hasRole('Piket')) {
             return false;

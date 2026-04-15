@@ -12,7 +12,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class NomorSuratResource extends Resource
 {
@@ -29,7 +29,7 @@ class NomorSuratResource extends Resource
   public static function shouldRegisterNavigation(): bool
   {
     /** @var User $user */
-    $user = Auth::user();
+    $user = Filament::auth()->user();
     return $user && $user->hasRole('Super Admin');
   }
 

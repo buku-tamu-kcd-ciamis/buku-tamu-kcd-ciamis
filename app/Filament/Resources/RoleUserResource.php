@@ -16,7 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use App\Models\User;
 
 class RoleUserResource extends Resource
@@ -38,7 +38,7 @@ class RoleUserResource extends Resource
     public static function canViewAny(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user && $user->hasRole('Super Admin'));
     }

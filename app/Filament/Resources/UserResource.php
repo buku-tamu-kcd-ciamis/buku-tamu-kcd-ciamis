@@ -24,7 +24,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Validation\ValidationException;
 
 class UserResource extends Resource
@@ -51,7 +51,7 @@ class UserResource extends Resource
     public static function canDelete($record): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user && $user->hasRole('Super Admin'));
     }
@@ -387,7 +387,7 @@ class UserResource extends Resource
     protected static function hasDeletePasswordVerification(): bool
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (! $user) {
             return false;
@@ -399,7 +399,7 @@ class UserResource extends Resource
     protected static function verifyDeletePasswordForSession(array $data): void
     {
         /** @var User|null $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (! $user) {
             throw ValidationException::withMessages([

@@ -11,7 +11,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class DataKepalaCabdin extends Page implements HasForms
 {
@@ -29,7 +29,7 @@ class DataKepalaCabdin extends Page implements HasForms
     public static function shouldRegisterNavigation(): bool
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return $user?->role_user?->name === 'Super Admin';
     }
@@ -37,7 +37,7 @@ class DataKepalaCabdin extends Page implements HasForms
     public static function canAccess(): bool
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         return $user?->role_user?->name === 'Super Admin';
     }
@@ -45,7 +45,7 @@ class DataKepalaCabdin extends Page implements HasForms
     public function mount(): void
     {
         /** @var User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if (!$user || $user->role_user?->name !== 'Super Admin') {
             abort(403);
@@ -103,7 +103,7 @@ class DataKepalaCabdin extends Page implements HasForms
         $settings->update($data);
 
         activity()
-            ->causedBy(Auth::user())
+            ->causedBy(Filament::auth()->user())
             ->performedOn($settings)
             ->useLog('pengaturan')
             ->event('updated')

@@ -11,7 +11,7 @@ use App\Models\PegawaiIzin;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 use Illuminate\Support\Str;
 
 class StaffQuickActionWidget extends BaseWidget
@@ -21,7 +21,7 @@ class StaffQuickActionWidget extends BaseWidget
     protected function getStats(): array
     {
         /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $pegawaiNama = $user?->pegawai?->nama ?? $user?->name;
 
         $chatBelumDibacaQuery = BookingChatMessage::query()

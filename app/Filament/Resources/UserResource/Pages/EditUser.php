@@ -6,7 +6,7 @@ use App\Filament\Resources\UserResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class EditUser extends EditRecord
 {
@@ -27,9 +27,9 @@ class EditUser extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
-                ->hidden(fn(): bool => !(Auth::user()?->hasRole('Super Admin') ?? false) || !$this->record->isDeletable())
+                ->hidden(fn(): bool => !(Filament::auth()->user()?->hasRole('Super Admin') ?? false) || !$this->record->isDeletable())
                 ->before(function (Actions\DeleteAction $action) {
-                    if (!(Auth::user()?->hasRole('Super Admin') ?? false)) {
+                    if (!(Filament::auth()->user()?->hasRole('Super Admin') ?? false)) {
                         Notification::make()
                             ->danger()
                             ->title('Akses ditolak!')

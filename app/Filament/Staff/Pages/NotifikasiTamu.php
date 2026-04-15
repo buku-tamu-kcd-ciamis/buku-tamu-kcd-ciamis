@@ -15,7 +15,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class NotifikasiTamu extends Page implements HasTable
 {
@@ -60,7 +60,7 @@ class NotifikasiTamu extends Page implements HasTable
      */
     public static function getNavigationBadge(): ?string
     {
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         if (!$user)
             return null;
 
@@ -81,7 +81,7 @@ class NotifikasiTamu extends Page implements HasTable
         return $table
             ->query(
                 StaffNotification::query()
-                    ->where('user_id', Auth::id())
+                    ->where('user_id', Filament::auth()->id())
                     ->with('bukuTamu')
                     ->latest()
             )
@@ -190,7 +190,7 @@ class NotifikasiTamu extends Page implements HasTable
                             }
 
                             $chat = app(BookingChatManager::class)
-                                ->getOrCreateForBookingAndStaff($booking, Auth::user(), Auth::user());
+                                ->getOrCreateForBookingAndStaff($booking, Filament::auth()->user(), Filament::auth()->user());
 
                             return ChatBooking::getUrl() . '?chat=' . $chat->id;
                         })

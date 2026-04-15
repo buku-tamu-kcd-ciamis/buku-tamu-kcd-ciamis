@@ -26,8 +26,8 @@ class PegawaiTemplateExport
         $roleFormula = '"' . implode(',', $roleOptions) . '"';
 
         // ===== HEADER ROW =====
-        $headers = ['No', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Role User (Opsional)'];
-        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+        $headers = ['No', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Role User (Opsional)', 'Password Login (Opsional)'];
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
         foreach ($headers as $i => $header) {
             $cell = $columns[$i] . '1';
@@ -35,7 +35,7 @@ class PegawaiTemplateExport
         }
 
         // Header styling
-        $headerRange = 'A1:G1';
+        $headerRange = 'A1:H1';
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -61,8 +61,8 @@ class PegawaiTemplateExport
 
         // ===== SAMPLE DATA (2 rows) =====
         $sampleData = [
-            [1, 'DWI YANTI ESTRININGRUM, S.Sos., M.Pd.', '197202022005012011', 'Pembina TK.I, IV/b', 'KEPALA CABANG PENDIDIKAN WILAYAH XIII', 'CABANG PENDIDIKAN WILAYAH XIII', 'Kepala Cabang Dinas'],
-            [2, 'RUDIANTO, M.Pd.', '197105111999031002', 'Pembina TK.I, IV/b', 'KEPALA SUBBAGIAN TATA USAHA', 'CABANG PENDIDIKAN WILAYAH XIII', 'Staff'],
+            [1, 'DWI YANTI ESTRININGRUM, S.Sos., M.Pd.', '197202022005012011', 'Pembina TK.I, IV/b', 'KEPALA CABANG PENDIDIKAN WILAYAH XIII', 'CABANG PENDIDIKAN WILAYAH XIII', 'Kepala Cabang Dinas', ''],
+            [2, 'RUDIANTO, M.Pd.', '197105111999031002', 'Pembina TK.I, IV/b', 'KEPALA SUBBAGIAN TATA USAHA', 'CABANG PENDIDIKAN WILAYAH XIII', 'Staff', ''],
         ];
 
         foreach ($sampleData as $rowIndex => $rowData) {
@@ -81,7 +81,7 @@ class PegawaiTemplateExport
         }
 
         // Sample data styling (light blue background)
-        $sampleRange = 'A2:G3';
+        $sampleRange = 'A2:H3';
         $sheet->getStyle($sampleRange)->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -120,23 +120,25 @@ class PegawaiTemplateExport
         // ===== INSTRUCTIONS ROW =====
         $sheet->setCellValue('A5', '📌 PETUNJUK PENGISIAN:');
         $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(11);
-        $sheet->mergeCells('A5:G5');
+        $sheet->mergeCells('A5:H5');
 
         $instructions = [
             '1. Hapus baris contoh (baris 2-3) sebelum mengisi data baru.',
             '2. Format utama import: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja.',
             '3. Kolom "Pangkat/Golongan" dibaca untuk kompatibilitas format, namun tidak disimpan ke database.',
             '4. Kolom "Role User (Opsional)": isi Staff, Piket, atau Kepala Cabang Dinas bila ingin sinkron role user.',
-            '5. Kolom "Nama Pegawai" wajib diisi. Kolom "NIP" opsional.',
-            '6. Jika kolom NIP diisi, nilainya harus tepat 18 digit angka.',
-            '7. Jika NIP sudah ada di database, data akan diperbarui (update).',
-            '8. Simpan file dalam format .xlsx sebelum mengimpor.',
+            '5. Kolom "Password Login (Opsional)": jika diisi, password akun user akan mengikuti nilai kolom ini.',
+            '6. Jika kolom Password Login dikosongkan, sistem akan generate default otomatis sesuai role user.',
+            '7. Kolom "Nama Pegawai" wajib diisi. Kolom "NIP" opsional.',
+            '8. Jika kolom NIP diisi, nilainya harus tepat 18 digit angka.',
+            '9. Jika NIP sudah ada di database, data akan diperbarui (update).',
+            '10. Simpan file dalam format .xlsx sebelum mengimpor.',
         ];
 
         foreach ($instructions as $i => $text) {
             $row = 6 + $i;
             $sheet->setCellValue("A{$row}", $text);
-            $sheet->mergeCells("A{$row}:G{$row}");
+            $sheet->mergeCells("A{$row}:H{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setSize(10)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF555555'));
         }
 
@@ -148,6 +150,7 @@ class PegawaiTemplateExport
         $sheet->getColumnDimension('E')->setWidth(44);  // Jabatan
         $sheet->getColumnDimension('F')->setWidth(36);  // Unit Kerja
         $sheet->getColumnDimension('G')->setWidth(24);  // Role User (Opsional)
+        $sheet->getColumnDimension('H')->setWidth(28);  // Password Login (Opsional)
 
         // NIP column as text format
         $sheet->getStyle('C:C')->getNumberFormat()

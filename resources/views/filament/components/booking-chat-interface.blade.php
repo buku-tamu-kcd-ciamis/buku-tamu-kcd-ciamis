@@ -195,6 +195,8 @@
                 dropNotice: '',
                 dropNoticeType: 'info',
                 dropNoticeTimer: null,
+                allowNativeAttachmentChangeOnce: false,
+                serverSafeAttachmentMaxBytes: 900 * 1024,
                 notificationPermission: 'default',
                 notificationPromptVisible: false,
                 notificationPromptDismissStorageKey: 'booking-chat-notification-dismissed',
@@ -638,6 +640,199 @@
 
                     return true;
                 },
+                humanizeBytes(bytes) {
+                    const value = Number(bytes || 0);
+
+                    if (value < 1024) {
+                        return `${value} B`;
+                    }
+
+                    if (value < 1024 * 1024) {
+                        return `${(value / 1024).toFixed(1)} KB`;
+                    }
+
+                    return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+                },
+                isCompressibleImage(file) {
+                    const mime = String(file?.type || '').toLowerCase();
+
+                    return ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/bmp'].includes(mime);
+                },
+                async loadImageElementFromFile(file) {
+                    return await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+
+                        reader.onerror = () => reject(new Error('READ_FILE_FAILED'));
+                        reader.onload = () => {
+                            const image = new Image();
+                            image.onload = () => resolve(image);
+                            image.onerror = () => reject(new Error('READ_IMAGE_FAILED'));
+                            image.src = String(reader.result || '');
+                        };
+
+                        reader.readAsDataURL(file);
+                    });
+                },
+                canvasToBlob(canvas, mimeType, quality) {
+                    return new Promise((resolve) => {
+                        canvas.toBlob((blob) => resolve(blob), mimeType, quality);
+                    });
+                },
+                async compressImageFileToSafeSize(file, targetBytes) {
+                    const sourceImage = await this.loadImageElementFromFile(file);
+
+                    const maxDimension = 1920;
+                    const widthRatio = maxDimension / Math.max(sourceImage.width || 1, 1);
+                    const heightRatio = maxDimension / Math.max(sourceImage.height || 1, 1);
+                    const baseScale = Math.min(1, widthRatio, heightRatio);
+
+                    const scaleCandidates = [baseScale, baseScale * 0.9, baseScale * 0.8, baseScale * 0.7, baseScale * 0.6]
+                        .map((value) => Math.max(0.35, Math.min(1, Number(value || 1))));
+                    const qualityCandidates = [0.88, 0.8, 0.72, 0.64, 0.56, 0.48, 0.42];
+                    const outputMime = 'image/jpeg';
+
+                    let bestBlob = null;
+
+                    for (const scale of scaleCandidates) {
+                        const nextWidth = Math.max(320, Math.round((sourceImage.width || 1) * scale));
+                        const nextHeight = Math.max(240, Math.round((sourceImage.height || 1) * scale));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = nextWidth;
+                        canvas.height = nextHeight;
+                        const context = canvas.getContext('2d');
+
+                        if (!context) {
+                            continue;
+                        }
+
+                        context.drawImage(sourceImage, 0, 0, nextWidth, nextHeight);
+
+                        for (const quality of qualityCandidates) {
+                            const blob = await this.canvasToBlob(canvas, outputMime, quality);
+
+                            if (!blob) {
+                                continue;
+                            }
+
+                            if (!bestBlob || blob.size < bestBlob.size) {
+                                bestBlob = blob;
+                            }
+
+                            if (blob.size <= targetBytes) {
+                                const originalName = String(file.name || 'gambar.jpg');
+                                const sanitizedBase = originalName.replace(/\.[^.]+$/u, '');
+
+                                return new File([blob], `${sanitizedBase}.jpg`, {
+                                    type: outputMime,
+                                    lastModified: Date.now(),
+                                });
+                            }
+                        }
+                    }
+
+                    if (!bestBlob) {
+                        return null;
+                    }
+
+                    const originalName = String(file.name || 'gambar.jpg');
+                    const sanitizedBase = originalName.replace(/\.[^.]+$/u, '');
+
+                    return new File([bestBlob], `${sanitizedBase}.jpg`, {
+                        type: outputMime,
+                        lastModified: Date.now(),
+                    });
+                },
+                async prepareAttachmentFile(file) {
+                    if (!this.validateAttachmentFile(file)) {
+                        return null;
+                    }
+
+                    const safeMaxBytes = this.serverSafeAttachmentMaxBytes;
+                    const originalBytes = Number(file.size || 0);
+
+                    if (originalBytes <= safeMaxBytes) {
+                        return {
+                            file,
+                            wasCompressed: false,
+                            originalBytes,
+                        };
+                    }
+
+                    if (!this.isCompressibleImage(file)) {
+                        this.showDropNotice(`Berkas non-gambar maksimal ${this.humanizeBytes(safeMaxBytes)} di server online. Kompres file dulu lalu unggah ulang.`, 'error');
+
+                        return null;
+                    }
+
+                    try {
+                        const compressed = await this.compressImageFileToSafeSize(file, safeMaxBytes);
+
+                        if (!compressed) {
+                            this.showDropNotice('Gagal mengompres gambar. Coba gambar lain atau kompres manual.', 'error');
+
+                            return null;
+                        }
+
+                        if (compressed.size > safeMaxBytes) {
+                            this.showDropNotice(`Gambar masih terlalu besar setelah kompresi. Target maksimal ${this.humanizeBytes(safeMaxBytes)}.`, 'error');
+
+                            return null;
+                        }
+
+                        return {
+                            file: compressed,
+                            wasCompressed: true,
+                            originalBytes,
+                        };
+                    } catch (error) {
+                        this.showDropNotice('Gagal memproses kompresi gambar di browser.', 'error');
+
+                        return null;
+                    }
+                },
+                async handleAttachmentInputChange(event) {
+                    if (this.allowNativeAttachmentChangeOnce) {
+                        this.allowNativeAttachmentChangeOnce = false;
+
+                        return;
+                    }
+
+                    const input = event?.target;
+                    const pickedFile = input?.files?.[0] || null;
+
+                    if (!input || !pickedFile) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const prepared = await this.prepareAttachmentFile(pickedFile);
+
+                    if (!prepared) {
+                        input.value = '';
+
+                        return;
+                    }
+
+                    if (!window.DataTransfer) {
+                        this.showDropNotice('Browser tidak mendukung pemrosesan lampiran otomatis.', 'error');
+                        input.value = '';
+
+                        return;
+                    }
+
+                    const transfer = new DataTransfer();
+                    transfer.items.add(prepared.file);
+                    input.files = transfer.files;
+
+                    this.allowNativeAttachmentChangeOnce = true;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+                    if (prepared.wasCompressed) {
+                        this.showDropNotice(`Gambar dikompres otomatis (${this.humanizeBytes(prepared.originalBytes)} -> ${this.humanizeBytes(prepared.file.size)}).`, 'success');
+                    }
+                },
                 stopCameraStream() {
                     if (this.cameraStream) {
                         this.cameraStream.getTracks().forEach((track) => track.stop());
@@ -834,17 +1029,26 @@
                     const transfer = new DataTransfer();
                     transfer.items.add(file);
                     this.$refs.attachInput.files = transfer.files;
+                    this.allowNativeAttachmentChangeOnce = true;
                     this.$refs.attachInput.dispatchEvent(new Event('change', { bubbles: true }));
 
                     return true;
                 },
-                attachFileToComposer(file, successMessage = 'Lampiran siap dikirim.') {
-                    if (!this.validateAttachmentFile(file)) {
+                async attachFileToComposer(file, successMessage = 'Lampiran siap dikirim.') {
+                    const prepared = await this.prepareAttachmentFile(file);
+
+                    if (!prepared) {
                         return false;
                     }
 
-                    if (!this.assignAttachmentFile(file)) {
+                    if (!this.assignAttachmentFile(prepared.file)) {
                         return false;
+                    }
+
+                    if (prepared.wasCompressed) {
+                        this.showDropNotice(`Gambar dikompres otomatis (${this.humanizeBytes(prepared.originalBytes)} -> ${this.humanizeBytes(prepared.file.size)}).`, 'success');
+
+                        return true;
                     }
 
                     this.showDropNotice(successMessage, 'success');
@@ -975,7 +1179,7 @@
                     const files = Array.from(dataTransfer.files || []);
 
                     if (files.length > 0) {
-                        this.attachFileToComposer(files[0], `Lampiran ${files[0].name || ''} siap dikirim.`.trim());
+                        await this.attachFileToComposer(files[0], `Lampiran ${files[0].name || ''} siap dikirim.`.trim());
 
                         return;
                     }
@@ -990,7 +1194,7 @@
 
                     this.showDropNotice('Data drag & drop tidak dikenali.', 'error');
                 },
-                handleComposerPaste(event) {
+                async handleComposerPaste(event) {
                     const clipboardData = event.clipboardData || window.clipboardData;
 
                     if (!clipboardData || !clipboardData.items || !this.$refs.attachInput) {
@@ -1028,7 +1232,7 @@
                         type: mime,
                     });
 
-                    this.attachFileToComposer(pastedFile, 'Gambar dari clipboard siap dikirim.');
+                    await this.attachFileToComposer(pastedFile, 'Gambar dari clipboard siap dikirim.');
                 },
                 captureCameraPhoto() {
                     if (!this.$refs.cameraVideo || !this.$refs.cameraCanvas) {
@@ -1061,7 +1265,7 @@
                     context.drawImage(video, 0, 0, width, height);
                     context.restore();
 
-                    canvas.toBlob((blob) => {
+                    canvas.toBlob(async (blob) => {
                         if (!blob) {
                             this.cameraError = 'Gagal mengambil foto. Coba lagi.';
                             return;
@@ -1070,7 +1274,7 @@
                         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                         const file = new File([blob], `kamera-${timestamp}.jpg`, { type: 'image/jpeg' });
 
-                        if (this.assignAttachmentFile(file)) {
+                        if (await this.attachFileToComposer(file, 'Foto kamera siap dikirim.')) {
                             this.closeCamera();
                         }
                     }, 'image/jpeg', 0.92);
@@ -1677,6 +1881,7 @@
                                         wire:key="attachment-{{ $attachmentInputIteration }}"
                                         accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
                                         x-ref="attachInput"
+                                        x-on:change.capture="handleAttachmentInputChange($event)"
                                         class="booking-chat-attach-input"
                                     />
                                 </label>

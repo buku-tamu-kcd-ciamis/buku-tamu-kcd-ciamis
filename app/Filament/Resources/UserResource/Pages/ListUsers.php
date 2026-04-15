@@ -45,7 +45,7 @@ class ListUsers extends ListRecords
                             'application/vnd.ms-excel',
                         ])
                         ->maxSize(5120)
-                        ->helperText('Kolom "Role User (Opsional)" dapat diisi: Staff, Piket, atau Kepala Cabang Dinas. Jika dikosongkan, role user lama dipertahankan (untuk user lama) atau default Staff (untuk user baru).')
+                        ->helperText('Kolom "Role User (Opsional)" dapat diisi: Staff, Piket, atau Kepala Cabang Dinas. Kolom "Password Login (Opsional)" bisa diisi jika ingin set password tertentu; jika kosong sistem pakai default/generate otomatis.')
                         ->required(),
                 ])
                 ->action(function (array $data): void {
@@ -139,6 +139,7 @@ class ListUsers extends ListRecords
                 'nip' => $nip,
                 'email' => $email,
                 'role_user_name' => (string) ($row['role_user_name'] ?? ''),
+                'initial_password' => trim((string) ($row['initial_password'] ?? '')),
             ];
 
             if ($nip !== '') {
@@ -171,7 +172,9 @@ class ListUsers extends ListRecords
             ->get(['id', 'nama', 'nip', 'email']);
 
         $roleNameToIdMap = $this->getRoleNameToIdMap();
-        $defaultRoleId = $roleNameToIdMap[$this->normalizeRoleName('Staff')] ?? null;
+        $staffRoleId = $roleNameToIdMap[$this->normalizeRoleName('Staff')] ?? null;
+        $piketRoleId = $roleNameToIdMap[$this->normalizeRoleName('Piket')] ?? null;
+        $defaultRoleId = $staffRoleId;
         $kepalaCabdinRoleId = $roleNameToIdMap[$this->normalizeRoleName('Kepala Cabang Dinas')] ?? null;
         $currentKepalaCabdinUserId = null;
 
@@ -207,6 +210,7 @@ class ListUsers extends ListRecords
             $user = User::query()->where('pegawai_id', $pegawai->id)->first();
 
             $requestedRoleName = (string) ($row['role_user_name'] ?? '');
+            $importedInitialPassword = trim((string) ($row['initial_password'] ?? ''));
             $hasExplicitRole = $this->normalizeRoleName($requestedRoleName) !== '';
             $resolvedRoleId = $hasExplicitRole
                 ? $this->resolveRoleIdFromName($requestedRoleName, $roleNameToIdMap)
@@ -254,10 +258,24 @@ class ListUsers extends ListRecords
             }
 
             if (! $user) {
+                $initialPassword = $this->resolveInitialPassword($pegawai, $resolvedEmail);
+
+                if ($piketRoleId !== null && (int) $resolvedRoleId === (int) $piketRoleId) {
+                    $initialPassword = 'piket123';
+                } elseif ($staffRoleId !== null && (int) $resolvedRoleId === (int) $staffRoleId) {
+                    $initialPassword = 'staff123';
+                } elseif ($kepalaCabdinRoleId !== null && (int) $resolvedRoleId === (int) $kepalaCabdinRoleId) {
+                    $initialPassword = 'kepalakcd123';
+                }
+
+                if ($importedInitialPassword !== '') {
+                    $initialPassword = $importedInitialPassword;
+                }
+
                 $newUser = User::query()->create([
                     'name' => (string) $pegawai->nama,
                     'email' => $resolvedEmail,
-                    'password' => Hash::make($this->resolveInitialPassword($pegawai, $resolvedEmail)),
+                    'password' => Hash::make($initialPassword),
                     'role_user_id' => $resolvedRoleId,
                     'pegawai_id' => $pegawai->id,
                 ]);
@@ -276,6 +294,12 @@ class ListUsers extends ListRecords
                 'email' => $resolvedEmail,
                 'role_user_id' => $resolvedRoleId,
             ]);
+
+            if ($importedInitialPassword !== '') {
+                $user->update([
+                    'password' => Hash::make($importedInitialPassword),
+                ]);
+            }
 
             if ($kepalaCabdinRoleId !== null && (int) $resolvedRoleId === (int) $kepalaCabdinRoleId) {
                 $currentKepalaCabdinUserId = $user->id;

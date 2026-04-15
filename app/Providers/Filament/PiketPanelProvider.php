@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -9,7 +10,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -25,11 +25,12 @@ class PiketPanelProvider extends PanelProvider
     return $panel
       ->id('piket')
       ->path('piket')
+      ->authGuard('piket')
       ->login()
       ->profile(\App\Filament\Piket\Pages\EditProfile::class)
       ->darkMode(true)
       ->brandName(function (): string {
-        $user = Auth::user();
+        $user = Filament::auth()->user();
 
         if ($user) {
           return 'Cabang Dinas Pendidikan Wilayah XIII — ' . ($user->role_user?->name ?? 'Piket');

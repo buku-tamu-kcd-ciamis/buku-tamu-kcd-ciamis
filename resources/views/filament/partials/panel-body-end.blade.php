@@ -104,3 +104,55 @@
         });
     }
 </script>
+
+<script>
+    (function () {
+        const FIRST_CONFIRM_MESSAGE = 'Yakin ingin logout dari akun ini?';
+        const SECOND_CONFIRM_MESSAGE = 'Konfirmasi sekali lagi: logout sekarang?';
+
+        function isLikelyLogoutAction(action) {
+            if (!action) {
+                return false;
+            }
+
+            const normalized = String(action).toLowerCase();
+
+            return normalized.includes('/logout') || normalized.includes('.auth.logout');
+        }
+
+        function requestDoubleLogoutConfirmation() {
+            const firstConfirmed = window.confirm(FIRST_CONFIRM_MESSAGE);
+
+            if (!firstConfirmed) {
+                return false;
+            }
+
+            return window.confirm(SECOND_CONFIRM_MESSAGE);
+        }
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            if (!isLikelyLogoutAction(form.getAttribute('action'))) {
+                return;
+            }
+
+            if (form.dataset.logoutDoubleConfirmed === '1') {
+                return;
+            }
+
+            event.preventDefault();
+
+            if (!requestDoubleLogoutConfirmation()) {
+                return;
+            }
+
+            form.dataset.logoutDoubleConfirmed = '1';
+            HTMLFormElement.prototype.submit.call(form);
+        }, true);
+    })();
+</script>

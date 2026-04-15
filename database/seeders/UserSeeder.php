@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
                 'email' => 'ketua@cadisdik13.id',
                 'role_user_id'  => RoleUser::where('name', 'Kepala Cabang Dinas')->first()->id,
                 'email_verified_at' => Carbon::now()->format('Y-m-d H:i:s'),
-                'password' => Hash::make('ketua123'),
+                'password' => Hash::make('kepalakcd123'),
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
             ]);
         }

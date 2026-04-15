@@ -402,10 +402,10 @@ class ChatBooking extends Page
     {
         $this->validate([
             'messageDraft' => ['nullable', 'string', 'max:2000'],
-            'attachmentDraft' => ['nullable', 'file', 'max:10240', 'mimes:jpg,jpeg,png,gif,webp,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar'],
+            'attachmentDraft' => ['nullable', 'file', 'max:900', 'mimes:jpg,jpeg,png,gif,webp,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar'],
         ], [
             'messageDraft.max' => 'Pesan maksimal 2000 karakter.',
-            'attachmentDraft.max' => 'Ukuran berkas maksimal 10 MB.',
+            'attachmentDraft.max' => 'Ukuran berkas maksimal 900 KB untuk server online.',
             'attachmentDraft.mimes' => 'Format berkas tidak didukung.',
         ]);
 

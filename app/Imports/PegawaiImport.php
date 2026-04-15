@@ -31,7 +31,7 @@ class PegawaiImport
         $dataStartIndex = $detectedFormat['data_start_index'];
 
         if ($columnMap === []) {
-            $this->errors[] = 'Format kolom belum dikenali. Gunakan kolom: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja (Role User opsional).';
+            $this->errors[] = 'Format kolom belum dikenali. Gunakan kolom: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja (Role User dan Password Login opsional).';
             return $this;
         }
 
@@ -76,6 +76,14 @@ class PegawaiImport
 
             if ($data['email'] !== '' && ! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $this->errors[] = "Baris {$rowNumber}: Format email tidak valid.";
+                $this->skipped++;
+                continue;
+            }
+
+            $data['initial_password'] = trim((string) ($data['initial_password'] ?? ''));
+
+            if ($data['initial_password'] !== '' && strlen($data['initial_password']) < 8) {
+                $this->errors[] = "Baris {$rowNumber}: Password Login minimal 8 karakter.";
                 $this->skipped++;
                 continue;
             }
@@ -134,6 +142,7 @@ class PegawaiImport
                         'nip' => $data['nip'],
                         'email' => $resolvedEmail,
                         'role_user_name' => (string) ($data['role_user_name'] ?? ''),
+                        'initial_password' => $data['initial_password'],
                     ];
                 } else {
                     Pegawai::create([
@@ -153,6 +162,7 @@ class PegawaiImport
                         'nip' => $data['nip'],
                         'email' => $resolvedEmail,
                         'role_user_name' => (string) ($data['role_user_name'] ?? ''),
+                        'initial_password' => $data['initial_password'],
                     ];
                 }
             } catch (Throwable $e) {
@@ -207,6 +217,7 @@ class PegawaiImport
                 'nomor hp', 'nomor_hp', 'no hp', 'hp', 'telepon', 'phone' => 'nomor_hp',
                 'status', 'is active', 'aktif' => 'is_active',
                 'role', 'role user', 'role_user', 'role pegawai', 'role_pegawai' => 'role_user_name',
+                'password', 'password login', 'password_login', 'kata sandi', 'kata_sandi' => 'initial_password',
                 default => null,
             };
 

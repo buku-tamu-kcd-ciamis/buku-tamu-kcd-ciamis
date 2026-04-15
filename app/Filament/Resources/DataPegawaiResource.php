@@ -107,6 +107,28 @@ class DataPegawaiResource extends Resource
             ->helperText('Nonaktifkan jika pegawai sudah tidak bertugas.')
             ->inline(false),
         ]),
+      Section::make('Akun Login (Opsional)')
+        ->description('Isi password baru jika ingin mengubah password akun login pegawai dari halaman ini.')
+        ->columnSpanFull()
+        ->columns(2)
+        ->schema([
+          Forms\Components\TextInput::make('login_password')
+            ->label('Password Login Baru')
+            ->password()
+            ->revealable()
+            ->dehydrated(false)
+            ->nullable()
+            ->minLength(8)
+            ->same('login_password_confirmation')
+            ->helperText('Kosongkan jika tidak ingin mengubah password akun.'),
+          Forms\Components\TextInput::make('login_password_confirmation')
+            ->label('Konfirmasi Password Baru')
+            ->password()
+            ->revealable()
+            ->dehydrated(false)
+            ->nullable()
+            ->minLength(8),
+        ]),
     ]);
   }
 

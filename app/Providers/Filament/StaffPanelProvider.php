@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -24,10 +25,11 @@ class StaffPanelProvider extends PanelProvider
         return $panel
             ->id('staff')
             ->path('staff')
+            ->authGuard('staff')
             ->login()
             ->profile(\App\Filament\Staff\Pages\EditProfile::class)
             ->darkMode(true)
-            ->brandName(fn() => 'Cabang Dinas Pendidikan Wilayah XIII — ' . (auth()->user()?->role_user?->name ?? 'Staff'))
+            ->brandName(fn() => 'Cabang Dinas Pendidikan Wilayah XIII — ' . (Filament::auth()->user()?->role_user?->name ?? 'Staff'))
             ->favicon(asset('img/logo-cadisdik.png'))
             ->colors([
                 'primary' => Color::Emerald,

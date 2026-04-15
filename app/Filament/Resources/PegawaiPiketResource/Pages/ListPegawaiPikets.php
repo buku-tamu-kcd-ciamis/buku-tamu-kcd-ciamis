@@ -16,7 +16,6 @@ use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Throwable;
 
 class ListPegawaiPikets extends ListRecords
@@ -101,6 +100,60 @@ class ListPegawaiPikets extends ListRecords
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->action(fn() => (new PegawaiPiketTemplateExport())->download()),
+            Actions\Action::make('resetDefaultPiketPassword')
+                ->label('Reset Password Piket')
+                ->icon('heroicon-o-key')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Reset Password Default Piket')
+                ->modalDescription('Semua akun dengan role Piket akan direset ke password default piket123. Setelah login, pengguna bisa mengganti password dari halaman profil.')
+                ->modalSubmitActionLabel('Reset Sekarang')
+                ->action(function (): void {
+                    $result = $this->resetPiketPasswordsToDefault();
+
+                    if ($result['error'] !== null) {
+                        Notification::make()
+                            ->warning()
+                            ->title('Reset password dibatalkan')
+                            ->body($result['error'])
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->success()
+                        ->title('Reset password Piket selesai')
+                        ->body($result['updated'] . ' akun Piket berhasil direset ke password default piket123.')
+                        ->send();
+                }),
+            Actions\Action::make('resetDefaultKepalaCabdinPassword')
+                ->label('Reset Password Kepala Cabang')
+                ->icon('heroicon-o-shield-check')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Reset Password Default Kepala Cabang Dinas')
+                ->modalDescription('Semua akun dengan role Kepala Cabang Dinas akan direset ke password default kepalakcd123. Setelah login, pengguna bisa mengganti password dari halaman profil.')
+                ->modalSubmitActionLabel('Reset Sekarang')
+                ->action(function (): void {
+                    $result = $this->resetKepalaCabdinPasswordsToDefault();
+
+                    if ($result['error'] !== null) {
+                        Notification::make()
+                            ->warning()
+                            ->title('Reset password dibatalkan')
+                            ->body($result['error'])
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->success()
+                        ->title('Reset password Kepala Cabang selesai')
+                        ->body($result['updated'] . ' akun Kepala Cabang Dinas berhasil direset ke password default kepalakcd123.')
+                        ->send();
+                }),
             Actions\Action::make('exportPegawaiPiketPdf')
                 ->label('Export')
                 ->icon('heroicon-o-document-arrow-down')
@@ -260,13 +313,84 @@ class ListPegawaiPikets extends ListRecords
 
     protected function resolveInitialPasswordForPiket(string $email): string
     {
-        $localPart = (string) Str::of($email)->before('@');
-        $localPart = preg_replace('/[^a-z0-9]/i', '', $localPart);
+        return 'piket123';
+    }
 
-        if ($localPart === '') {
-            return 'piket123';
+    protected function resetPiketPasswordsToDefault(): array
+    {
+        $piketRoleId = RoleUser::query()
+            ->where('name', 'Piket')
+            ->value('id');
+
+        if (! $piketRoleId) {
+            return [
+                'updated' => 0,
+                'error' => 'Role Piket tidak ditemukan.',
+            ];
         }
 
-        return substr(str_pad($localPart, 8, '12345678'), 0, 8);
+        $users = User::query()
+            ->where('role_user_id', $piketRoleId)
+            ->get(['id']);
+
+        if ($users->isEmpty()) {
+            return [
+                'updated' => 0,
+                'error' => 'Tidak ada akun Piket yang dapat direset.',
+            ];
+        }
+
+        $updated = 0;
+
+        foreach ($users as $user) {
+            $user->update([
+                'password' => Hash::make('piket123'),
+            ]);
+            $updated++;
+        }
+
+        return [
+            'updated' => $updated,
+            'error' => null,
+        ];
+    }
+
+    protected function resetKepalaCabdinPasswordsToDefault(): array
+    {
+        $kepalaCabdinRoleId = RoleUser::query()
+            ->where('name', 'Kepala Cabang Dinas')
+            ->value('id');
+
+        if (! $kepalaCabdinRoleId) {
+            return [
+                'updated' => 0,
+                'error' => 'Role Kepala Cabang Dinas tidak ditemukan.',
+            ];
+        }
+
+        $users = User::query()
+            ->where('role_user_id', $kepalaCabdinRoleId)
+            ->get(['id']);
+
+        if ($users->isEmpty()) {
+            return [
+                'updated' => 0,
+                'error' => 'Tidak ada akun Kepala Cabang Dinas yang dapat direset.',
+            ];
+        }
+
+        $updated = 0;
+
+        foreach ($users as $user) {
+            $user->update([
+                'password' => Hash::make('kepalakcd123'),
+            ]);
+            $updated++;
+        }
+
+        return [
+            'updated' => $updated,
+            'error' => null,
+        ];
     }
 }

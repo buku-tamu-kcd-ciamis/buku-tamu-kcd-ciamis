@@ -8,7 +8,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class PegawaiSeeder extends Seeder
 {
@@ -197,6 +196,8 @@ class PegawaiSeeder extends Seeder
       $roleId = RoleUser::where('name', $roleName)->value('id');
 
       if ($roleId) {
+        $defaultPassword = $roleName === 'Kepala Cabang Dinas' ? 'kepalakcd123' : 'staff123';
+
         // If a user with this email already exists, update their pegawai_id and role
         $user = User::where('email', $email)->first();
 
@@ -211,7 +212,7 @@ class PegawaiSeeder extends Seeder
             'id' => uniqid(),
             'name' => $val['nama'],
             'email' => $email,
-            'password' => Hash::make('staff123'),
+            'password' => Hash::make($defaultPassword),
             'role_user_id' => $roleId,
             'pegawai_id' => $pegawai->id,
             'email_verified_at' => Carbon::now(),

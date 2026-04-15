@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -12,7 +13,6 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Assets\Css;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -29,11 +29,12 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->authGuard('admin')
             ->login()
             ->profile(\App\Filament\Pages\EditProfile::class)
             ->darkMode(true)
             ->brandName(function (): string {
-                $user = Auth::user();
+                $user = Filament::auth()->user();
 
                 if ($user) {
                     return 'Cabang Dinas Pendidikan Wilayah XIII — ' . ($user->role_user?->name ?? 'Admin');
@@ -75,7 +76,7 @@ class AdminPanelProvider extends PanelProvider
                 function (): string {
                     $manifestUrl = asset('manifest-admin.webmanifest');
 
-                    if (Auth::check() && Auth::user()?->role_user?->name === 'Kepala Cabang Dinas') {
+                    if (Filament::auth()->check() && Filament::auth()->user()?->role_user?->name === 'Kepala Cabang Dinas') {
                         $manifestUrl = asset('manifest-kepala.webmanifest');
                     }
 

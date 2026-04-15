@@ -61,6 +61,8 @@ document.addEventListener("DOMContentLoaded", function () {
             label: "Nomor ID",
             placeholder: "Pilih jenis ID terlebih dahulu",
             digits: null,
+            maxRepeated: 3,
+            maxSequential: 4,
         },
     };
     jenisIdOptions.forEach(function (item) {
@@ -474,6 +476,17 @@ document.addEventListener("DOMContentLoaded", function () {
         return regex.test(value);
     }
 
+    function scheduleGuestLookup(criteria, delay = 350) {
+        if (suppressAutoLookup) {
+            return;
+        }
+
+        clearTimeout(autoFillTimeout);
+        autoFillTimeout = setTimeout(() => {
+            fetchGuestData(criteria);
+        }, delay);
+    }
+
     // Function to check if number has more than limit consecutive sequential digits
     function hasSequentialDigits(value, limit) {
         for (let i = 0; i < value.length - limit; i++) {
@@ -499,7 +512,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedId = jenisIdHidden.value;
         const config = idConfig[selectedId] || idConfig[""];
         const nikHint = document.getElementById("nik_hint");
-        const val = this.value;
+        const maxRepeated = Number.isFinite(Number(config.maxRepeated))
+            ? Number(config.maxRepeated)
+            : 3;
+        const maxSequentialRaw = Number.isFinite(Number(config.maxSequential))
+            ? Number(config.maxSequential)
+            : 4;
+        const maxSequential = Math.max(maxSequentialRaw, 4);
+        const val = (this.value || "").trim();
 
         // Reset hint
         nikHint.textContent = "";
@@ -513,20 +533,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Check for repeated digits
-        if (hasRepeatedDigits(val, config.maxRepeated)) {
+        if (hasRepeatedDigits(val, maxRepeated)) {
             nikHint.textContent =
                 "\u2717 Angka tidak boleh sama lebih dari " +
-                config.maxRepeated +
+                maxRepeated +
                 " digit berturut-turut";
             nikHint.className = "phone-hint invalid";
             return;
         }
 
         // Check for sequential digits
-        if (hasSequentialDigits(val, config.maxSequential)) {
+        if (hasSequentialDigits(val, maxSequential)) {
             nikHint.textContent =
                 "\u2717 Angka tidak boleh berurutan lebih dari " +
-                config.maxSequential +
+                maxSequential +
                 " digit";
             nikHint.className = "phone-hint invalid";
             return;
@@ -534,39 +554,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Check digits length if specified
         if (config.digits) {
+            const requiredDigits = Number.parseInt(config.digits, 10);
+
             // Only allow digits for types with digit requirement
             this.value = this.value.replace(/[^0-9]/g, "");
 
             const count = this.value.length;
-            if (count < config.digits) {
+            if (count < requiredDigits) {
                 nikHint.textContent =
                     count +
                     " digit \u2014 kurang " +
-                    (config.digits - count) +
+                    (requiredDigits - count) +
                     " digit lagi";
                 nikHint.className = "phone-hint invalid";
-            } else if (count > config.digits) {
+            } else if (count > requiredDigits) {
                 nikHint.textContent =
-                    "\u2717 Terlalu banyak digit (maks " + config.digits + ")";
+                    "\u2717 Terlalu banyak digit (maks " + requiredDigits + ")";
                 nikHint.className = "phone-hint invalid";
             } else {
                 nikHint.textContent =
-                    "\u2713 " + config.digits + " digit \u2014 valid";
+                    "\u2713 " + requiredDigits + " digit \u2014 valid";
                 nikHint.className = "phone-hint valid";
 
                 // Auto-fill data jika tamu pernah terdaftar
-                if (!suppressAutoLookup) {
-                    clearTimeout(autoFillTimeout);
-                    autoFillTimeout = setTimeout(() => {
-                        fetchGuestData({ nik: this.value });
-                    }, 500);
-                }
+                scheduleGuestLookup({ nik: this.value }, 450);
             }
         } else {
             // General valid if no digits specified but passed other checks
             nikHint.textContent = "\u2713 Valid";
             nikHint.className = "phone-hint valid";
+
+            if (val.length >= 4) {
+                scheduleGuestLookup({ nik: val }, 450);
+            }
         }
+    });
+
+    nikInput.addEventListener("blur", function () {
+        const nikValue = (this.value || "").trim();
+
+        if (nikValue.length < 4) {
+            return;
+        }
+
+        scheduleGuestLookup({ nik: nikValue }, 250);
     });
 
     function normalizePhoneForLookup(value) {
@@ -796,6 +827,11 @@ document.addEventListener("DOMContentLoaded", function () {
             phoneHint.textContent =
                 "\u2713 " + digitCount + " digit \u2014 nomor valid";
             phoneHint.className = "phone-hint valid";
+
+            const normalized = normalizePhoneForLookup(this.value);
+            if (normalized.length >= MIN_DIGITS) {
+                scheduleGuestLookup({ nomorHp: normalized }, 500);
+            }
         }
     });
 
@@ -830,29 +866,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Auto-fill by phone number when user finishes typing valid phone number
     phoneInput.addEventListener("blur", function () {
-        if (suppressAutoLookup) return;
-
         const normalized = normalizePhoneForLookup(this.value);
         if (normalized.length < MIN_DIGITS) return;
 
-        clearTimeout(autoFillTimeout);
-        autoFillTimeout = setTimeout(() => {
-            fetchGuestData({ nomorHp: normalized });
-        }, 350);
+        scheduleGuestLookup({ nomorHp: normalized }, 250);
     });
 
     // Auto-fill by email when user leaves the field
     if (emailInput) {
-        emailInput.addEventListener("blur", function () {
-            if (suppressAutoLookup) return;
+        emailInput.addEventListener("input", function () {
+            const emailValue = (this.value || "").trim();
+            if (!emailValue || !emailValue.includes("@") || emailValue.length < 6)
+                return;
 
+            scheduleGuestLookup({ email: emailValue }, 500);
+        });
+
+        emailInput.addEventListener("blur", function () {
             const emailValue = (this.value || "").trim();
             if (!emailValue || !emailValue.includes("@")) return;
 
-            clearTimeout(autoFillTimeout);
-            autoFillTimeout = setTimeout(() => {
-                fetchGuestData({ email: emailValue });
-            }, 350);
+            scheduleGuestLookup({ email: emailValue }, 250);
         });
     }
 
@@ -870,8 +904,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             clearTimeout(autoFillTimeout);
             autoFillTimeout = setTimeout(() => {
+                if (namaLengkap.length >= 3) {
+                    fetchGuestData({ namaLengkap: namaLengkap });
+                    return;
+                }
+
                 fetchGuestSuggestions({ namaLengkap: namaLengkap });
-            }, 250);
+            }, 280);
         });
 
         namaLengkapInput.addEventListener("focus", function () {

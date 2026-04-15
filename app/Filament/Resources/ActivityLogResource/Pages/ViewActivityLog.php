@@ -15,9 +15,12 @@ class ViewActivityLog extends ViewRecord
 
     public function infolist(Schema $schema): Schema
     {
-        return $schema->components([
+        return $schema
+            ->columns(1)
+            ->components([
             Section::make('Informasi Aktivitas')
                 ->icon('heroicon-o-information-circle')
+                ->columnSpanFull()
                 ->columns(3)
                 ->components([
                     Infolists\Components\TextEntry::make('created_at')
@@ -65,6 +68,7 @@ class ViewActivityLog extends ViewRecord
             // Section: Data Changes (before/after diff)
             Section::make('Perubahan Data')
                 ->icon('heroicon-o-arrows-right-left')
+                ->columnSpanFull()
                 ->visible(fn($record) => $record->properties->has('attributes') || $record->properties->has('old'))
                 ->components([
                     Infolists\Components\ViewEntry::make('properties')
@@ -76,6 +80,7 @@ class ViewActivityLog extends ViewRecord
             // Section: Additional Properties (for print/auth logs that have custom properties)
             Section::make('Detail Tambahan')
                 ->icon('heroicon-o-clipboard-document-list')
+                ->columnSpanFull()
                 ->visible(fn($record) => $record->properties->isNotEmpty()
                     && !$record->properties->has('attributes')
                     && !$record->properties->has('old'))

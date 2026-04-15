@@ -112,7 +112,8 @@ class DropdownOptionResource extends Resource
             ->minValue(1)
             ->helperText('Jumlah maksimal angka berurutan yang diizinkan (misal: 2 berarti 12 boleh, 123 tidak).'),
         ])
-        ->columns(2),
+        ->columns(2)
+        ->visible(fn ($get) => $get('category') === \App\Models\DropdownOption::CATEGORY_JENIS_ID),
     ]);
   }
 

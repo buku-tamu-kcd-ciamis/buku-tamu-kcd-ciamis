@@ -26,8 +26,8 @@ class PegawaiTemplateExport
         $roleFormula = '"' . implode(',', $roleOptions) . '"';
 
         // ===== HEADER ROW =====
-        $headers = ['No', 'Nama', 'NIP', 'Email', 'Jabatan', 'Unit Kerja', 'Nomor HP', 'Status', 'Role User'];
-        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+        $headers = ['No', 'Nama Pegawai', 'NIP', 'Pangkat/Golongan', 'Jabatan', 'Unit Kerja', 'Role User (Opsional)'];
+        $columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
         foreach ($headers as $i => $header) {
             $cell = $columns[$i] . '1';
@@ -35,7 +35,7 @@ class PegawaiTemplateExport
         }
 
         // Header styling
-        $headerRange = 'A1:I1';
+        $headerRange = 'A1:G1';
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -61,8 +61,8 @@ class PegawaiTemplateExport
 
         // ===== SAMPLE DATA (2 rows) =====
         $sampleData = [
-            [1, 'Drs. H. Ahmad Suryadi, M.Pd.', '198501012010011001', 'ahmad.suryadi@cadisdik13.local', 'Kepala Cabang Dinas', 'Cadisdik Wilayah XIII', '812-3456-7890', 'Aktif', 'Kepala Cabang Dinas'],
-            [2, 'Siti Nurhaliza, S.Pd.', '', '', 'Staff Tata Usaha', 'Sub Bagian Tata Usaha', '857-1234-5678', 'Aktif', 'Staff'],
+            [1, 'DWI YANTI ESTRININGRUM, S.Sos., M.Pd.', '197202022005012011', 'Pembina TK.I, IV/b', 'KEPALA CABANG PENDIDIKAN WILAYAH XIII', 'CABANG PENDIDIKAN WILAYAH XIII', 'Kepala Cabang Dinas'],
+            [2, 'RUDIANTO, M.Pd.', '197105111999031002', 'Pembina TK.I, IV/b', 'KEPALA SUBBAGIAN TATA USAHA', 'CABANG PENDIDIKAN WILAYAH XIII', 'Staff'],
         ];
 
         foreach ($sampleData as $rowIndex => $rowData) {
@@ -81,7 +81,7 @@ class PegawaiTemplateExport
         }
 
         // Sample data styling (light blue background)
-        $sampleRange = 'A2:I3';
+        $sampleRange = 'A2:G3';
         $sheet->getStyle($sampleRange)->applyFromArray([
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -103,7 +103,7 @@ class PegawaiTemplateExport
         ]);
 
         for ($row = 2; $row <= 500; $row++) {
-            $validation = $sheet->getCell("I{$row}")->getDataValidation();
+            $validation = $sheet->getCell("G{$row}")->getDataValidation();
             $validation->setType(DataValidation::TYPE_LIST);
             $validation->setErrorStyle(DataValidation::STYLE_STOP);
             $validation->setAllowBlank(true);
@@ -120,46 +120,42 @@ class PegawaiTemplateExport
         // ===== INSTRUCTIONS ROW =====
         $sheet->setCellValue('A5', '📌 PETUNJUK PENGISIAN:');
         $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(11);
-        $sheet->mergeCells('A5:I5');
+        $sheet->mergeCells('A5:G5');
 
         $instructions = [
             '1. Hapus baris contoh (baris 2-3) sebelum mengisi data baru.',
-            '2. Kolom "Nama" wajib diisi. Kolom "NIP" opsional.',
-            '3. Kolom "Email" opsional. Jika kosong, sistem membuat email dummy dari nama.',
-            '4. Jika kolom NIP diisi, nilainya harus tepat 18 digit angka.',
-            '5. Nomor HP: format 8xx-xxxx-xxxx (tanpa kode +62 atau 0).',
-            '6. Status: isi "Aktif" atau "Nonaktif" (default: Aktif jika dikosongkan).',
-            '7. Kolom "Role User": pilih "Staff", "Piket", atau "Kepala Cabang Dinas".',
-            '8. Jika NIP diisi dan sudah ada di database, data akan diperbarui (update).',
-            '9. Simpan file dalam format .xlsx sebelum mengimpor.',
+            '2. Format utama import: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja.',
+            '3. Kolom "Pangkat/Golongan" dibaca untuk kompatibilitas format, namun tidak disimpan ke database.',
+            '4. Kolom "Role User (Opsional)": isi Staff, Piket, atau Kepala Cabang Dinas bila ingin sinkron role user.',
+            '5. Kolom "Nama Pegawai" wajib diisi. Kolom "NIP" opsional.',
+            '6. Jika kolom NIP diisi, nilainya harus tepat 18 digit angka.',
+            '7. Jika NIP sudah ada di database, data akan diperbarui (update).',
+            '8. Simpan file dalam format .xlsx sebelum mengimpor.',
         ];
 
         foreach ($instructions as $i => $text) {
             $row = 6 + $i;
             $sheet->setCellValue("A{$row}", $text);
-            $sheet->mergeCells("A{$row}:I{$row}");
+            $sheet->mergeCells("A{$row}:G{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setSize(10)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF555555'));
         }
 
         // ===== COLUMN WIDTHS =====
         $sheet->getColumnDimension('A')->setWidth(6);   // No
-        $sheet->getColumnDimension('B')->setWidth(35);  // Nama
+        $sheet->getColumnDimension('B')->setWidth(42);  // Nama Pegawai
         $sheet->getColumnDimension('C')->setWidth(22);  // NIP
-        $sheet->getColumnDimension('D')->setWidth(32);  // Email
-        $sheet->getColumnDimension('E')->setWidth(28);  // Jabatan
-        $sheet->getColumnDimension('F')->setWidth(30);  // Unit Kerja
-        $sheet->getColumnDimension('G')->setWidth(18);  // Nomor HP
-        $sheet->getColumnDimension('H')->setWidth(12);  // Status
-        $sheet->getColumnDimension('I')->setWidth(24);  // Role User
+        $sheet->getColumnDimension('D')->setWidth(24);  // Pangkat/Golongan
+        $sheet->getColumnDimension('E')->setWidth(44);  // Jabatan
+        $sheet->getColumnDimension('F')->setWidth(36);  // Unit Kerja
+        $sheet->getColumnDimension('G')->setWidth(24);  // Role User (Opsional)
 
         // NIP column as text format
         $sheet->getStyle('C:C')->getNumberFormat()
             ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT);
 
-        // Center No and Status columns
+        // Center No and Role columns
         $sheet->getStyle('A:A')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('H:H')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('I:I')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G:G')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         // Freeze header row
         $sheet->freezePane('A2');

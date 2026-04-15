@@ -26,7 +26,7 @@ class ListDataPegawai extends ListRecords
         ->icon('heroicon-o-arrow-up-tray')
         ->color('gray')
         ->modalHeading('Import Data Pegawai dari Excel')
-        ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai.')
+        ->modalDescription('Unggah file Excel dengan format utama: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja.')
         ->schema([
           FileUpload::make('file')
             ->label('File Excel')
@@ -38,6 +38,7 @@ class ListDataPegawai extends ListRecords
               'application/vnd.ms-excel',
             ])
             ->maxSize(5120)
+            ->helperText('Template terbaru sudah disesuaikan dengan bahasa kolom baru. Kolom Pangkat/Golongan bersifat referensi (tidak disimpan ke database).')
             ->required(),
         ])
         ->action(function (array $data): void {

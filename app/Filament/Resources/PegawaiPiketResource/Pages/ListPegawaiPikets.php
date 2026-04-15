@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PegawaiPiketResource\Pages;
 use App\Exports\PegawaiPiketTemplateExport;
 use App\Filament\Resources\PegawaiPiketResource;
 use App\Imports\PegawaiPiketImport;
+use App\Models\Pegawai;
 use App\Models\RoleUser;
 use App\Models\User;
 use Filament\Actions;
@@ -29,7 +30,7 @@ class ListPegawaiPikets extends ListRecords
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('gray')
                 ->modalHeading('Import Data Pegawai Piket dari Excel')
-                ->modalDescription('Unggah file Excel (.xlsx/.xls) untuk menambah atau memperbarui data pegawai piket.')
+                ->modalDescription('Unggah file Excel dengan format yang sama seperti data pegawai biasa: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja.')
                 ->schema([
                     FileUpload::make('file')
                         ->label('File Excel')
@@ -41,6 +42,7 @@ class ListPegawaiPikets extends ListRecords
                             'application/vnd.ms-excel',
                         ])
                         ->maxSize(5120)
+                        ->helperText('Gunakan template terbaru. Isi NIP agar akun piket bisa sinkron dengan data pegawai yang sama.')
                         ->required(),
                 ])
                 ->action(function (array $data): void {
@@ -135,17 +137,51 @@ class ListPegawaiPikets extends ListRecords
         $created = 0;
         $updated = 0;
         $skipped = 0;
+        $linkedToPegawai = 0;
 
         foreach ($rows as $row) {
             $name = trim((string) ($row['label'] ?? ''));
-            $email = strtolower(trim((string) ($row['email'] ?? '')));
+            $email = $this->normalizeEmail($row['email'] ?? null);
+            $nip = preg_replace('/[^0-9]/', '', (string) ($row['nip'] ?? ''));
+            $pegawaiId = isset($row['pegawai_id']) ? (int) $row['pegawai_id'] : null;
 
-            if ($name === '' || $email === '') {
+            $pegawai = null;
+            if ($pegawaiId) {
+                $pegawai = Pegawai::query()->find($pegawaiId);
+            }
+
+            if (! $pegawai && $nip !== '') {
+                $pegawai = Pegawai::query()->where('nip', $nip)->first();
+            }
+
+            if (! $pegawai && $email !== '') {
+                $pegawai = Pegawai::query()->where('email', $email)->first();
+            }
+
+            if (! $pegawai && $name !== '') {
+                $pegawai = Pegawai::query()->where('nama', $name)->first();
+            }
+
+            if ($pegawai) {
+                $name = trim((string) ($pegawai->nama ?? $name));
+                $email = $this->normalizeEmail($pegawai->email ?? $email);
+            }
+
+            if ($name === '') {
                 $skipped++;
                 continue;
             }
 
-            $user = User::query()->where('email', $email)->first();
+            $user = null;
+            if ($pegawai) {
+                $user = User::query()->where('pegawai_id', $pegawai->id)->first();
+            }
+
+            if (! $user && $email !== '') {
+                $user = User::query()->where('email', $email)->first();
+            }
+
+            $email = $this->resolveUniquePiketEmail($email, $name, $user?->id);
 
             if (! $user) {
                 User::query()->create([
@@ -153,24 +189,73 @@ class ListPegawaiPikets extends ListRecords
                     'email' => $email,
                     'password' => Hash::make($this->resolveInitialPasswordForPiket($email)),
                     'role_user_id' => $piketRoleId,
+                    'pegawai_id' => $pegawai?->id,
                 ]);
                 $created++;
+
+                if ($pegawai) {
+                    $linkedToPegawai++;
+                }
 
                 continue;
             }
 
             $user->update([
                 'name' => $name,
+                'email' => $email,
                 'role_user_id' => $piketRoleId,
+                'pegawai_id' => $pegawai?->id ?? $user->pegawai_id,
             ]);
             $updated++;
+
+            if ($pegawai) {
+                $linkedToPegawai++;
+            }
+        }
+
+        $summary = $created . ' user dibuat, ' . $updated . ' user diperbarui, ' . $skipped . ' user dilewati';
+        if ($linkedToPegawai > 0) {
+            $summary .= ', ' . $linkedToPegawai . ' user tersambung ke data pegawai';
         }
 
         return [
             'created' => $created,
             'updated' => $updated,
-            'summary' => $created . ' user dibuat, ' . $updated . ' user diperbarui, ' . $skipped . ' user dilewati',
+            'summary' => $summary,
         ];
+    }
+
+    protected function normalizeEmail(?string $email): string
+    {
+        return strtolower(trim((string) $email));
+    }
+
+    protected function resolveUniquePiketEmail(?string $preferredEmail, ?string $name, ?int $ignoreUserId = null): string
+    {
+        $normalized = $this->normalizeEmail($preferredEmail);
+
+        if ($normalized === '' || ! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+            $base = Str::slug((string) $name, '.');
+            $base = $base !== '' ? $base : 'piket';
+            $normalized = $base . '@cadisdik13.local';
+        }
+
+        [$localPart, $domain] = array_pad(explode('@', $normalized, 2), 2, 'cadisdik13.local');
+        $localPart = $localPart !== '' ? $localPart : 'piket';
+        $domain = $domain !== '' ? $domain : 'cadisdik13.local';
+
+        $counter = 0;
+        do {
+            $suffix = $counter > 0 ? '.' . $counter : '';
+            $candidate = $localPart . $suffix . '@' . $domain;
+            $exists = User::query()
+                ->when($ignoreUserId !== null, fn($query) => $query->where('id', '!=', $ignoreUserId))
+                ->where('email', $candidate)
+                ->exists();
+            $counter++;
+        } while ($exists);
+
+        return $candidate;
     }
 
     protected function resolveInitialPasswordForPiket(string $email): string

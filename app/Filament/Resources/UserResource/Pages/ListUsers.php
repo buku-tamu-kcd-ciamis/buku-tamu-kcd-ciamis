@@ -33,7 +33,7 @@ class ListUsers extends ListRecords
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('success')
                 ->modalHeading('Import Data Pegawai dari Excel')
-                ->modalDescription('Unggah file Excel untuk sinkron data pegawai sekaligus akun user. Role user dibaca dari kolom "Role User" di template import.')
+                ->modalDescription('Unggah file Excel dengan format utama: Nama Pegawai, NIP, Pangkat/Golongan, Jabatan, Unit Kerja. Sinkron akun user akan mengikuti data import.')
                 ->schema([
                     FileUpload::make('file')
                         ->label('File Excel')
@@ -45,7 +45,7 @@ class ListUsers extends ListRecords
                             'application/vnd.ms-excel',
                         ])
                         ->maxSize(5120)
-                        ->helperText('Isi kolom "Role User" pada template dengan nilai: Staff, Piket, atau Kepala Cabang Dinas. Kolom Email opsional, jika kosong akan dibuat otomatis.')
+                        ->helperText('Kolom "Role User (Opsional)" dapat diisi: Staff, Piket, atau Kepala Cabang Dinas. Jika dikosongkan, role user lama dipertahankan (untuk user lama) atau default Staff (untuk user baru).')
                         ->required(),
                 ])
                 ->action(function (array $data): void {
@@ -186,6 +186,7 @@ class ListUsers extends ListRecords
         $skipped = 0;
         $fallbackRoleCount = 0;
         $kepalaCabdinBlockedCount = 0;
+        $preservedRoleCount = 0;
 
         foreach ($pegawais as $pegawai) {
             $row = [];
@@ -203,12 +204,29 @@ class ListUsers extends ListRecords
                 continue;
             }
 
+            $user = User::query()->where('pegawai_id', $pegawai->id)->first();
+
             $requestedRoleName = (string) ($row['role_user_name'] ?? '');
-            $resolvedRoleId = $this->resolveRoleIdFromName($requestedRoleName, $roleNameToIdMap);
+            $hasExplicitRole = $this->normalizeRoleName($requestedRoleName) !== '';
+            $resolvedRoleId = $hasExplicitRole
+                ? $this->resolveRoleIdFromName($requestedRoleName, $roleNameToIdMap)
+                : null;
 
             if ($resolvedRoleId === null) {
-                $resolvedRoleId = $defaultRoleId;
-                $fallbackRoleCount++;
+                if ($hasExplicitRole) {
+                    $resolvedRoleId = $defaultRoleId;
+                    if ($resolvedRoleId !== null) {
+                        $fallbackRoleCount++;
+                    }
+                } elseif ($user) {
+                    $resolvedRoleId = (int) $user->role_user_id;
+                    $preservedRoleCount++;
+                } else {
+                    $resolvedRoleId = $defaultRoleId;
+                    if ($resolvedRoleId !== null) {
+                        $fallbackRoleCount++;
+                    }
+                }
             }
 
             if ($resolvedRoleId === null) {
@@ -216,7 +234,6 @@ class ListUsers extends ListRecords
                 continue;
             }
 
-            $user = User::query()->where('pegawai_id', $pegawai->id)->first();
             $preferredEmail = $this->normalizeEmail($row['email'] ?? $pegawai->email);
             $resolvedEmail = $this->resolveUniqueUserEmail(
                 $preferredEmail,
@@ -270,6 +287,9 @@ class ListUsers extends ListRecords
         $summary = $created . ' user dibuat, ' . $updated . ' user diperbarui, ' . $skipped . ' user dilewati';
         if ($fallbackRoleCount > 0) {
             $summary .= ', ' . $fallbackRoleCount . ' user pakai role default Staff';
+        }
+        if ($preservedRoleCount > 0) {
+            $summary .= ', ' . $preservedRoleCount . ' user mempertahankan role lama (kolom role kosong)';
         }
         if ($kepalaCabdinBlockedCount > 0) {
             $summary .= ', ' . $kepalaCabdinBlockedCount . ' baris ditolak karena role Kepala Cabang Dinas hanya boleh 1 user';

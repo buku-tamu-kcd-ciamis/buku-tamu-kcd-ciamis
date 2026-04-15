@@ -52,10 +52,21 @@ class ListActivityLogs extends ListRecords
                         ->autocomplete('current-password')
                         ->helperText('Masukkan password akun Super Admin yang sedang login untuk melanjutkan.'),
                 ])
-                ->action(function (array $data): void {
+                ->action(function (array $data) {
                     $this->verifySuperAdminPassword($data);
 
                     $backup = $this->exportToExcel(download: false, persistBackup: true);
+
+                    if (! is_array($backup) || empty($backup['file_path']) || ! is_file((string) $backup['file_path'])) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Backup gagal dibuat')
+                            ->body('Log aktivitas tidak dihapus karena file backup tidak tersedia.')
+                            ->send();
+
+                        return;
+                    }
+
                     $deletedCount = Activity::query()->count();
                     Activity::query()->delete();
 
@@ -72,8 +83,16 @@ class ListActivityLogs extends ListRecords
                     Notification::make()
                         ->success()
                         ->title('Log aktivitas berhasil dihapus')
-                        ->body('Backup tersimpan di storage/app/' . ($backup['relative_path'] ?? '-'))
+                        ->body('Backup otomatis diunduh dan juga tersimpan di storage/app/' . ($backup['relative_path'] ?? '-'))
                         ->send();
+
+                    return response()->download(
+                        (string) $backup['file_path'],
+                        (string) $backup['file_name'],
+                        [
+                            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        ]
+                    );
                 }),
         ];
     }

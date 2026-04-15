@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DataPegawaiResource\Pages;
 use App\Exports\PegawaiTemplateExport;
 use App\Filament\Resources\DataPegawaiResource;
 use App\Imports\PegawaiImport;
+use App\Services\StaffDitujuSyncService;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -57,6 +58,10 @@ class ListDataPegawai extends ListRecords
 
           try {
             $importer = (new PegawaiImport())->import(Storage::disk('local')->path($relativePath));
+            $syncResult = app(StaffDitujuSyncService::class)->syncNow();
+            $syncSummary = $syncResult['has_staff']
+              ? ($syncResult['saved'] . ' opsi staff aktif tersinkron otomatis')
+              : ('tidak ada pegawai aktif, ' . $syncResult['removed'] . ' opsi staff lama dibersihkan');
 
             if ($importer->hasErrors()) {
               $errors = array_slice($importer->getErrors(), 0, 3);
@@ -64,13 +69,13 @@ class ListDataPegawai extends ListRecords
               Notification::make()
                 ->warning()
                 ->title('Import selesai dengan catatan')
-                ->body($importer->getSummary() . '. Contoh error: ' . implode(' | ', $errors))
+                ->body($importer->getSummary() . '. Sinkron staff otomatis: ' . $syncSummary . '. Contoh error: ' . implode(' | ', $errors))
                 ->send();
             } else {
               Notification::make()
                 ->success()
                 ->title('Import berhasil')
-                ->body($importer->getSummary())
+                ->body($importer->getSummary() . '. Sinkron staff otomatis: ' . $syncSummary)
                 ->send();
             }
           } catch (Throwable $exception) {

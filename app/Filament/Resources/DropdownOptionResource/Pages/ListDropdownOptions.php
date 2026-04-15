@@ -4,8 +4,8 @@ namespace App\Filament\Resources\DropdownOptionResource\Pages;
 
 use App\Filament\Resources\DropdownOptionResource;
 use App\Models\DropdownOption;
-use App\Models\Pegawai;
 use App\Models\PengaturanKcd;
+use App\Services\StaffDitujuSyncService;
 use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -34,84 +34,22 @@ class ListDropdownOptions extends ListRecords
         ->modalDescription('Data kategori Staff Yang Dituju akan disesuaikan dengan data pegawai aktif.')
         ->modalSubmitActionLabel('Sinkronkan')
         ->action(function (): void {
-          $pegawaiAktif = Pegawai::query()
-            ->where('is_active', true)
-            ->select(['id', 'nama', 'jabatan'])
-            ->get()
-            ->filter(fn(Pegawai $pegawai): bool => filled(trim((string) $pegawai->nama)))
-            ->values();
+          $result = app(StaffDitujuSyncService::class)->syncNow();
 
-          $duplicateCounts = $pegawaiAktif
-            ->map(function (Pegawai $pegawai): string {
-              $nama = trim((string) $pegawai->nama);
-              $jabatan = trim((string) ($pegawai->jabatan ?? ''));
-
-              return mb_strtolower($nama . '|' . $jabatan);
-            })
-            ->countBy();
-
-          $staffOptions = $pegawaiAktif
-            ->map(function (Pegawai $pegawai) use ($duplicateCounts): array {
-              $nama = trim((string) $pegawai->nama);
-              $jabatan = trim((string) ($pegawai->jabatan ?? ''));
-              $baseDisplay = $jabatan !== '' ? ($nama . ' — ' . $jabatan) : $nama;
-              $duplicateKey = mb_strtolower($nama . '|' . $jabatan);
-
-              $display = ($duplicateCounts[$duplicateKey] ?? 0) > 1
-                ? ($baseDisplay . ' #' . $pegawai->id)
-                : $baseDisplay;
-
-              return [
-                'value' => $display,
-                'label' => $display,
-              ];
-            })
-            ->unique('value')
-            ->sortBy('value', SORT_NATURAL | SORT_FLAG_CASE)
-            ->values();
-
-          if ($staffOptions->isEmpty()) {
+          if (! $result['has_staff']) {
             Notification::make()
               ->warning()
-              ->title('Sinkronisasi dibatalkan')
-              ->body('Belum ada data staff aktif yang bisa disinkronkan.')
+              ->title('Sinkronisasi selesai')
+              ->body('Belum ada pegawai aktif. ' . $result['removed'] . ' opsi staff lama dibersihkan.')
               ->send();
 
             return;
           }
 
-          $category = DropdownOption::CATEGORY_STAFF_DITUJU;
-          $keepValues = [];
-
-          foreach ($staffOptions as $index => $option) {
-            DropdownOption::updateOrCreate(
-              ['category' => $category, 'value' => $option['value']],
-              [
-                'label' => $option['label'],
-                'metadata' => null,
-                'sort_order' => $index + 1,
-                'is_active' => true,
-              ],
-            );
-
-            $keepValues[] = $option['value'];
-          }
-
-          DropdownOption::query()
-            ->where('category', $category)
-            ->whereNotIn('value', $keepValues)
-            ->delete();
-
-          DropdownOption::clearCache($category);
-
-          $savedCount = DropdownOption::query()
-            ->where('category', $category)
-            ->count();
-
           Notification::make()
             ->success()
             ->title('Sinkronisasi berhasil')
-            ->body(count($keepValues) . ' staff diproses, ' . $savedCount . ' staff tersimpan di kategori Staff Yang Dituju.')
+            ->body($result['processed'] . ' staff diproses, ' . $result['saved'] . ' staff tersimpan, ' . $result['removed'] . ' data lama dibersihkan.')
             ->send();
         }),
       Actions\Action::make('ganti_barcode_skm')

@@ -169,7 +169,7 @@ class ActivityLogResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->orderByDesc('id'))
-            ->paginationMode(PaginationMode::LengthAware)
+            ->paginationMode(PaginationMode::Default)
             ->defaultPaginationPageOption(25)
             ->paginationPageOptions([10, 25, 50, 100])
             ->poll('30s')

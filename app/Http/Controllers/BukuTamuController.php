@@ -15,6 +15,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class BukuTamuController extends Controller
 {
@@ -334,6 +336,20 @@ class BukuTamuController extends Controller
         return trim((string) preg_replace('/\s+#\d+$/', '', $name));
     }
 
+    private function requiresPenerimaanPhoto(string $keperluan): bool
+    {
+        $normalized = strtolower(trim($keperluan));
+
+        if ($normalized === '') {
+            return false;
+        }
+
+        return str_contains($normalized, 'berkas')
+            || str_contains($normalized, 'surat')
+            || str_contains($normalized, 'dokumen')
+            || str_contains($normalized, 'legalisir');
+    }
+
     public function store(Request $request)
     {
         try {
@@ -394,7 +410,11 @@ class BukuTamuController extends Controller
                 'email' => 'nullable|email|max:255',
                 'keperluan' => 'required|string',
                 'foto_selfie' => 'required|string',
-                'foto_penerimaan' => 'nullable|string',
+                'foto_penerimaan' => [
+                    'nullable',
+                    Rule::requiredIf(fn() => $this->requiresPenerimaanPhoto((string) $request->input('keperluan'))),
+                    'string',
+                ],
                 'tanda_tangan' => 'required|string',
                 'staff_dituju' => 'required|string|max:255',
             ]);
@@ -482,6 +502,8 @@ class BukuTamuController extends Controller
             }
 
             return redirect()->route('index')->with('success', 'Data buku tamu berhasil disimpan!');
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Error saving buku tamu: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan saat menyimpan data.')->withInput();

@@ -241,6 +241,7 @@ jobs:
             --exclude "storage/framework/cache/*" \
             --exclude "storage/framework/sessions/*" \
             --exclude "storage/framework/views/*" \
+            --exclude "storage/app/public/apk/*" \
             ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
 
       - name: Run remote deploy commands

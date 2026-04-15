@@ -17,10 +17,43 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== DYNAMIC DATA FROM DATABASE =====
     const __dd = window.__dropdownData || {};
 
+    function toSafeText(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value).trim();
+    }
+
     // Build jenisIdOptions from dynamic data (fallback to empty)
-    const jenisIdOptions = (__dd.jenisId || []).map(function (item) {
-        return { value: item.value, label: item.label };
-    });
+    const jenisIdOptions = (__dd.jenisId || [])
+        .map(function (item) {
+            const value = toSafeText(
+                item && item.value !== undefined
+                    ? item.value
+                    : item && item.label !== undefined
+                      ? item.label
+                      : "",
+            );
+            const label = toSafeText(
+                item && item.label !== undefined
+                    ? item.label
+                    : item && item.value !== undefined
+                      ? item.value
+                      : "",
+            );
+
+            if (value === "" || label === "") {
+                return null;
+            }
+
+            return {
+                value,
+                label,
+                metadata: item && item.metadata ? item.metadata : null,
+            };
+        })
+        .filter(Boolean);
 
     // Build idConfig from dynamic data metadata
     const idConfig = {
@@ -30,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
             digits: null,
         },
     };
-    (__dd.jenisId || []).forEach(function (item) {
+    jenisIdOptions.forEach(function (item) {
         if (item.metadata) {
             const metadataMaxSequential = Number.parseInt(
                 item.metadata.max_sequential_digits,
@@ -916,9 +949,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ===== KABUPATEN/KOTA AUTOCOMPLETE (SELURUH INDONESIA) =====
     // Data loaded dynamically from database
-    const kabKotaData = (__dd.kabupatenKota || []).map(function (item) {
-        return item.value;
-    });
+    const kabKotaData = (__dd.kabupatenKota || [])
+        .map(function (item) {
+            return toSafeText(
+                item && item.value !== undefined
+                    ? item.value
+                    : item && item.label !== undefined
+                      ? item.label
+                      : "",
+            );
+        })
+        .filter(function (value) {
+            return value !== "";
+        });
 
     const kabKotaInput = document.getElementById("kabupaten_kota");
     const kabKotaList = document.getElementById("kabkota_list");
@@ -1016,7 +1059,35 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // ===== STAFF YANG DITUJU AUTOCOMPLETE =====
-    const staffData = __dd.staffList || [];
+    const staffData = (__dd.staffList || [])
+        .map(function (item) {
+            const value = toSafeText(
+                item && item.value !== undefined
+                    ? item.value
+                    : item && item.label !== undefined
+                      ? item.label
+                      : "",
+            );
+            const label = toSafeText(
+                item && item.label !== undefined
+                    ? item.label
+                    : item && item.value !== undefined
+                      ? item.value
+                      : "",
+            );
+
+            if (value === "" || label === "") {
+                return null;
+            }
+
+            return {
+                value,
+                label,
+                is_unavailable: Boolean(item && item.is_unavailable),
+                availability_note: toSafeText(item && item.availability_note),
+            };
+        })
+        .filter(Boolean);
     const staffInput = document.getElementById("staff_dituju_input");
     const staffHidden = document.getElementById("staff_dituju");
     const staffList = document.getElementById("staff_dituju_list");
@@ -3058,9 +3129,19 @@ document.addEventListener("DOMContentLoaded", function () {
     let keperluanActiveIdx = -1;
 
     // Data loaded dynamically from database
-    const keperluanData = (__dd.keperluan || []).map(function (item) {
-        return item.value;
-    });
+    const keperluanData = (__dd.keperluan || [])
+        .map(function (item) {
+            return toSafeText(
+                item && item.value !== undefined
+                    ? item.value
+                    : item && item.label !== undefined
+                      ? item.label
+                      : "",
+            );
+        })
+        .filter(function (value) {
+            return value !== "";
+        });
 
     function renderKeperluan(filter) {
         const query = (filter || "").toLowerCase();

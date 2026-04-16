@@ -159,36 +159,13 @@ class RiwayatKunjungan extends Page implements HasTable
             ])
             ->recordActions([
                 ActionGroup::make([
-                    Action::make('status_menunggu')
-                        ->label('Menunggu')
-                        ->icon('heroicon-o-clock')
-                        ->color('gray')
-                        ->visible(fn(BukuTamu $record) => $record->status !== BukuTamu::STATUS_MENUNGGU)
-                        ->action(fn(BukuTamu $record) => $this->updateStatus($record, BukuTamu::STATUS_MENUNGGU)),
-                    Action::make('status_diproses')
-                        ->label('Diproses')
-                        ->icon('heroicon-o-arrow-path')
-                        ->color('gray')
-                        ->visible(fn(BukuTamu $record) => $record->status !== BukuTamu::STATUS_DIPROSES)
-                        ->action(fn(BukuTamu $record) => $this->updateStatus($record, BukuTamu::STATUS_DIPROSES)),
                     Action::make('status_selesai')
                         ->label('Selesai')
                         ->icon('heroicon-o-check-circle')
-                        ->color('gray')
+                        ->color('success')
+                        ->requiresConfirmation()
                         ->visible(fn(BukuTamu $record) => $record->status !== BukuTamu::STATUS_SELESAI)
                         ->action(fn(BukuTamu $record) => $this->updateStatus($record, BukuTamu::STATUS_SELESAI)),
-                    Action::make('status_ditolak')
-                        ->label('Ditolak')
-                        ->icon('heroicon-o-x-circle')
-                        ->color('gray')
-                        ->visible(fn(BukuTamu $record) => $record->status !== BukuTamu::STATUS_DITOLAK)
-                        ->action(fn(BukuTamu $record) => $this->updateStatus($record, BukuTamu::STATUS_DITOLAK)),
-                    Action::make('status_dibatalkan')
-                        ->label('Dibatalkan')
-                        ->icon('heroicon-o-no-symbol')
-                        ->color('gray')
-                        ->visible(fn(BukuTamu $record) => $record->status !== BukuTamu::STATUS_DIBATALKAN)
-                        ->action(fn(BukuTamu $record) => $this->updateStatus($record, BukuTamu::STATUS_DIBATALKAN)),
                 ])
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->tooltip('Aksi status'),
@@ -328,6 +305,16 @@ class RiwayatKunjungan extends Page implements HasTable
 
     public function updateStatus(BukuTamu $record, string $status): void
     {
+        if ($status !== BukuTamu::STATUS_SELESAI) {
+            Notification::make()
+                ->title('Aksi tidak diizinkan')
+                ->body('Staff hanya dapat menyelesaikan kunjungan.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         if (!array_key_exists($status, BukuTamu::STATUS_LABELS)) {
             return;
         }

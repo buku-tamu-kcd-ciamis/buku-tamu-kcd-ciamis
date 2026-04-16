@@ -6,6 +6,7 @@ use App\Filament\Resources\DataPegawaiResource\Pages;
 use App\Models\Pegawai;
 use App\Models\RoleUser;
 use App\Models\User;
+use App\Support\LoginEmailNormalizer;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -62,6 +63,10 @@ class DataPegawaiResource extends Resource
             ->placeholder('Contoh: Drs. H. Ahmad Suryadi, M.Pd.'),
           Forms\Components\TextInput::make('nip')
             ->label('NIP')
+            ->validationAttribute('NIP')
+            ->validationMessages([
+              'unique' => 'NIP sudah digunakan.',
+            ])
             ->required()
             ->unique(ignoreRecord: true)
             ->minLength(18)
@@ -87,7 +92,7 @@ class DataPegawaiResource extends Resource
             ->email()
             ->maxLength(255)
             ->placeholder('contoh: nama.pegawai@cadisdik13.local')
-            ->helperText('Jika kosong saat import, sistem akan membuat email dummy dari nama.'),
+            ->helperText('Jika kosong, sistem akan membuat email dummy dari nama secara otomatis.'),
           Forms\Components\TextInput::make('jabatan')
             ->label('Jabatan')
             ->required()
@@ -124,7 +129,7 @@ class DataPegawaiResource extends Resource
             ->nullable()
             ->minLength(8)
             ->same('login_password_confirmation')
-            ->helperText('Kosongkan jika tidak ingin mengubah password akun.'),
+            ->helperText('Kosongkan saat create untuk memakai password default sesuai role (staff123/piket123/kepalakcd123). Pada edit, kosongkan jika tidak ingin mengubah password akun.'),
           Forms\Components\TextInput::make('login_password_confirmation')
             ->label('Konfirmasi Password Baru')
             ->password()
@@ -363,15 +368,6 @@ class DataPegawaiResource extends Resource
 
   protected static function resetPasswordForPegawaiRecord(Pegawai $record): array
   {
-    $user = static::resolveUserFromPegawai($record);
-
-    if (! $user) {
-      return [
-        'updated' => false,
-        'message' => 'Akun login untuk pegawai ini tidak ditemukan.',
-      ];
-    }
-
     $resolved = static::resolveDefaultCredentialByPegawai($record);
 
     if (! $resolved['allowed']) {
@@ -393,9 +389,30 @@ class DataPegawaiResource extends Resource
       ];
     }
 
+    $user = static::resolveUserFromPegawai($record);
+    $resolvedEmail = static::resolveUniqueUserEmailForPegawai($record, $user?->id);
+
+    if (! $user) {
+      $createdUser = User::query()->create([
+        'name' => (string) ($record->nama ?: 'Pegawai'),
+        'email' => $resolvedEmail,
+        'password' => Hash::make($resolved['password']),
+        'role_user_id' => $targetRole->id,
+        'pegawai_id' => $record->id,
+      ]);
+
+      return [
+        'updated' => true,
+        'message' => 'Akun login tidak ditemukan, akun baru dibuat dengan email ' . $createdUser->email . ', role ' . $resolved['role_name'] . ', dan password default ' . $resolved['password'] . '.',
+      ];
+    }
+
     $user->update([
+      'name' => (string) ($record->nama ?: $user->name),
+      'email' => $resolvedEmail,
       'password' => Hash::make($resolved['password']),
       'role_user_id' => $targetRole->id,
+      'pegawai_id' => $record->id,
     ]);
 
     return [
@@ -481,6 +498,33 @@ class DataPegawaiResource extends Resource
         'message' => 'Role default tidak bisa ditentukan dari jabatan pegawai.',
       ],
     };
+  }
+
+  protected static function resolveUniqueUserEmailForPegawai(Pegawai $pegawai, ?string $ignoreUserId = null): string
+  {
+    $normalized = LoginEmailNormalizer::sanitizePreferredEmail($pegawai->email, $pegawai->nama, 'user');
+
+    if ($normalized === '' || ! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+      $normalized = LoginEmailNormalizer::localPartFromName($pegawai->nama, 'user') . '@' . LoginEmailNormalizer::INTERNAL_DOMAIN;
+    }
+
+    [$localPart, $domain] = array_pad(explode('@', $normalized, 2), 2, LoginEmailNormalizer::INTERNAL_DOMAIN);
+    $localPart = $localPart !== '' ? $localPart : 'user';
+    $domain = $domain !== '' ? $domain : LoginEmailNormalizer::INTERNAL_DOMAIN;
+
+    $counter = 0;
+
+    do {
+      $suffix = $counter > 0 ? '.' . $counter : '';
+      $candidate = $localPart . $suffix . '@' . $domain;
+      $exists = User::query()
+        ->when($ignoreUserId !== null, fn($query) => $query->where('id', '!=', $ignoreUserId))
+        ->where('email', $candidate)
+        ->exists();
+      $counter++;
+    } while ($exists);
+
+    return $candidate;
   }
 
   public static function getRelations(): array

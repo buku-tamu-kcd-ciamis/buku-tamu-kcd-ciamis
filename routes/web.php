@@ -385,10 +385,14 @@ Route::get('/preview/pegawai-izin/{id}', [PegawaiIzinController::class, 'preview
     ->name('pegawai-izin.preview');
 
 // Print routes — dilindungi auth middleware agar data sensitif tidak diakses publik
-Route::middleware('auth')->group(function () {
-    Route::post('/api/web-push/subscriptions', [WebPushSubscriptionController::class, 'store'])->name('web-push.subscribe');
-    Route::delete('/api/web-push/subscriptions', [WebPushSubscriptionController::class, 'destroy'])->name('web-push.unsubscribe');
+Route::post('/api/web-push/subscriptions', [WebPushSubscriptionController::class, 'store'])
+    ->middleware('auth:web,admin,piket,staff')
+    ->name('web-push.subscribe');
+Route::delete('/api/web-push/subscriptions', [WebPushSubscriptionController::class, 'destroy'])
+    ->middleware('auth:web,admin,piket,staff')
+    ->name('web-push.unsubscribe');
 
+Route::middleware('auth')->group(function () {
     Route::get('/print/buku-tamu/{id}', [BukuTamuController::class, 'print'])->name('buku-tamu.print');
     Route::get('/print/buku-tamu-bulk', [BukuTamuController::class, 'printBulk'])->name('buku-tamu.print-bulk');
     Route::get('/print/dropdown-options', [BukuTamuController::class, 'printDropdownOptions'])->name('dropdown-options.print');

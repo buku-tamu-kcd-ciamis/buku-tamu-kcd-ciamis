@@ -80,8 +80,12 @@ class RiwayatTamu extends Page implements HasTable
           ->label('Nama')
           ->searchable()
           ->weight('bold'),
+        Tables\Columns\TextColumn::make('jenis_id')
+          ->label('Jenis ID')
+          ->formatStateUsing(fn($state): string => filled($state) ? strtoupper((string) $state) : '-')
+          ->toggleable(isToggledHiddenByDefault: true),
         Tables\Columns\TextColumn::make('nik')
-          ->label('NIK')
+          ->label('Nomor ID')
           ->searchable()
           ->toggleable(isToggledHiddenByDefault: true),
         Tables\Columns\TextColumn::make('instansi')
@@ -286,14 +290,21 @@ class RiwayatTamu extends Page implements HasTable
         $query->whereNull('foto_penerimaan')
           ->orWhere('foto_penerimaan', '');
       })
-      ->whereIn('id', function ($query) {
-        $query->select(DB::raw('MAX(id)'))
-          ->from('buku_tamu')
-          ->where(function ($subQuery): void {
-            $subQuery->whereNull('foto_penerimaan')
-              ->orWhere('foto_penerimaan', '');
+      ->whereNotExists(function ($subQuery): void {
+        $subQuery->selectRaw('1')
+          ->from('buku_tamu as bt_newer')
+          ->whereColumn('bt_newer.nik', 'buku_tamu.nik')
+          ->where(function ($candidateQuery): void {
+            $candidateQuery->whereNull('bt_newer.foto_penerimaan')
+              ->orWhere('bt_newer.foto_penerimaan', '');
           })
-          ->groupBy('nik');
+          ->where(function ($newerQuery): void {
+            $newerQuery->whereColumn('bt_newer.created_at', '>', 'buku_tamu.created_at')
+              ->orWhere(function ($sameTimestampQuery): void {
+                $sameTimestampQuery->whereColumn('bt_newer.created_at', '=', 'buku_tamu.created_at')
+                  ->whereColumn('bt_newer.id', '>', 'buku_tamu.id');
+              });
+          });
       });
   }
 

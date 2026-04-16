@@ -36,6 +36,7 @@ class EditDataPegawai extends EditRecord
   protected function mutateFormDataBeforeSave(array $data): array
   {
     $this->pendingLoginPassword = $this->pullLoginPasswordFromFormData($data);
+    $data = $this->normalizePegawaiEmailForPersistence($data, $this->record);
 
     return $data;
   }

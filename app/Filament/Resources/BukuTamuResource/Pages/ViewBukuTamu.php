@@ -59,7 +59,7 @@ class ViewBukuTamu extends ViewRecord
                                             ->formatStateUsing(fn($state): string => filled($state) ? strtoupper((string) $state) : '-')
                                             ->placeholder('-'),
                                         Infolists\Components\TextEntry::make('nik')
-                                            ->label('NIK')
+                                            ->label(fn($record): string => filled($record?->jenis_id) ? strtoupper((string) $record->jenis_id) : 'Nomor ID')
                                             ->icon('heroicon-o-finger-print')
                                             ->copyable(),
                                         Infolists\Components\TextEntry::make('instansi')
@@ -94,10 +94,16 @@ class ViewBukuTamu extends ViewRecord
                 'default' => 1,
                 'lg' => 2,
             ])
+                ->extraAttributes([
+                    'class' => 'bt-middle-grid',
+                ])
                 ->columnSpanFull()
                 ->components([
                     Section::make('Status Kunjungan')
                         ->icon('heroicon-o-signal')
+                        ->extraAttributes([
+                            'class' => 'bt-detail-middle-card h-full',
+                        ])
                         ->columns(2)
                         ->components([
                             Infolists\Components\TextEntry::make('status')
@@ -115,13 +121,18 @@ class ViewBukuTamu extends ViewRecord
                                 ->icon('heroicon-o-user')
                                 ->placeholder('Belum ada penerima'),
                             Infolists\Components\TextEntry::make('catatan')
+                                ->columnSpanFull()
                                 ->placeholder('Tidak ada catatan'),
                         ]),
                     Section::make('Informasi Kunjungan')
                         ->icon('heroicon-o-clipboard-document-list')
+                        ->extraAttributes([
+                            'class' => 'bt-detail-middle-card h-full',
+                        ])
                         ->columns(2)
                         ->components([
                             Infolists\Components\TextEntry::make('kabupaten_kota')
+                                ->label('Kabupaten/Kota')
                                 ->icon('heroicon-o-map-pin'),
                             Infolists\Components\TextEntry::make('staff_dituju')
                                 ->icon('heroicon-o-building-office'),

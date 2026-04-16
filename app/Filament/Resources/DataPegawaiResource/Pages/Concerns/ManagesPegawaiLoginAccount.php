@@ -10,6 +10,59 @@ use Illuminate\Support\Facades\Hash;
 
 trait ManagesPegawaiLoginAccount
 {
+    protected function resolveDefaultPasswordForPegawai(Pegawai $pegawai): string
+    {
+        $normalized = strtolower(trim((string) ($pegawai->jabatan ?? '')));
+
+        if ($normalized !== '' && str_contains($normalized, 'kepala cabang')) {
+            return 'kepalakcd123';
+        }
+
+        if ($normalized !== '' && str_contains($normalized, 'piket')) {
+            return 'piket123';
+        }
+
+        return 'staff123';
+    }
+
+    protected function normalizePegawaiEmailForPersistence(array $data, ?Pegawai $existingPegawai = null): array
+    {
+        $nama = trim((string) ($data['nama'] ?? $existingPegawai?->nama ?? ''));
+        $inputEmail = LoginEmailNormalizer::normalizeEmail($data['email'] ?? null);
+        $currentEmail = LoginEmailNormalizer::normalizeEmail($existingPegawai?->email ?? null);
+
+        $preferredEmail = $inputEmail !== ''
+            ? LoginEmailNormalizer::sanitizePreferredEmail($inputEmail, $nama, 'pegawai')
+            : ($currentEmail !== ''
+                ? LoginEmailNormalizer::sanitizePreferredEmail($currentEmail, $nama, 'pegawai')
+                : LoginEmailNormalizer::sanitizePreferredEmail('', $nama, 'pegawai'));
+
+        $data['email'] = $this->ensureUniquePegawaiEmail($preferredEmail, $existingPegawai?->id);
+
+        return $data;
+    }
+
+    protected function ensureUniquePegawaiEmail(string $preferredEmail, ?int $ignorePegawaiId = null): string
+    {
+        $normalized = LoginEmailNormalizer::normalizeEmail($preferredEmail);
+        [$localPart, $domain] = array_pad(explode('@', $normalized, 2), 2, LoginEmailNormalizer::INTERNAL_DOMAIN);
+        $localPart = trim((string) $localPart) !== '' ? trim((string) $localPart) : 'pegawai';
+        $domain = trim((string) $domain) !== '' ? trim((string) $domain) : LoginEmailNormalizer::INTERNAL_DOMAIN;
+
+        $counter = 0;
+        do {
+            $suffix = $counter > 0 ? '.' . $counter : '';
+            $candidate = $localPart . $suffix . '@' . $domain;
+            $exists = Pegawai::query()
+                ->when($ignorePegawaiId !== null, fn($query) => $query->where('id', '!=', $ignorePegawaiId))
+                ->where('email', $candidate)
+                ->exists();
+            $counter++;
+        } while ($exists);
+
+        return $candidate;
+    }
+
     protected function pullLoginPasswordFromFormData(array &$data): string
     {
         $password = trim((string) ($data['login_password'] ?? ''));
@@ -21,29 +74,35 @@ trait ManagesPegawaiLoginAccount
 
     protected function syncLoginAccountPasswordForPegawai(Pegawai $pegawai, string $plainPassword): array
     {
+        $roleId = $this->resolveRoleIdFromJabatan($pegawai->jabatan);
+
+        if (! $roleId) {
+            return [
+                'updated' => false,
+                'created' => false,
+                'message' => 'Akun login tidak dapat diproses karena role default tidak ditemukan.',
+            ];
+        }
+
         $user = User::query()
             ->where('pegawai_id', $pegawai->id)
             ->first();
 
         if (! $user && filled($pegawai->email)) {
+            $normalizedEmail = strtolower(trim((string) $pegawai->email));
+
             $user = User::query()
-                ->where('email', $pegawai->email)
+                ->whereRaw('LOWER(email) = ?', [$normalizedEmail])
                 ->first();
         }
 
+        $resolvedEmail = $this->resolveUniqueUserEmail(
+            $pegawai->email,
+            $pegawai->nama,
+            $user?->id,
+        );
+
         if (! $user) {
-            $roleId = $this->resolveRoleIdFromJabatan($pegawai->jabatan);
-
-            if (! $roleId) {
-                return [
-                    'updated' => false,
-                    'created' => false,
-                    'message' => 'Akun login tidak dapat dibuat karena role default tidak ditemukan.',
-                ];
-            }
-
-            $resolvedEmail = $this->resolveUniqueUserEmail($pegawai->email, $pegawai->nama);
-
             $user = User::query()->create([
                 'name' => (string) $pegawai->nama,
                 'email' => $resolvedEmail,
@@ -63,16 +122,18 @@ trait ManagesPegawaiLoginAccount
             'password' => Hash::make($plainPassword),
             'pegawai_id' => $pegawai->id,
             'name' => (string) ($pegawai->nama ?: $user->name),
+            'email' => $resolvedEmail,
+            'role_user_id' => $roleId,
         ]);
 
         return [
             'updated' => true,
             'created' => false,
-            'message' => 'Password login berhasil diperbarui.',
+            'message' => 'Akun login berhasil disinkronkan dan password berhasil diperbarui.',
         ];
     }
 
-    protected function resolveRoleIdFromJabatan(?string $jabatan): ?int
+    protected function resolveRoleIdFromJabatan(?string $jabatan): ?string
     {
         $normalized = strtolower(trim((string) $jabatan));
 

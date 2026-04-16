@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('web_push_subscriptions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('user_id');
-            $table->string('endpoint', 2048)->unique();
+            $table->string('endpoint', 768)->unique();
             $table->text('public_key');
             $table->text('auth_token');
             $table->string('content_encoding', 32)->default('aes128gcm');

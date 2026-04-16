@@ -120,7 +120,7 @@ class ViewPengantarBerkas extends Page implements HasInfolists
                                                 ->formatStateUsing(fn($state): string => filled($state) ? strtoupper((string) $state) : '-')
                                                 ->placeholder('-'),
                                             Infolists\Components\TextEntry::make('nik')
-                                                ->label('NIK')
+                                                ->label(fn($record): string => filled($record?->jenis_id) ? strtoupper((string) $record->jenis_id) : 'Nomor ID')
                                                 ->icon('heroicon-o-finger-print')
                                                 ->copyable(),
                                             Infolists\Components\TextEntry::make('instansi')

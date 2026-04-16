@@ -6,6 +6,7 @@ use App\Models\BukuTamu;
 use Filament\Panel;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\WithPagination;
 
 class ViewRiwayatTamu extends Page
@@ -44,32 +45,34 @@ class ViewRiwayatTamu extends Page
         $perPage = (int) request()->query('per_page', 5);
         $this->kunjunganPerPage = in_array($perPage, [3, 5, 10], true) ? $perPage : 5;
 
-        $tamu = BukuTamu::where('nik', $this->nik)->first();
+        $tamu = $this->riwayatQuery()->first();
 
         if (!$tamu) {
             abort(404);
         }
     }
 
+    protected function riwayatQuery(): Builder
+    {
+        return BukuTamu::query()
+            ->where('nik', $this->nik)
+            ->orderByDesc('created_at')
+            ->orderByDesc('updated_at');
+    }
+
     public function getTamu()
     {
-        return BukuTamu::where('nik', $this->nik)
-            ->orderBy('created_at', 'desc')
-            ->first();
+        return $this->riwayatQuery()->first();
     }
 
     public function getAllKunjungan()
     {
-        return BukuTamu::where('nik', $this->nik)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        return $this->riwayatQuery()->get();
     }
 
     public function getKunjunganPaginated()
     {
-        return BukuTamu::where('nik', $this->nik)
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->kunjunganPerPage);
+        return $this->riwayatQuery()->paginate($this->kunjunganPerPage);
     }
 
     public function getPageClasses(): array

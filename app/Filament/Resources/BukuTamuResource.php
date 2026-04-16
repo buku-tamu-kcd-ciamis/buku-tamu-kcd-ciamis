@@ -84,8 +84,13 @@ class BukuTamuResource extends Resource
                     ->searchable()
                     ->weight('bold')
                     ->verticallyAlignCenter(),
+                Tables\Columns\TextColumn::make('jenis_id')
+                    ->label('Jenis ID')
+                    ->formatStateUsing(fn($state): string => filled($state) ? strtoupper((string) $state) : '-')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->verticallyAlignCenter(),
                 Tables\Columns\TextColumn::make('nik')
-                    ->label('NIK')
+                    ->label('Nomor ID')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->verticallyAlignCenter(),

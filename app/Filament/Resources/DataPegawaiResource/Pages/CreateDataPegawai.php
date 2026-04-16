@@ -49,22 +49,24 @@ class CreateDataPegawai extends CreateRecord
   protected function mutateFormDataBeforeCreate(array $data): array
   {
     $this->pendingLoginPassword = $this->pullLoginPasswordFromFormData($data);
+    $data = $this->normalizePegawaiEmailForPersistence($data);
 
     return $data;
   }
 
   protected function afterCreate(): void
   {
-    if ($this->pendingLoginPassword === '') {
-      return;
-    }
+    $isUsingDefaultPassword = $this->pendingLoginPassword === '';
+    $passwordToApply = $isUsingDefaultPassword
+      ? $this->resolveDefaultPasswordForPegawai($this->record)
+      : $this->pendingLoginPassword;
 
-    $result = $this->syncLoginAccountPasswordForPegawai($this->record, $this->pendingLoginPassword);
+    $result = $this->syncLoginAccountPasswordForPegawai($this->record, $passwordToApply);
 
     if (! $result['updated']) {
       Notification::make()
         ->warning()
-        ->title('Password akun belum diubah')
+        ->title('Akun login belum diproses')
         ->body($result['message'])
         ->send();
 
@@ -73,8 +75,12 @@ class CreateDataPegawai extends CreateRecord
 
     Notification::make()
       ->success()
-      ->title($result['created'] ? 'Akun login dibuat' : 'Password akun diperbarui')
-      ->body($result['message'])
+      ->title($result['created']
+        ? ($isUsingDefaultPassword ? 'Akun login dibuat otomatis' : 'Akun login dibuat')
+        : ($isUsingDefaultPassword ? 'Password akun disetel default' : 'Password akun diperbarui'))
+      ->body($isUsingDefaultPassword
+        ? ($result['message'] . ' Password default: ' . $passwordToApply . '.')
+        : $result['message'])
       ->send();
   }
 

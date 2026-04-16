@@ -167,6 +167,13 @@ class BookingChatManager
             ]);
 
             $chat->update(['last_message_at' => $chatMessage->created_at]);
+
+            if (($chat->bukuTamu?->status ?? null) === BukuTamu::STATUS_MENUNGGU) {
+                $chat->bukuTamu->update([
+                    'status' => BukuTamu::STATUS_DIPROSES,
+                ]);
+            }
+
             $chat->markPresenceFor($sender);
             $chat->clearTypingFor($sender);
 

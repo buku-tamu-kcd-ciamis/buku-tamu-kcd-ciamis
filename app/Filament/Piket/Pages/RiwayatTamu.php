@@ -3,21 +3,18 @@
 namespace App\Filament\Piket\Pages;
 
 use App\Models\BukuTamu;
-use App\Models\DropdownOption;
-use App\Services\BookingChatManager;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Forms;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Pages\Page;
 use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
-use App\Models\User;
 
 class RiwayatTamu extends Page implements HasTable
 {
@@ -60,10 +57,17 @@ class RiwayatTamu extends Page implements HasTable
             DB::raw('(SELECT COUNT(*) FROM buku_tamu AS bt WHERE bt.nik = buku_tamu.nik) as total_kunjungan'),
             DB::raw('(SELECT MAX(created_at) FROM buku_tamu AS bt WHERE bt.nik = buku_tamu.nik) as kunjungan_terakhir')
           ])
-          ->whereIn('id', function ($query) {
-            $query->select(DB::raw('MAX(id)'))
-              ->from('buku_tamu')
-              ->groupBy('nik');
+          ->whereNotExists(function ($subQuery): void {
+            $subQuery->selectRaw('1')
+              ->from('buku_tamu as bt_newer')
+              ->whereColumn('bt_newer.nik', 'buku_tamu.nik')
+              ->where(function ($newerQuery): void {
+                $newerQuery->whereColumn('bt_newer.created_at', '>', 'buku_tamu.created_at')
+                  ->orWhere(function ($sameTimestampQuery): void {
+                    $sameTimestampQuery->whereColumn('bt_newer.created_at', '=', 'buku_tamu.created_at')
+                      ->whereColumn('bt_newer.id', '>', 'buku_tamu.id');
+                  });
+              });
           })
       )
       ->columns([
@@ -112,24 +116,6 @@ class RiwayatTamu extends Page implements HasTable
       ->recordActionsColumnLabel('')
       ->recordActions([
         ActionGroup::make([
-          Action::make('chat')
-            ->label('Chat Staff')
-            ->icon('heroicon-o-chat-bubble-left-right')
-            ->color('primary')
-            ->url(function (BukuTamu $record): string {
-              $chat = $record->bookingChats()->first();
-
-              if (!$chat) {
-                $chat = app(BookingChatManager::class)->bootstrapForBooking($record, Filament::auth()->user())->first();
-              }
-
-              if (!$chat) {
-                return ChatBooking::getUrl() . '?booking=' . $record->id;
-              }
-
-              return ChatBooking::getUrl() . '?chat=' . $chat->id;
-            })
-            ->openUrlInNewTab(false),
           Action::make('view')
             ->label('Lihat Detail')
             ->icon('heroicon-o-eye')
@@ -140,7 +126,23 @@ class RiwayatTamu extends Page implements HasTable
           ->icon('heroicon-m-ellipsis-vertical')
           ->color('gray'),
       ])
-      ->headerActions([]);
+      ->headerActions([])
+      ->toolbarActions([
+        BulkActionGroup::make([
+          BulkAction::make('bulk_print')
+            ->label('Print')
+            ->icon('heroicon-o-printer')
+            ->color('gray')
+            ->url(route('buku-tamu.print-bulk'))
+            ->livewireClickHandlerEnabled(false)
+            ->accessSelectedRecords(false)
+            ->openUrlInNewTab(true)
+            ->extraAttributes([
+              'style' => 'padding: 10px 16px !important;',
+              'x-bind:href' => "`\${window.location.origin}/print/buku-tamu-bulk?ids=\${[...selectedRecords].join(',')}`",
+            ]),
+        ]),
+      ]);
   }
 
   public function getFooter(): ?View

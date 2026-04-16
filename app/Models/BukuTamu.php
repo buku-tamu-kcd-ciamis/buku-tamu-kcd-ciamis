@@ -31,6 +31,12 @@ class BukuTamu extends Model
         'status',
         'catatan',
         'nama_penerima',
+        'diselesaikan_oleh',
+        'diselesaikan_pada',
+    ];
+
+    protected $casts = [
+        'diselesaikan_pada' => 'datetime',
     ];
 
     public const STATUS_MENUNGGU = 'menunggu';
@@ -82,6 +88,8 @@ class BukuTamu extends Model
                 'status',
                 'catatan',
                 'nama_penerima',
+                'diselesaikan_oleh',
+                'diselesaikan_pada',
             ])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()

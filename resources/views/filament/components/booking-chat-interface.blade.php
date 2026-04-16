@@ -386,12 +386,24 @@
                     const existingRegistration = await navigator.serviceWorker.getRegistration();
 
                     if (existingRegistration) {
-                        return existingRegistration;
+                        try {
+                            const readyRegistration = await navigator.serviceWorker.ready;
+
+                            return readyRegistration || existingRegistration;
+                        } catch (_readyError) {
+                            return existingRegistration;
+                        }
                     }
 
                     const registration = await navigator.serviceWorker.register('{{ asset('sw.js') }}');
 
-                    return registration;
+                    try {
+                        const readyRegistration = await navigator.serviceWorker.ready;
+
+                        return readyRegistration || registration;
+                    } catch (_readyError) {
+                        return registration;
+                    }
                 },
                 async registerWebPushSubscription(subscription) {
                     const payload = subscription?.toJSON?.();
@@ -420,6 +432,14 @@
                         }),
                     });
 
+                    if (response.redirected) {
+                        const redirectError = new Error('REGISTER_PUSH_SUBSCRIPTION_AUTH_REDIRECT');
+                        redirectError.statusCode = 401;
+                        redirectError.responseBody = response.url || '';
+
+                        throw redirectError;
+                    }
+
                     if (!response.ok) {
                         let errorBody = '';
 
@@ -432,6 +452,32 @@
                         const responseError = new Error('REGISTER_PUSH_SUBSCRIPTION_FAILED');
                         responseError.statusCode = response.status;
                         responseError.responseBody = errorBody;
+
+                        throw responseError;
+                    }
+
+                    const responseType = String(response.headers.get('content-type') || '').toLowerCase();
+
+                    if (!responseType.includes('application/json')) {
+                        const responseError = new Error('REGISTER_PUSH_SUBSCRIPTION_INVALID_RESPONSE');
+                        responseError.statusCode = 502;
+                        responseError.responseBody = responseType;
+
+                        throw responseError;
+                    }
+
+                    let responseJson = null;
+
+                    try {
+                        responseJson = await response.json();
+                    } catch (_error) {
+                        responseJson = null;
+                    }
+
+                    if ((responseJson?.status || '') !== 'ok') {
+                        const responseError = new Error('REGISTER_PUSH_SUBSCRIPTION_REJECTED');
+                        responseError.statusCode = 502;
+                        responseError.responseBody = JSON.stringify(responseJson || {});
 
                         throw responseError;
                     }
@@ -470,8 +516,16 @@
                         return 'Format data push subscription tidak valid. Coba nonaktifkan lalu aktifkan lagi notifikasi browser.';
                     }
 
+                    if (statusCode === 502 || messageText.includes('invalid_response') || messageText.includes('auth_redirect')) {
+                        return 'Sinkronisasi push mendapat respons tidak valid dari server. Silakan refresh lalu coba aktifkan notifikasi lagi.';
+                    }
+
                     if (messageText.includes('invalidcharactererror') || messageText.includes('atob')) {
                         return 'Konfigurasi VAPID public key tidak valid. Periksa WEB_PUSH_VAPID_PUBLIC_KEY di server.';
+                    }
+
+                    if (messageText.includes('invalidstateerror') || messageText.includes('subscription failed')) {
+                        return 'Subscription push browser lama/invalid. Refresh halaman lalu aktifkan notifikasi kembali.';
                     }
 
                     if (messageText.includes('notallowederror') || messageText.includes('permission denied')) {
@@ -519,10 +573,35 @@
                         }
 
                         if (!subscription) {
-                            subscription = await registration.pushManager.subscribe({
-                                userVisibleOnly: true,
-                                applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
-                            });
+                            try {
+                                subscription = await registration.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
+                                });
+                            } catch (subscribeError) {
+                                const subscribeErrorText = String(subscribeError?.message || '').toLowerCase();
+                                const subscribeErrorName = String(subscribeError?.name || '').toLowerCase();
+
+                                if (subscribeErrorName.includes('invalidstate') || subscribeErrorText.includes('subscription failed')) {
+                                    const staleSubscription = await registration.pushManager.getSubscription();
+
+                                    if (staleSubscription) {
+                                        try {
+                                            await this.unregisterWebPushSubscription(staleSubscription.endpoint);
+                                            await staleSubscription.unsubscribe();
+                                        } catch (_cleanupError) {
+                                            // Ignore stale cleanup failure; retry subscribe anyway.
+                                        }
+                                    }
+
+                                    subscription = await registration.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey),
+                                    });
+                                } else {
+                                    throw subscribeError;
+                                }
+                            }
                         }
 
                         try {

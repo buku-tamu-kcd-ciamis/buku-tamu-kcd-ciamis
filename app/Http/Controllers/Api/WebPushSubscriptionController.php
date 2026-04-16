@@ -19,7 +19,7 @@ class WebPushSubscriptionController extends Controller
         }
 
         $validated = $request->validate([
-            'endpoint' => ['required', 'string', 'max:2048'],
+            'endpoint' => ['required', 'string', 'max:768'],
             'keys' => ['required', 'array'],
             'keys.p256dh' => ['required', 'string'],
             'keys.auth' => ['required', 'string'],
@@ -50,7 +50,7 @@ class WebPushSubscriptionController extends Controller
         }
 
         $validated = $request->validate([
-            'endpoint' => ['required', 'string', 'max:2048'],
+            'endpoint' => ['required', 'string', 'max:768'],
         ]);
 
         WebPushSubscription::query()

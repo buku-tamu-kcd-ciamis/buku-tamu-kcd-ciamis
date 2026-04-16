@@ -38,6 +38,7 @@ class ViewKunjungan extends ViewRecord
                     Infolists\Components\TextEntry::make('jenis_id')
                       ->icon('heroicon-o-identification'),
                     Infolists\Components\TextEntry::make('nik')
+                      ->label(fn($record): string => filled($record?->jenis_id) ? strtoupper((string) $record->jenis_id) : 'Nomor ID')
                       ->icon('heroicon-o-finger-print')
                       ->copyable(),
                     Infolists\Components\TextEntry::make('instansi')
@@ -92,6 +93,15 @@ class ViewKunjungan extends ViewRecord
               Infolists\Components\TextEntry::make('nama_penerima')
                 ->icon('heroicon-o-user')
                 ->placeholder('Belum ada penerima'),
+              Infolists\Components\TextEntry::make('diselesaikan_oleh')
+                ->label('Diselesaikan oleh')
+                ->icon('heroicon-o-user-circle')
+                ->placeholder('Belum diselesaikan'),
+              Infolists\Components\TextEntry::make('diselesaikan_pada')
+                ->label('Jam selesai')
+                ->icon('heroicon-o-clock')
+                ->dateTime('d F Y, H:i:s')
+                ->placeholder('Belum diselesaikan'),
               Infolists\Components\TextEntry::make('catatan')
                 ->placeholder('Tidak ada catatan'),
             ]),

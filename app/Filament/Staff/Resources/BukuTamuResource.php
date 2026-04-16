@@ -87,6 +87,7 @@ class BukuTamuResource extends Resource
                     Infolists\Components\TextEntry::make('jenis_id')
                       ->icon('heroicon-o-identification'),
                     Infolists\Components\TextEntry::make('nik')
+                      ->label(fn($record): string => filled($record?->jenis_id) ? strtoupper((string) $record->jenis_id) : 'Nomor ID')
                       ->icon('heroicon-o-finger-print')
                       ->copyable(),
                     Infolists\Components\TextEntry::make('instansi')

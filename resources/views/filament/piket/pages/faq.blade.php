@@ -15,7 +15,7 @@
                         
                         <!-- Animated Background Gradient -->
                         <div 
-                            class="absolute inset-0 bg-gradient-to-r from-primary-50/50 to-transparent dark:from-primary-900/20 opacity-0 transition-opacity duration-300"
+                            class="absolute inset-0 bg-linear-to-r from-primary-50/50 to-transparent dark:from-primary-900/20 opacity-0 transition-opacity duration-300"
                             :class="{ 'opacity-100': openFaq === {{ $index }} }"
                         ></div>
 
@@ -24,7 +24,7 @@
                             class="relative z-10 w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all duration-200"
                         >
                             <div class="flex items-center gap-4 flex-1">
-                                <div class="flex-shrink-0 relative z-20">
+                                <div class="shrink-0 relative z-20">
                                     <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base transition-all duration-300"
                                          :class="openFaq === {{ $index }} ? 'bg-primary-500 text-white shadow-xl' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white'"
                                          style="isolation: isolate;">
@@ -38,7 +38,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="flex-shrink-0 ml-4">
+                            <div class="shrink-0 ml-4">
                                 <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300"
                                      :class="openFaq === {{ $index }} ? 'bg-primary-100 dark:bg-primary-900/40 ring-2 ring-primary-200 dark:ring-primary-800' : 'bg-gray-100 dark:bg-gray-700'">
                                     <svg class="w-5 h-5 transform transition-all duration-300"
@@ -57,7 +57,7 @@
                              x-transition:enter-end="opacity-100">
                             <div class="relative px-6 pb-6 pt-2">
                                 <div class="pl-14 pr-4">
-                                    <div class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-6 border-l-4 border-primary-500 shadow-inner">
+                                    <div class="bg-linear-to-br from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-6 border-l-4 border-primary-500 shadow-inner">
                                         <div class="text-gray-700 dark:text-gray-200 leading-relaxed space-y-3 prose prose-sm dark:prose-invert max-w-none">
                                             {!! $faq['answer'] !!}
                                         </div>

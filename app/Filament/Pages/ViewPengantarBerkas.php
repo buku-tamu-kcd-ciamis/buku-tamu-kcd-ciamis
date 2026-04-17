@@ -158,10 +158,16 @@ class ViewPengantarBerkas extends Page implements HasInfolists
                     'default' => 1,
                     'lg' => 2,
                 ])
+                    ->extraAttributes([
+                        'class' => 'bt-middle-grid',
+                    ])
                     ->columnSpanFull()
                     ->components([
                         Section::make('Status Kunjungan')
                             ->icon('heroicon-o-signal')
+                            ->extraAttributes([
+                                'class' => 'bt-detail-middle-card h-full',
+                            ])
                             ->columns(2)
                             ->components([
                                 Infolists\Components\TextEntry::make('status')
@@ -179,13 +185,18 @@ class ViewPengantarBerkas extends Page implements HasInfolists
                                     ->icon('heroicon-o-user')
                                     ->placeholder('Belum ada penerima'),
                                 Infolists\Components\TextEntry::make('catatan')
+                                    ->columnSpanFull()
                                     ->placeholder('Tidak ada catatan'),
                             ]),
                         Section::make('Informasi Kunjungan')
                             ->icon('heroicon-o-clipboard-document-list')
+                            ->extraAttributes([
+                                'class' => 'bt-detail-middle-card h-full',
+                            ])
                             ->columns(2)
                             ->components([
                                 Infolists\Components\TextEntry::make('kabupaten_kota')
+                                    ->label('Kabupaten/Kota')
                                     ->icon('heroicon-o-map-pin'),
                                 Infolists\Components\TextEntry::make('staff_dituju')
                                     ->icon('heroicon-o-building-office'),

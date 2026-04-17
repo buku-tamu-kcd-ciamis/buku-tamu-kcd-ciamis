@@ -97,7 +97,7 @@ class PengantarBerkas extends Page implements HasTable
       ])
       ->defaultSort('created_at', 'desc')
       ->defaultPaginationPageOption(10)
-      ->paginationPageOptions([10])
+      ->paginationPageOptions([5, 10, 20, 50, 100])
       ->filters([
         Tables\Filters\SelectFilter::make('status')
           ->options(BukuTamu::STATUS_LABELS),

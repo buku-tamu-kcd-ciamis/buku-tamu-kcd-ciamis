@@ -118,7 +118,7 @@ class RiwayatTamu extends Page implements HasTable
       ])
       ->defaultSort('total_kunjungan', 'desc')
       ->defaultPaginationPageOption(10)
-      ->paginationPageOptions([10])
+      ->paginationPageOptions([5, 10, 20, 50, 100])
       ->filters([
         Tables\Filters\SelectFilter::make('instansi')
           ->label('Instansi')

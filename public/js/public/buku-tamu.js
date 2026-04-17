@@ -372,23 +372,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnLanjutSubmit = document.getElementById("btnLanjutSubmit");
     const bukuTamuForm = document.getElementById("bukuTamuForm");
 
-    const surveyWaitSeconds = 30;
-    let surveyCountdown = surveyWaitSeconds;
-    let surveyTimer = null;
-    let surveyUnlockAt = 0;
-
-    function stopSurveyTimer() {
-        if (surveyTimer) {
-            clearInterval(surveyTimer);
-            surveyTimer = null;
-        }
-    }
+    let surveyGatePassed = false;
 
     function resetSurveyModalUI() {
-        stopSurveyTimer();
-        surveyCountdown = surveyWaitSeconds;
-        surveyUnlockAt = 0;
-
         if (surveySubmitGate) {
             surveySubmitGate.classList.remove("active");
         }
@@ -414,11 +400,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openSurveyGateBeforeSubmit() {
         resetSurveyModalUI();
-        surveyUnlockAt = Date.now() + surveyWaitSeconds * 1000;
 
         if (surveyGateNote) {
             surveyGateNote.textContent =
-                "Silakan scan barcode lalu isi survey. Tombol lanjut aktif setelah 30 detik.";
+                "Silakan scan barcode lalu isi survey. Jika sudah, klik Lanjutkan Kirim.";
         }
 
         if (surveySubmitGate) {
@@ -427,45 +412,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (surveyTimerText) {
             surveyTimerText.textContent =
-                "Isi survey kepuasan terlebih dahulu. Tunggu 30 detik sebelum lanjut kirim.";
+                "Tidak ada countdown. Anda bisa langsung lanjut kirim setelah meninjau popup ini.";
         }
 
         if (btnLanjutSubmit) {
-            btnLanjutSubmit.disabled = true;
+            btnLanjutSubmit.disabled = false;
         }
 
         barcodeModal.classList.add("active");
-
-        surveyTimer = setInterval(function () {
-            const remainingSeconds = Math.max(
-                0,
-                Math.ceil((surveyUnlockAt - Date.now()) / 1000),
-            );
-
-            surveyCountdown = remainingSeconds;
-
-            if (surveyCountdown > 0) {
-                if (surveyTimerText) {
-                    surveyTimerText.textContent =
-                        "Isi survey kepuasan terlebih dahulu. Tombol lanjut aktif dalam " +
-                        surveyCountdown +
-                        " detik.";
-                }
-                return;
-            }
-
-            stopSurveyTimer();
-            surveyCountdown = 0;
-
-            if (surveyTimerText) {
-                surveyTimerText.textContent =
-                    "Terima kasih. Anda bisa lanjutkan pengiriman data sekarang.";
-            }
-
-            if (btnLanjutSubmit) {
-                btnLanjutSubmit.disabled = false;
-            }
-        }, 1000);
     }
 
     // --- Draggable floating button ---
@@ -548,19 +502,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            if (surveyUnlockAt > Date.now()) {
-                btnLanjutSubmit.disabled = true;
-
-                if (surveyTimerText) {
-                    surveyTimerText.textContent =
-                        "Isi survey kepuasan terlebih dahulu. Tombol lanjut aktif dalam " +
-                        Math.max(1, Math.ceil((surveyUnlockAt - Date.now()) / 1000)) +
-                        " detik.";
-                }
-
-                return;
-            }
-
             // Prevent stale gate-pass state when native browser validation fails.
             if (!bukuTamuForm.reportValidity()) {
                 barcodeModal.classList.remove("active");
@@ -569,6 +510,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            surveyGatePassed = true;
             barcodeModal.classList.remove("active");
             resetSurveyModalUI();
             bukuTamuForm.requestSubmit();
@@ -3617,6 +3559,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
                 return;
             }
+
+            if (!surveyGatePassed) {
+                e.preventDefault();
+                openSurveyGateBeforeSubmit();
+                return;
+            }
+
+            // Consume one gate pass per submit attempt.
+            surveyGatePassed = false;
 
         });
     }

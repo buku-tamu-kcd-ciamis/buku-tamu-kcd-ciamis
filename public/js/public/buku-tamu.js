@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const surveyWaitSeconds = 30;
     let surveyCountdown = surveyWaitSeconds;
     let surveyTimer = null;
-    let surveyGatePassed = false;
+    let surveyUnlockAt = 0;
 
     function stopSurveyTimer() {
         if (surveyTimer) {
@@ -387,6 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function resetSurveyModalUI() {
         stopSurveyTimer();
         surveyCountdown = surveyWaitSeconds;
+        surveyUnlockAt = 0;
 
         if (surveySubmitGate) {
             surveySubmitGate.classList.remove("active");
@@ -413,6 +414,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openSurveyGateBeforeSubmit() {
         resetSurveyModalUI();
+        surveyUnlockAt = Date.now() + surveyWaitSeconds * 1000;
 
         if (surveyGateNote) {
             surveyGateNote.textContent =
@@ -435,7 +437,12 @@ document.addEventListener("DOMContentLoaded", function () {
         barcodeModal.classList.add("active");
 
         surveyTimer = setInterval(function () {
-            surveyCountdown -= 1;
+            const remainingSeconds = Math.max(
+                0,
+                Math.ceil((surveyUnlockAt - Date.now()) / 1000),
+            );
+
+            surveyCountdown = remainingSeconds;
 
             if (surveyCountdown > 0) {
                 if (surveyTimerText) {
@@ -541,7 +548,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            surveyGatePassed = true;
+            if (surveyUnlockAt > Date.now()) {
+                btnLanjutSubmit.disabled = true;
+
+                if (surveyTimerText) {
+                    surveyTimerText.textContent =
+                        "Isi survey kepuasan terlebih dahulu. Tombol lanjut aktif dalam " +
+                        Math.max(1, Math.ceil((surveyUnlockAt - Date.now()) / 1000)) +
+                        " detik.";
+                }
+
+                return;
+            }
+
+            // Prevent stale gate-pass state when native browser validation fails.
+            if (!bukuTamuForm.reportValidity()) {
+                barcodeModal.classList.remove("active");
+                resetSurveyModalUI();
+
+                return;
+            }
+
             barcodeModal.classList.remove("active");
             resetSurveyModalUI();
             bukuTamuForm.requestSubmit();
@@ -3591,11 +3618,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            if (!surveyGatePassed) {
-                e.preventDefault();
-                openSurveyGateBeforeSubmit();
-                return;
-            }
         });
     }
 

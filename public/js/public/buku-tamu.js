@@ -3462,6 +3462,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== FORM SUBMIT VALIDATION =====
     if (bukuTamuForm) {
         bukuTamuForm.addEventListener("submit", function (e) {
+            const hasSurveyGatePass = surveyGatePassed;
+            surveyGatePassed = false;
+
             // Check NIK validity
             const selectedId = jenisIdHidden.value;
             const config = idConfig[selectedId] || idConfig[""];
@@ -3560,14 +3563,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            if (!surveyGatePassed) {
+            if (!hasSurveyGatePass) {
                 e.preventDefault();
                 openSurveyGateBeforeSubmit();
                 return;
             }
-
-            // Consume one gate pass per submit attempt.
-            surveyGatePassed = false;
 
         });
     }

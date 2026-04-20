@@ -18,6 +18,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Facades\Filament;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -90,7 +91,24 @@ class PengantarBerkas extends Page implements HasTable
           ->formatStateUsing(fn(string $state) => BukuTamu::STATUS_LABELS[$state] ?? ucfirst($state)),
         Tables\Columns\TextColumn::make('created_at')
           ->label('Waktu')
-          ->since()
+          ->formatStateUsing(function ($state): string {
+            $timezone = (string) config('app.timezone', 'Asia/Jakarta');
+            $timestamp = ($state instanceof Carbon ? $state->copy() : Carbon::parse((string) $state))
+              ->setTimezone($timezone)
+              ->startOfDay();
+            $today = now($timezone)->startOfDay();
+            $dayDiff = $timestamp->diffInDays($today, false);
+
+            if ($dayDiff <= 0) {
+              return 'hari ini';
+            }
+
+            if ($dayDiff === 1) {
+              return '1 hari yang lalu';
+            }
+
+            return $dayDiff . ' hari yang lalu';
+          })
           ->color('gray')
           ->tooltip(fn($record) => $record->created_at->format('d/m/Y H:i'))
           ->sortable(),

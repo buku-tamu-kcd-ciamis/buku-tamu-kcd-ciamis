@@ -1763,11 +1763,9 @@ document.addEventListener("DOMContentLoaded", function () {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx2 = canvas.getContext("2d");
-        if (isFrontCamera) {
-            // Flip horizontally to un-mirror front camera
-            ctx2.translate(canvas.width, 0);
-            ctx2.scale(-1, 1);
-        }
+        // Do not flip the saved frame.
+        // Mirror is only for live preview (video CSS), while stored image
+        // should keep camera-native orientation for admin/detail pages.
         ctx2.drawImage(video, 0, 0);
 
         // Compressed canvas for form submission (prevents nginx 413 error)

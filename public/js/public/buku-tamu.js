@@ -590,6 +590,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         clearTimeout(autoFillTimeout);
         autoFillTimeout = setTimeout(() => {
+            // Re-check flag di dalam callback — bisa saja flag di-set
+            // setelah scheduleGuestLookup dipanggil tapi sebelum timeout habis.
+            if (suppressAutoLookup) {
+                return;
+            }
             fetchGuestData(criteria);
         }, delay);
     }
@@ -811,7 +816,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function applyGuestDataToForm(data, matchedBy) {
+        // Aktifkan flag suppress dan batalkan semua lookup yang sedang menunggu.
         suppressAutoLookup = true;
+        clearTimeout(autoFillTimeout);
+        autoFillTimeout = null;
 
         setJenisIdAndNik(data.jenis_id || "", data.nik || "", {
             focusNik: false,
@@ -833,6 +841,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (data.nomor_hp) {
             phoneInput.value = formatPhoneForInput(data.nomor_hp);
+            // Dispatch hanya untuk memperbarui tampilan hint nomor HP.
+            // suppressAutoLookup sudah aktif sehingga listener phone tidak
+            // akan memicu lookup baru (dicek ulang di dalam scheduleGuestLookup).
             phoneInput.dispatchEvent(new Event("input", { bubbles: true }));
         }
 
@@ -852,13 +863,19 @@ document.addEventListener("DOMContentLoaded", function () {
             ")";
         nikHint.className = "phone-hint valid";
 
+        // Perpanjang durasi suppress menjadi 2500ms agar:
+        // 1. Response API yang sedang in-flight sempat datang dan diabaikan.
+        // 2. Semua timeout scheduled yang mungkin sudah ter-queue habis.
         setTimeout(() => {
             nikHint.textContent = originalText;
             suppressAutoLookup = false;
-        }, 500);
+        }, 2500);
     }
 
     async function fetchGuestSuggestions(criteria) {
+        if (suppressAutoLookup) {
+            return;
+        }
         if (!criteria.namaLengkap && !criteria.nomorHp && !criteria.email) {
             hideGuestSuggestions();
             return;
@@ -874,6 +891,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to fetch guest data by NIK / name / phone
     async function fetchGuestData(criteria) {
+        if (suppressAutoLookup) {
+            return;
+        }
         if (
             !criteria.nik &&
             !criteria.namaLengkap &&
@@ -1034,6 +1054,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             clearTimeout(autoFillTimeout);
             autoFillTimeout = setTimeout(() => {
+                if (suppressAutoLookup) return;
                 if (namaLengkap.length >= 3) {
                     fetchGuestData({ namaLengkap: namaLengkap });
                     return;
@@ -1100,6 +1121,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             clearTimeout(autoFillTimeout);
             autoFillTimeout = setTimeout(() => {
+                if (suppressAutoLookup) return;
                 fetchGuestData({ namaLengkap: namaLengkap });
             }, 350);
 

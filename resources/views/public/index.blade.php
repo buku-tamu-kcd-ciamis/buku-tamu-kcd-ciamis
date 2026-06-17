@@ -511,6 +511,7 @@
                 deferredInstallPrompt = null;
                 reminder.classList.remove('is-visible');
                 reminder.classList.add('is-hidden');
+                localStorage.setItem('apkReminderDismissedAt', (Date.now() + 365 * 24 * 60 * 60 * 1000).toString());
             });
 
             if (installButton) {
@@ -537,6 +538,14 @@
                 return;
             }
 
+            const dismissedAt = localStorage.getItem('apkReminderDismissedAt');
+            const cooldown = 24 * 60 * 60 * 1000; // 24 Hours Cooldown
+
+            if (dismissedAt && (Date.now() - Number(dismissedAt) < cooldown)) {
+                reminder.classList.add('is-hidden');
+                return;
+            }
+
             window.setTimeout(() => {
                 reminder.classList.add('is-visible');
             }, 700);
@@ -544,6 +553,7 @@
             closeButton.addEventListener('click', () => {
                 reminder.classList.remove('is-visible');
                 reminder.classList.add('is-hidden');
+                localStorage.setItem('apkReminderDismissedAt', Date.now().toString());
             });
         })();
     </script>

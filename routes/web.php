@@ -415,4 +415,52 @@ if (app()->environment('testing')) {
     })->whereIn('status', ['500', '501', '503']);
 }
 
+Route::get('system-errors/error.css', function () {
+    $path = public_path('system-errors/error.css.bak');
+    if (!File::exists($path)) {
+        abort(404);
+    }
+    return response(File::get($path), 200, [
+        'Content-Type' => 'text/css; charset=utf-8',
+        'Cache-Control' => 'public, max-age=31536000',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+});
+
+Route::get('system-errors/error.js', function () {
+    $path = public_path('system-errors/error.js.bak');
+    if (!File::exists($path)) {
+        abort(404);
+    }
+    return response(File::get($path), 200, [
+        'Content-Type' => 'application/javascript; charset=utf-8',
+        'Cache-Control' => 'public, max-age=31536000',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+});
+
+Route::get('img/logo-cadisdik.png', function () {
+    $path = public_path('img/logo-cadisdik.png.bak');
+    if (!File::exists($path)) {
+        abort(404);
+    }
+    return response(File::get($path), 200, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=31536000',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+});
+
+Route::get('favicon.ico', function () {
+    $path = public_path('favicon.ico.bak');
+    if (!File::exists($path)) {
+        abort(404);
+    }
+    return response(File::get($path), 200, [
+        'Content-Type' => 'image/x-icon',
+        'Cache-Control' => 'public, max-age=31536000',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+});
+
 require __DIR__ . '/auth.php';

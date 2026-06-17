@@ -311,7 +311,7 @@ class BukuTamuResource extends Resource
     return false;
   }
 
-  private static function applyCurrentStaffScope(Builder $query): Builder
+  public static function applyCurrentStaffScope(Builder $query): Builder
   {
     $staffLookup = static::getCurrentStaffLookupName();
 

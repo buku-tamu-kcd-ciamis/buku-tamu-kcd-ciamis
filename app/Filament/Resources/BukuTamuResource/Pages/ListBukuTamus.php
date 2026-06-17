@@ -5,6 +5,9 @@ namespace App\Filament\Resources\BukuTamuResource\Pages;
 use App\Filament\Resources\BukuTamuResource;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\View\View;
+use Filament\Resources\Components\Tab;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\BukuTamu;
 
 class ListBukuTamus extends ListRecords
 {
@@ -14,6 +17,30 @@ class ListBukuTamus extends ListRecords
     {
         return [
             BukuTamuResource::makeExportExcelAction(),
+        ];
+    }
+
+    public function getTabs(): array
+    {
+        $hasCustomDate = !empty($this->tableFilters['tanggal']['tanggal'] ?? null);
+
+        $baseQuery = BukuTamu::query()->where(function (Builder $q): void {
+            $q->whereNull('foto_penerimaan')
+                ->orWhere('foto_penerimaan', '');
+        });
+
+        return [
+            'hari_ini' => Tab::make('Hari Ini')
+                ->badge((clone $baseQuery)->whereDate('created_at', now()->toDateString())->count())
+                ->badgeColor('success')
+                ->modifyQueryUsing(fn (Builder $query) => $hasCustomDate ? $query : $query->whereDate('created_at', now()->toDateString())),
+            'kemarin' => Tab::make('Kemarin')
+                ->badge((clone $baseQuery)->whereDate('created_at', now()->subDay()->toDateString())->count())
+                ->badgeColor('warning')
+                ->modifyQueryUsing(fn (Builder $query) => $hasCustomDate ? $query : $query->whereDate('created_at', now()->subDay()->toDateString())),
+            'semua' => Tab::make('Semua Data')
+                ->badge((clone $baseQuery)->count())
+                ->badgeColor('gray'),
         ];
     }
 

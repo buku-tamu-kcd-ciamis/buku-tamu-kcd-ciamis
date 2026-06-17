@@ -373,8 +373,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const bukuTamuForm = document.getElementById("bukuTamuForm");
 
     let surveyGatePassed = false;
+    let confirmationPassed = false;
 
     function resetSurveyModalUI() {
+        confirmationPassed = false;
         if (surveySubmitGate) {
             surveySubmitGate.classList.remove("active");
         }
@@ -514,6 +516,106 @@ document.addEventListener("DOMContentLoaded", function () {
             barcodeModal.classList.remove("active");
             resetSurveyModalUI();
             bukuTamuForm.requestSubmit();
+        });
+    }
+
+    // ===== CONFIRMATION MODAL =====
+    const confirmModal = document.getElementById("confirmModal");
+    const btnCloseConfirm = document.getElementById("btnCloseConfirm");
+    const btnConfirmBack = document.getElementById("btnConfirmBack");
+    const btnConfirmNext = document.getElementById("btnConfirmNext");
+
+    function populateConfirmationModal() {
+        // Data pribadi
+        document.getElementById("confirmJenisId").textContent =
+            (document.getElementById("jenis_id_input") || {}).value || "-";
+        document.getElementById("confirmNik").textContent =
+            (document.getElementById("nik") || {}).value || "-";
+        document.getElementById("confirmNama").textContent =
+            (document.getElementById("nama_lengkap") || {}).value || "-";
+        document.getElementById("confirmInstansi").textContent =
+            (document.getElementById("instansi") || {}).value || "-";
+
+        var phoneVal = (document.getElementById("nomor_hp") || {}).value || "";
+        document.getElementById("confirmHp").textContent =
+            phoneVal ? "+62 " + phoneVal : "-";
+
+        document.getElementById("confirmJabatan").textContent =
+            (document.getElementById("jabatan") || {}).value || "-";
+        document.getElementById("confirmKabKota").textContent =
+            (document.getElementById("kabupaten_kota") || {}).value || "-";
+        document.getElementById("confirmEmail").textContent =
+            (document.getElementById("email") || {}).value || "-";
+
+        // Kunjungan
+        document.getElementById("confirmStaff").textContent =
+            (document.getElementById("staff_dituju_input") || {}).value || "-";
+        document.getElementById("confirmKeperluan").textContent =
+            (document.getElementById("keperluan") || {}).value || "-";
+
+        // Foto selfie
+        var selfieData = (document.getElementById("fotoSelfieInput") || {}).value || "";
+        var selfieImg = document.getElementById("confirmSelfieImg");
+        if (selfieData && selfieImg) {
+            selfieImg.src = selfieData;
+        }
+
+        // Foto penerimaan
+        var penerimaanData = (document.getElementById("fotoPenerimaanInput") || {}).value || "";
+        var penerimaanWrap = document.getElementById("confirmPenerimaanWrap");
+        var penerimaanImg = document.getElementById("confirmPenerimaanImg");
+        if (penerimaanData && penerimaanWrap && penerimaanImg) {
+            penerimaanImg.src = penerimaanData;
+            penerimaanWrap.style.display = "";
+        } else if (penerimaanWrap) {
+            penerimaanWrap.style.display = "none";
+        }
+
+        // Tanda tangan
+        var ttdData = (document.getElementById("ttdInput") || {}).value || "";
+        var ttdImg = document.getElementById("confirmTtdImg");
+        if (ttdData && ttdImg) {
+            ttdImg.src = ttdData;
+        }
+    }
+
+    function openConfirmationModal() {
+        populateConfirmationModal();
+        if (confirmModal) {
+            confirmModal.classList.add("active");
+        }
+    }
+
+    function closeConfirmationModal() {
+        if (confirmModal) {
+            confirmModal.classList.remove("active");
+        }
+    }
+
+    if (btnCloseConfirm) {
+        btnCloseConfirm.addEventListener("click", closeConfirmationModal);
+    }
+
+    if (btnConfirmBack) {
+        btnConfirmBack.addEventListener("click", closeConfirmationModal);
+    }
+
+    if (confirmModal) {
+        confirmModal.addEventListener("click", function (e) {
+            if (e.target === confirmModal) {
+                closeConfirmationModal();
+            }
+        });
+    }
+
+    if (btnConfirmNext) {
+        btnConfirmNext.addEventListener("click", function () {
+            confirmationPassed = true;
+            surveyGatePassed = true;
+            closeConfirmationModal();
+            if (bukuTamuForm) {
+                bukuTamuForm.requestSubmit();
+            }
         });
     }
 
@@ -1785,10 +1887,15 @@ document.addEventListener("DOMContentLoaded", function () {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx2 = canvas.getContext("2d");
-        // Do not flip the saved frame.
-        // Mirror is only for live preview (video CSS), while stored image
-        // should keep camera-native orientation for admin/detail pages.
+        // Mirror the captured frame for front camera so the saved image
+        // matches what the user saw in the mirrored live preview.
+        if (isFrontCamera) {
+            ctx2.translate(canvas.width, 0);
+            ctx2.scale(-1, 1);
+        }
         ctx2.drawImage(video, 0, 0);
+        // Reset transform for any subsequent drawing on this canvas
+        ctx2.setTransform(1, 0, 0, 1, 0, 0);
 
         // Compressed canvas for form submission (prevents nginx 413 error)
         // Resize to max 1280px width and encode as JPEG 0.7 quality
@@ -3482,6 +3589,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== FORM SUBMIT VALIDATION =====
     if (bukuTamuForm) {
         bukuTamuForm.addEventListener("submit", function (e) {
+            const hasConfirmationPass = confirmationPassed;
+            confirmationPassed = false;
+
             const hasSurveyGatePass = surveyGatePassed;
             surveyGatePassed = false;
 
@@ -3580,6 +3690,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         ttdBox.closest(".form-group").classList.remove("shake"),
                     600,
                 );
+                return;
+            }
+
+            if (!hasConfirmationPass) {
+                e.preventDefault();
+                openConfirmationModal();
                 return;
             }
 

@@ -280,6 +280,134 @@
         </button>
     </div>
 
+    <!-- Modal Konfirmasi Data -->
+    <div class="confirm-modal-overlay" id="confirmModal">
+        <div class="confirm-modal">
+            <button type="button" class="confirm-modal__close" id="btnCloseConfirm">&times;</button>
+            <div class="confirm-modal__header">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <h3>Konfirmasi Data & Survey SKM</h3>
+                <p>Silakan tinjau data Anda dan isi Survey Kepuasan Masyarakat sebelum mengirim</p>
+            </div>
+
+            <div class="confirm-modal__body">
+                <div class="confirm-modal__container">
+                    <!-- Sisi Kiri: Tinjau Data -->
+                    <div class="confirm-modal__left-col">
+                        <!-- Data Pribadi -->
+                        <div class="confirm-section">
+                            <h4><i class="fa-solid fa-user-circle"></i> Data Pribadi</h4>
+                            <div class="confirm-grid">
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Jenis ID</span>
+                                    <span class="confirm-value" id="confirmJenisId">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Nomor ID</span>
+                                    <span class="confirm-value" id="confirmNik">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Nama Lengkap</span>
+                                    <span class="confirm-value" id="confirmNama">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Instansi</span>
+                                    <span class="confirm-value" id="confirmInstansi">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Nomor HP</span>
+                                    <span class="confirm-value" id="confirmHp">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Jabatan</span>
+                                    <span class="confirm-value" id="confirmJabatan">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Kabupaten/Kota</span>
+                                    <span class="confirm-value" id="confirmKabKota">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Email</span>
+                                    <span class="confirm-value" id="confirmEmail">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kunjungan -->
+                        <div class="confirm-section">
+                            <h4><i class="fa-solid fa-clipboard-list"></i> Informasi Kunjungan</h4>
+                            <div class="confirm-grid">
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Staff Yang Dituju</span>
+                                    <span class="confirm-value" id="confirmStaff">-</span>
+                                </div>
+                                <div class="confirm-item">
+                                    <span class="confirm-label">Keperluan</span>
+                                    <span class="confirm-value" id="confirmKeperluan">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Foto & TTD -->
+                        <div class="confirm-section">
+                            <h4><i class="fa-solid fa-camera"></i> Foto & Tanda Tangan</h4>
+                            <div class="confirm-media">
+                                <div class="confirm-media-item">
+                                    <span class="confirm-label">Foto Selfie</span>
+                                    <div class="confirm-img-box" id="confirmSelfieBox">
+                                        <img id="confirmSelfieImg" src="" alt="Foto Selfie">
+                                    </div>
+                                </div>
+                                <div class="confirm-media-item" id="confirmPenerimaanWrap" style="display:none;">
+                                    <span class="confirm-label">Foto Penerimaan</span>
+                                    <div class="confirm-img-box">
+                                        <img id="confirmPenerimaanImg" src="" alt="Foto Penerimaan">
+                                    </div>
+                                </div>
+                                <div class="confirm-media-item">
+                                    <span class="confirm-label">Tanda Tangan</span>
+                                    <div class="confirm-img-box confirm-ttd-box">
+                                        <img id="confirmTtdImg" src="" alt="Tanda Tangan">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sisi Kanan: Barcode SKM -->
+                    <div class="confirm-modal__right-col">
+                        <div class="confirm-section">
+                            <h4><i class="fa-solid fa-qrcode"></i> Survey Kepuasan Masyarakat (SKM)</h4>
+                            <div class="confirm-skm-box">
+                                <p class="confirm-skm-desc">Scan QR Code di bawah ini menggunakan ponsel Anda untuk mengisi survey kepuasan pelayanan:</p>
+                                @php
+                                    $pengaturan = \App\Models\PengaturanKcd::getSettings();
+                                    $barcodeUrl = $pengaturan->barcode_skm ? '/storage/' . ltrim($pengaturan->barcode_skm, '/') : asset('img/barcode-skm.png');
+                                @endphp
+                                <div class="confirm-barcode-img-box">
+                                    <img src="{{ $barcodeUrl }}" alt="Barcode Survey Kepuasan Masyarakat">
+                                </div>
+                                <div class="confirm-skm-note">
+                                    <i class="fa-solid fa-info-circle"></i>
+                                    <span>Setelah mengisi survey, silakan klik tombol <strong>Kirim Buku Tamu</strong> di bawah.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="confirm-modal__footer">
+                <button type="button" class="confirm-btn confirm-btn--back" id="btnConfirmBack">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali & Edit
+                </button>
+                <button type="button" class="confirm-btn confirm-btn--next" id="btnConfirmNext">
+                    Kirim Buku Tamu <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Barcode Button -->
     <button type="button" class="floating-btn" id="btnBarcode" title="Survey Kepuasan Masyarakat">
         <i class="fa-solid fa-qrcode"></i>

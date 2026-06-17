@@ -965,6 +965,362 @@ body {
     z-index: 1;
 }
 
+/* Confirmation / Review Modal */
+.confirm-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10002;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.confirm-modal-overlay.active {
+    display: flex;
+}
+
+.confirm-modal {
+    background: white;
+    border-radius: 18px;
+    max-width: 950px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+.confirm-modal__container {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 24px;
+}
+
+.confirm-modal__left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.confirm-modal__right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-left: 1px solid #f0f0f0;
+    padding-left: 24px;
+}
+
+.confirm-skm-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.confirm-skm-desc {
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    color: #4b5563;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.confirm-barcode-img-box {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 180px;
+    height: 180px;
+    margin-bottom: 12px;
+}
+
+.confirm-barcode-img-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.confirm-skm-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: left;
+    margin-top: 4px;
+}
+
+.confirm-skm-note i {
+    color: #0f9455;
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+.confirm-skm-note span {
+    font-family: "Poppins", sans-serif;
+    font-size: 11.5px;
+    color: #2e7d32;
+    line-height: 1.4;
+}
+
+.confirm-modal__close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-family: "Poppins", sans-serif;
+    z-index: 2;
+}
+
+.confirm-modal__close:hover {
+    color: #e53935;
+}
+
+.confirm-modal__header {
+    text-align: center;
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.confirm-modal__header i {
+    font-size: 32px;
+    color: #0f9455;
+    margin-bottom: 8px;
+}
+
+.confirm-modal__header h3 {
+    font-family: "Poppins", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px;
+}
+
+.confirm-modal__header p {
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.confirm-modal__body {
+    padding: 16px 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.confirm-section {
+    margin-bottom: 18px;
+}
+
+.confirm-section:last-child {
+    margin-bottom: 0;
+}
+
+.confirm-section h4 {
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f9455;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e8f5e9;
+}
+
+.confirm-section h4 i {
+    font-size: 14px;
+}
+
+.confirm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+}
+
+.confirm-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.confirm-label {
+    font-family: "Poppins", sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.confirm-value {
+    font-family: "Poppins", sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #1f2937;
+    word-break: break-word;
+}
+
+.confirm-media {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.confirm-media-item {
+    flex: 1;
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.confirm-img-box {
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f9fafb;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.confirm-ttd-box {
+    aspect-ratio: 2 / 1;
+    background: #ffffff;
+}
+
+.confirm-ttd-box img {
+    object-fit: contain;
+    padding: 6px;
+}
+
+.confirm-modal__footer {
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.confirm-btn {
+    flex: 1;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 10px;
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.confirm-btn--back {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.confirm-btn--back:hover {
+    background: #e5e7eb;
+}
+
+.confirm-btn--next {
+    background: #0f9455;
+    color: #fff;
+}
+
+.confirm-btn--next:hover {
+    background: #0b7a46;
+}
+
+@media (max-width: 768px) {
+    .confirm-modal {
+        max-width: 580px;
+        max-height: 95vh;
+        border-radius: 14px;
+    }
+
+    .confirm-modal__header {
+        padding: 18px 18px 12px;
+    }
+
+    .confirm-modal__header h3 {
+        font-size: 16px;
+    }
+
+    .confirm-modal__body {
+        padding: 12px 18px;
+    }
+
+    .confirm-modal__container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .confirm-modal__right-col {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 16px;
+    }
+
+    .confirm-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .confirm-media {
+        flex-direction: column;
+    }
+
+    .confirm-img-box {
+        max-height: 160px;
+    }
+
+    .confirm-modal__footer {
+        flex-direction: column;
+        padding: 12px 18px;
+    }
+}
+
 /* Barcode Survey Modal */
 .barcode-modal-overlay {
     display: none;

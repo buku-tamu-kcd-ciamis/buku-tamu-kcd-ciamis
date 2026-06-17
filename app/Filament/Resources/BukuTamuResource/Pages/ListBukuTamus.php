@@ -22,7 +22,7 @@ class ListBukuTamus extends ListRecords
 
     public function getTabs(): array
     {
-        $hasCustomDate = !empty($this->tableFilters['tanggal']['tanggal'] ?? null);
+        $hasCustomDate = !empty($this->tableFilters['tanggal']['dari'] ?? null) || !empty($this->tableFilters['tanggal']['sampai'] ?? null);
 
         $baseQuery = BukuTamu::query()->where(function (Builder $q): void {
             $q->whereNull('foto_penerimaan')
@@ -38,6 +38,14 @@ class ListBukuTamus extends ListRecords
                 ->badge((clone $baseQuery)->whereDate('created_at', now()->subDay()->toDateString())->count())
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query) => $hasCustomDate ? $query : $query->whereDate('created_at', now()->subDay()->toDateString())),
+            'minggu_ini' => Tab::make('Minggu Ini')
+                ->badge((clone $baseQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count())
+                ->badgeColor('primary')
+                ->modifyQueryUsing(fn (Builder $query) => $hasCustomDate ? $query : $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])),
+            'bulan_ini' => Tab::make('Bulan Ini')
+                ->badge((clone $baseQuery)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count())
+                ->badgeColor('info')
+                ->modifyQueryUsing(fn (Builder $query) => $hasCustomDate ? $query : $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])),
             'semua' => Tab::make('Semua Data')
                 ->badge((clone $baseQuery)->count())
                 ->badgeColor('gray'),

@@ -236,12 +236,37 @@ class BukuTamuResource extends Resource
           ->options(BukuTamu::STATUS_LABELS),
         Tables\Filters\Filter::make('tanggal')
           ->schema([
-            Forms\Components\DatePicker::make('tanggal'),
+            Forms\Components\DatePicker::make('dari')
+              ->label('Dari Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
+            Forms\Components\DatePicker::make('sampai')
+              ->label('Sampai Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
           ])
           ->query(function ($query, array $data) {
-            return $query->when($data['tanggal'], fn($q, $date) => $q->whereDate('created_at', $date));
-          }),
+            return $query
+              ->when($data['dari'], fn($q, $date) => $q->whereDate('created_at', '>=', $date))
+              ->when($data['sampai'], fn($q, $date) => $q->whereDate('created_at', '<=', $date));
+          })
+          ->indicateUsing(function (array $data): array {
+            $indicators = [];
+            if ($data['dari'] ?? null) {
+              $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['dari'])->translatedFormat('d M Y');
+            }
+            if ($data['sampai'] ?? null) {
+              $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['sampai'])->translatedFormat('d M Y');
+            }
+            return $indicators;
+          })
+          ->columns(2)
+          ->columnSpan(2),
       ])
+      ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
+      ->filtersFormColumns(3)
       ->recordActionsAlignment('center')
       ->recordActionsColumnLabel('')
       ->recordActions([

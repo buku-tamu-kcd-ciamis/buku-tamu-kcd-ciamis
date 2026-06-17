@@ -86,8 +86,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response($html, $statusCode, [
                 'Content-Type' => 'text/html; charset=utf-8',
-                'Cache-Control' => 'no-cache, max-age=0',
+                'Cache-Control' => 'no-cache, private',
                 'X-Content-Type-Options' => 'nosniff',
+                'Content-Security-Policy' => "frame-ancestors 'self'",
             ]);
         });
     })->create();

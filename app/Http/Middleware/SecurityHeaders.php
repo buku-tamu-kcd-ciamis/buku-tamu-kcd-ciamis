@@ -19,7 +19,7 @@ class SecurityHeaders
 
         // Security headers
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        $response->headers->set('Content-Security-Policy', "frame-ancestors 'self'");
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'no-referrer-when-downgrade');
 
@@ -43,19 +43,19 @@ class SecurityHeaders
         $response->headers->remove('Expires');
 
         // Standardize Cache-Control for dynamic pages
-        // Avoid 'must-revalidate' and 'no-store' if they are flagged by the audit tool
+        // Avoid 'max-age' or 's-maxage' when 'no-cache' or 'no-store' is specified
         $cacheControl = $response->headers->get('Cache-Control');
         if ($cacheControl) {
             $directives = explode(',', $cacheControl);
             $directives = array_map('trim', $directives);
             
-            // If it is a non-cacheable page, change to 'no-cache, max-age=0'
+            // If it is a non-cacheable page, change to 'no-cache, private' (without max-age=0)
             if (in_array('no-store', $directives, true) || in_array('must-revalidate', $directives, true) || in_array('no-cache', $directives, true)) {
-                $response->headers->set('Cache-Control', 'no-cache, max-age=0');
+                $response->headers->set('Cache-Control', 'no-cache, private');
             }
         } else {
             // Set default Cache-Control if missing
-            $response->headers->set('Cache-Control', 'no-cache, max-age=0');
+            $response->headers->set('Cache-Control', 'no-cache, private');
         }
 
         // Remove or clean up 'Server' header (and PHP version header)

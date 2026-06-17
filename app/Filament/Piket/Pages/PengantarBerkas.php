@@ -50,6 +50,29 @@ class PengantarBerkas extends Page implements HasTable
     return true;
   }
 
+  public ?string $activeTab = 'hari_ini';
+
+  protected function hasCustomDateFilters(): bool
+  {
+    return !empty($this->tableFilters['tanggal']['dari'] ?? null) || !empty($this->tableFilters['tanggal']['sampai'] ?? null);
+  }
+
+  public function getTabBadge(string $tab): int
+  {
+    $query = BukuTamu::query()
+      ->whereNotNull('foto_penerimaan')
+      ->where('foto_penerimaan', '!=', '');
+
+    return match ($tab) {
+      'hari_ini' => $query->whereDate('created_at', now()->toDateString())->count(),
+      'kemarin' => $query->whereDate('created_at', now()->subDay()->toDateString())->count(),
+      'minggu_ini' => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+      'bulan_ini' => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
+      'semua' => $query->count(),
+      default => 0,
+    };
+  }
+
   public function table(Table $table): Table
   {
     return $table
@@ -57,6 +80,10 @@ class PengantarBerkas extends Page implements HasTable
         BukuTamu::query()
           ->whereNotNull('foto_penerimaan')
           ->where('foto_penerimaan', '!=', '')
+          ->when($this->activeTab === 'hari_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereDate('created_at', now()->toDateString()))
+          ->when($this->activeTab === 'kemarin' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereDate('created_at', now()->subDay()->toDateString()))
+          ->when($this->activeTab === 'minggu_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]))
+          ->when($this->activeTab === 'bulan_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]))
       )
       ->columns([
         Tables\Columns\ViewColumn::make('foto_selfie')
@@ -96,7 +123,65 @@ class PengantarBerkas extends Page implements HasTable
       ->filters([
         Tables\Filters\SelectFilter::make('status')
           ->options(BukuTamu::STATUS_LABELS),
+        Tables\Filters\SelectFilter::make('keperluan')
+          ->label('Keperluan')
+          ->options(fn(): array => BukuTamu::query()
+            ->whereNotNull('foto_penerimaan')
+            ->where('foto_penerimaan', '!=', '')
+            ->select('keperluan')
+            ->whereNotNull('keperluan')
+            ->where('keperluan', '!=', '')
+            ->orderBy('keperluan')
+            ->distinct()
+            ->pluck('keperluan', 'keperluan')
+            ->all())
+          ->searchable(),
+        Tables\Filters\SelectFilter::make('staff_dituju')
+          ->label('Staff Yang Dituju')
+          ->options(fn(): array => BukuTamu::query()
+            ->whereNotNull('foto_penerimaan')
+            ->where('foto_penerimaan', '!=', '')
+            ->select('staff_dituju')
+            ->whereNotNull('staff_dituju')
+            ->where('staff_dituju', '!=', '')
+            ->orderBy('staff_dituju')
+            ->distinct()
+            ->pluck('staff_dituju', 'staff_dituju')
+            ->all())
+          ->searchable(),
+        Tables\Filters\Filter::make('tanggal')
+          ->schema([
+            Forms\Components\DatePicker::make('dari')
+              ->label('Dari Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
+            Forms\Components\DatePicker::make('sampai')
+              ->label('Sampai Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
+          ])
+          ->query(function ($query, array $data) {
+            return $query
+              ->when($data['dari'], fn($query, $date) => $query->whereDate('created_at', '>=', $date))
+              ->when($data['sampai'], fn($query, $date) => $query->whereDate('created_at', '<=', $date));
+          })
+          ->indicateUsing(function (array $data): array {
+            $indicators = [];
+            if ($data['dari'] ?? null) {
+              $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['dari'])->translatedFormat('d M Y');
+            }
+            if ($data['sampai'] ?? null) {
+              $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['sampai'])->translatedFormat('d M Y');
+            }
+            return $indicators;
+          })
+          ->columns(2)
+          ->columnSpan(2),
       ])
+      ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
+      ->filtersFormColumns(5)
       ->recordActions([
         ActionGroup::make([
           Action::make('status_menunggu')

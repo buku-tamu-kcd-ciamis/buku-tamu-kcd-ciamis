@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables;
@@ -15,6 +16,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 
 class RiwayatTamu extends Page implements HasTable
 {
@@ -47,28 +49,58 @@ class RiwayatTamu extends Page implements HasTable
     return (string) $record->id;
   }
 
+  public ?string $activeTab = 'hari_ini';
+
+  protected function hasCustomDateFilters(): bool
+  {
+    return !empty($this->tableFilters['kunjungan_terakhir']['dari'] ?? null) || !empty($this->tableFilters['kunjungan_terakhir']['sampai'] ?? null);
+  }
+
+  protected static function riwayatTamuQuery(): Builder
+  {
+    return BukuTamu::query()
+      ->select([
+        'buku_tamu.*',
+        DB::raw('(SELECT COUNT(*) FROM buku_tamu AS bt WHERE bt.nik = buku_tamu.nik) as total_kunjungan'),
+        DB::raw('(SELECT MAX(created_at) FROM buku_tamu AS bt WHERE bt.nik = buku_tamu.nik) as kunjungan_terakhir')
+      ])
+      ->whereNotExists(function ($subQuery): void {
+        $subQuery->selectRaw('1')
+          ->from('buku_tamu as bt_newer')
+          ->whereColumn('bt_newer.nik', 'buku_tamu.nik')
+          ->where(function ($newerQuery): void {
+            $newerQuery->whereColumn('bt_newer.created_at', '>', 'buku_tamu.created_at')
+              ->orWhere(function ($sameTimestampQuery): void {
+                $sameTimestampQuery->whereColumn('bt_newer.created_at', '=', 'buku_tamu.created_at')
+                  ->whereColumn('bt_newer.id', '>', 'buku_tamu.id');
+              });
+          });
+      });
+  }
+
+  public function getTabBadge(string $tab): int
+  {
+    $query = static::riwayatTamuQuery();
+
+    return match ($tab) {
+      'hari_ini' => $query->whereDate('created_at', now()->toDateString())->count(),
+      'kemarin' => $query->whereDate('created_at', now()->subDay()->toDateString())->count(),
+      'minggu_ini' => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+      'bulan_ini' => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
+      'semua' => $query->count(),
+      default => 0,
+    };
+  }
+
   public function table(Table $table): Table
   {
     return $table
       ->query(
-        BukuTamu::query()
-          ->select([
-            'buku_tamu.*',
-            DB::raw('(SELECT COUNT(*) FROM buku_tamu AS bt WHERE bt.nik = buku_tamu.nik) as total_kunjungan'),
-            DB::raw('(SELECT MAX(created_at) FROM buku_tamu AS bt WHERE bt.nik = buku_tamu.nik) as kunjungan_terakhir')
-          ])
-          ->whereNotExists(function ($subQuery): void {
-            $subQuery->selectRaw('1')
-              ->from('buku_tamu as bt_newer')
-              ->whereColumn('bt_newer.nik', 'buku_tamu.nik')
-              ->where(function ($newerQuery): void {
-                $newerQuery->whereColumn('bt_newer.created_at', '>', 'buku_tamu.created_at')
-                  ->orWhere(function ($sameTimestampQuery): void {
-                    $sameTimestampQuery->whereColumn('bt_newer.created_at', '=', 'buku_tamu.created_at')
-                      ->whereColumn('bt_newer.id', '>', 'buku_tamu.id');
-                  });
-              });
-          })
+        static::riwayatTamuQuery()
+          ->when($this->activeTab === 'hari_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereDate('created_at', now()->toDateString()))
+          ->when($this->activeTab === 'kemarin' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereDate('created_at', now()->subDay()->toDateString()))
+          ->when($this->activeTab === 'minggu_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]))
+          ->when($this->activeTab === 'bulan_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]))
       )
       ->columns([
         Tables\Columns\ViewColumn::make('foto_selfie')
@@ -113,6 +145,62 @@ class RiwayatTamu extends Page implements HasTable
       ->defaultSort('total_kunjungan', 'desc')
       ->defaultPaginationPageOption(10)
       ->paginationPageOptions([10])
+      ->filters([
+        Tables\Filters\SelectFilter::make('instansi')
+          ->label('Instansi')
+          ->options(fn(): array => static::riwayatTamuQuery()
+            ->select('instansi')
+            ->whereNotNull('instansi')
+            ->where('instansi', '!=', '')
+            ->orderBy('instansi')
+            ->distinct()
+            ->pluck('instansi', 'instansi')
+            ->all())
+          ->searchable(),
+        Tables\Filters\TernaryFilter::make('jenis_kunjungan')
+          ->label('Jenis Kunjungan')
+          ->placeholder('Semua')
+          ->trueLabel('Kunjungan Berulang')
+          ->falseLabel('Kunjungan Sekali')
+          ->queries(
+            true: fn(Builder $query): Builder => $query->whereIn('nik', static::riwayatNikCountQuery('>', 1)),
+            false: fn(Builder $query): Builder => $query->whereIn('nik', static::riwayatNikCountQuery('=', 1)),
+            blank: fn(Builder $query): Builder => $query,
+          ),
+        Tables\Filters\Filter::make('kunjungan_terakhir')
+          ->label('Periode Terakhir Berkunjung')
+          ->schema([
+            Forms\Components\DatePicker::make('dari')
+              ->label('Dari Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
+            Forms\Components\DatePicker::make('sampai')
+              ->label('Sampai Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
+          ])
+          ->query(function (Builder $query, array $data): Builder {
+            return $query
+              ->when($data['dari'] ?? null, fn(Builder $builder, $date): Builder => $builder->whereDate('created_at', '>=', $date))
+              ->when($data['sampai'] ?? null, fn(Builder $builder, $date): Builder => $builder->whereDate('created_at', '<=', $date));
+          })
+          ->indicateUsing(function (array $data): array {
+            $indicators = [];
+            if ($data['dari'] ?? null) {
+              $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['dari'])->translatedFormat('d M Y');
+            }
+            if ($data['sampai'] ?? null) {
+              $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['sampai'])->translatedFormat('d M Y');
+            }
+            return $indicators;
+          })
+          ->columns(2)
+          ->columnSpan(2),
+      ])
+      ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
+      ->filtersFormColumns(4)
       ->recordActionsColumnLabel('')
       ->recordActions([
         ActionGroup::make([
@@ -148,5 +236,13 @@ class RiwayatTamu extends Page implements HasTable
   public function getFooter(): ?View
   {
     return view('filament.piket.pages.riwayat-tamu-footer');
+  }
+
+  protected static function riwayatNikCountQuery(string $operator, int $value)
+  {
+    return DB::table('buku_tamu as bt')
+      ->select('bt.nik')
+      ->groupBy('bt.nik')
+      ->havingRaw("COUNT(*) {$operator} ?", [$value]);
   }
 }

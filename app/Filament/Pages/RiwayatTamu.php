@@ -68,10 +68,37 @@ class RiwayatTamu extends Page implements HasTable
     return (string) $record->id;
   }
 
+  public ?string $activeTab = 'hari_ini';
+
+  protected function hasCustomDateFilters(): bool
+  {
+    return !empty($this->tableFilters['kunjungan_terakhir']['dari'] ?? null) || !empty($this->tableFilters['kunjungan_terakhir']['sampai'] ?? null);
+  }
+
+  public function getTabBadge(string $tab): int
+  {
+    $query = static::riwayatTamuQuery();
+
+    return match ($tab) {
+      'hari_ini' => $query->whereDate('created_at', now()->toDateString())->count(),
+      'kemarin' => $query->whereDate('created_at', now()->subDay()->toDateString())->count(),
+      'minggu_ini' => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+      'bulan_ini' => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
+      'semua' => $query->count(),
+      default => 0,
+    };
+  }
+
   public function table(Table $table): Table
   {
     return $table
-      ->query(static::riwayatTamuQuery())
+      ->query(
+        static::riwayatTamuQuery()
+          ->when($this->activeTab === 'hari_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereDate('created_at', now()->toDateString()))
+          ->when($this->activeTab === 'kemarin' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereDate('created_at', now()->subDay()->toDateString()))
+          ->when($this->activeTab === 'minggu_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]))
+          ->when($this->activeTab === 'bulan_ini' && !$this->hasCustomDateFilters(), fn ($query) => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]))
+      )
       ->columns([
         Tables\Columns\ViewColumn::make('foto_selfie')
           ->label('Foto')
@@ -145,16 +172,36 @@ class RiwayatTamu extends Page implements HasTable
           ->label('Periode Terakhir Berkunjung')
           ->schema([
             Forms\Components\DatePicker::make('dari')
-              ->label('Dari'),
+              ->label('Dari Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
             Forms\Components\DatePicker::make('sampai')
-              ->label('Sampai'),
+              ->label('Sampai Tanggal')
+              ->native(false)
+              ->displayFormat('d/m/Y')
+              ->closeOnDateSelection(),
           ])
           ->query(function (Builder $query, array $data): Builder {
             return $query
               ->when($data['dari'] ?? null, fn(Builder $builder, $date): Builder => $builder->whereDate('created_at', '>=', $date))
               ->when($data['sampai'] ?? null, fn(Builder $builder, $date): Builder => $builder->whereDate('created_at', '<=', $date));
-          }),
+          })
+          ->indicateUsing(function (array $data): array {
+            $indicators = [];
+            if ($data['dari'] ?? null) {
+              $indicators[] = 'Dari: ' . \Carbon\Carbon::parse($data['dari'])->translatedFormat('d M Y');
+            }
+            if ($data['sampai'] ?? null) {
+              $indicators[] = 'Sampai: ' . \Carbon\Carbon::parse($data['sampai'])->translatedFormat('d M Y');
+            }
+            return $indicators;
+          })
+          ->columns(2)
+          ->columnSpan(2),
       ])
+      ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
+      ->filtersFormColumns(4)
       ->recordUrl(fn(BukuTamu $record): string => ViewRiwayatTamu::getUrl(['nik' => $record->nik]))
       ->recordActions([
         ActionGroup::make([

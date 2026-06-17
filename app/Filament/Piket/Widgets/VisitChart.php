@@ -13,6 +13,7 @@ class VisitChart extends ChartWidget
   protected int | string | array $columnSpan = 'full';
 
   public ?string $filter = 'week';
+  private ?array $cachedData = null;
 
   protected function getFilters(): ?array
   {
@@ -25,6 +26,10 @@ class VisitChart extends ChartWidget
 
   protected function getData(): array
   {
+    if ($this->cachedData !== null) {
+      return $this->cachedData;
+    }
+
     $daysBack = match ($this->filter) {
       'week' => 6,
       'month' => 29,
@@ -66,7 +71,7 @@ class VisitChart extends ChartWidget
       }
     }
 
-    return [
+    $this->cachedData = [
       'datasets' => [
         [
           'label' => 'Jumlah Kunjungan',
@@ -78,6 +83,8 @@ class VisitChart extends ChartWidget
       ],
       'labels' => $labels,
     ];
+
+    return $this->cachedData;
   }
 
   protected function getType(): string
@@ -87,19 +94,38 @@ class VisitChart extends ChartWidget
 
   protected function getOptions(): array
   {
-    $maxValue = match ($this->filter) {
+    $data = $this->getData();
+    $values = $data['datasets'][0]['data'] ?? [];
+    $maxActualValue = empty($values) ? 0 : max($values);
+
+    $defaultMax = match ($this->filter) {
       'week' => 20,
       'month' => 50,
       'year' => 100,
       default => 20,
     };
 
-    $stepSize = match ($this->filter) {
-      'week' => 1,
-      'month' => 5,
-      'year' => 10,
-      default => 1,
-    };
+    $maxValue = max($defaultMax, $maxActualValue);
+
+    if ($maxValue > $defaultMax) {
+      if ($maxValue <= 50) {
+        $stepSize = 5;
+      } elseif ($maxValue <= 100) {
+        $stepSize = 10;
+      } elseif ($maxValue <= 500) {
+        $stepSize = 50;
+      } else {
+        $stepSize = 100;
+      }
+      $maxValue = ceil($maxValue / $stepSize) * $stepSize;
+    } else {
+      $stepSize = match ($this->filter) {
+        'week' => 1,
+        'month' => 5,
+        'year' => 10,
+        default => 1,
+      };
+    }
 
     return [
       'plugins' => [

@@ -13,7 +13,7 @@ class VisitChart extends ChartWidget
   protected int | string | array $columnSpan = 'full';
 
   public ?string $filter = 'week';
-  private ?array $cachedData = null;
+  protected ?array $visitChartCachedData = null;
 
   protected function getFilters(): ?array
   {
@@ -26,8 +26,8 @@ class VisitChart extends ChartWidget
 
   protected function getData(): array
   {
-    if ($this->cachedData !== null) {
-      return $this->cachedData;
+    if ($this->visitChartCachedData !== null) {
+      return $this->visitChartCachedData;
     }
 
     $daysBack = match ($this->filter) {
@@ -71,7 +71,7 @@ class VisitChart extends ChartWidget
       }
     }
 
-    $this->cachedData = [
+    $this->visitChartCachedData = [
       'datasets' => [
         [
           'label' => 'Jumlah Kunjungan',
@@ -84,7 +84,7 @@ class VisitChart extends ChartWidget
       'labels' => $labels,
     ];
 
-    return $this->cachedData;
+    return $this->visitChartCachedData;
   }
 
   protected function getType(): string

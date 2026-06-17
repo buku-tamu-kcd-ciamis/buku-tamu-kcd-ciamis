@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
@@ -83,8 +85,9 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return response($html, $statusCode, [
-                'Content-Type' => 'text/html; charset=UTF-8',
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Content-Type' => 'text/html; charset=utf-8',
+                'Cache-Control' => 'no-cache, max-age=0',
+                'X-Content-Type-Options' => 'nosniff',
             ]);
         });
     })->create();

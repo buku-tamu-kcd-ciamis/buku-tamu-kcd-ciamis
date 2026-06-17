@@ -5,7 +5,7 @@ namespace App\Filament\Resources\BukuTamuResource\Pages;
 use App\Filament\Resources\BukuTamuResource;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\View\View;
-use Filament\Resources\Components\Tab;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\BukuTamu;
 

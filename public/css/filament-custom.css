@@ -277,13 +277,13 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     box-shadow: 0 14px 22px -12px rgba(8, 112, 63, 0.95);
 }
 
-/* Staff, admin, and piket login page: solid black background and neutral text colors */
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+/* Staff and piket login page: solid black background and neutral text colors (admin excluded to follow main dashboard green style) */
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg) {
     background: #000000;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-header
     .fi-logo {
@@ -298,34 +298,34 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     text-overflow: ellipsis;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-header-heading {
     color: #111827;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     label,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-fo-field-label,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-fo-field-label
     span,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-fo-field-wrp-label,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-fo-field-wrp-label
     span,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-fo-checkbox
     .fi-fo-field-wrp-label,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-fo-checkbox
     .fi-fo-field-wrp-label
@@ -334,19 +334,19 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     -webkit-text-fill-color: #111827 !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-link,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     a {
     color: #111827;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-link:hover,
-.fi-body:is(.fi-panel-staff, .fi-panel-admin, .fi-panel-piket)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     a:hover {
     color: #000000;
@@ -477,27 +477,27 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     color: #0b7a46;
 }
 
-/* Login pages neutral override (remove green gradients/accents) */
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+/* Login pages neutral override (remove green gradients/accents) (admin excluded) */
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg) {
     background: #000000 !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-input-wrp:focus-within {
     border-color: #6b7280 !important;
     box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.18) !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-checkbox-input:checked {
     background-color: #111827 !important;
     border-color: #111827 !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-page
     .fi-btn.fi-ac-btn-action {
@@ -506,7 +506,7 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     box-shadow: 0 10px 18px -12px rgba(17, 24, 39, 0.92) !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-page
     .fi-btn.fi-ac-btn-action:hover {
@@ -514,22 +514,22 @@ th.fi-ta-header-cell.fi-table-header-cell-actions,
     box-shadow: 0 14px 22px -12px rgba(0, 0, 0, 0.95) !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-page
     .fi-link,
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-page
     a {
     color: #374151 !important;
 }
 
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-page
     .fi-link:hover,
-.fi-body:is(.fi-panel-staff, .fi-panel-piket, .fi-panel-admin)
+.fi-body:is(.fi-panel-staff, .fi-panel-piket)
     .fi-simple-layout:has(.fi-simple-main.fi-width-lg)
     .fi-simple-page
     a:hover {

@@ -495,6 +495,13 @@
             const isApkRuntime = isCapacitorNative || isAndroidWebView || isTrustedWebActivity;
 
             if ('serviceWorker' in navigator) {
+                let pwaRefreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', function () {
+                    if (pwaRefreshing) return;
+                    pwaRefreshing = true;
+                    window.location.reload();
+                });
+
                 window.addEventListener('load', function registerPublicServiceWorkerOnce() {
                     navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function (error) {
                         console.warn('Service worker registration failed on public page:', error);

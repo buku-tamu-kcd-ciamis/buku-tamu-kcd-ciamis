@@ -746,26 +746,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Check for repeated digits
-        if (hasRepeatedDigits(val, maxRepeated)) {
-            nikHint.textContent =
-                "\u2717 Angka tidak boleh sama lebih dari " +
-                maxRepeated +
-                " digit berturut-turut";
-            nikHint.className = "phone-hint invalid";
-            return;
-        }
-
-        // Check for sequential digits
-        if (hasSequentialDigits(val, maxSequential)) {
-            nikHint.textContent =
-                "\u2717 Angka tidak boleh berurutan lebih dari " +
-                maxSequential +
-                " digit";
-            nikHint.className = "phone-hint invalid";
-            return;
-        }
-
         // Check digits length if specified
         if (config.digits) {
             const requiredDigits = Number.parseInt(config.digits, 10);
@@ -2482,6 +2462,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function detectionLoop(video, overlay, isFront, mode) {
+        return;
         if (!video.srcObject || video.paused || video.ended) return;
         var now = Date.now();
         var ctx = overlay.getContext("2d");
@@ -2996,64 +2977,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection — STRICT: must be exactly 1 REAL face (native API)
-            const faceResult = await detectFaces(result.canvas, result.canvas);
-
-            // For selfie: REQUIRE native FaceDetector — skin-tone blobs are NOT enough
-            if (faceDetectorSupported && !faceResult.native) {
-                showToast(
-                    '<i class="fa-solid fa-face-frown"></i> Wajah tidak terdeteksi! Pastikan wajah Anda terlihat jelas di kamera.',
-                );
-                restartDetectionLoop(
-                    fotoSelfieBox,
-                    selfieLocalStream,
-                    "selfie",
-                );
-                return;
-            }
-
-            if (!faceResult.detected || faceResult.count === 0) {
-                showToast(
-                    '<i class="fa-solid fa-face-frown"></i> Wajah tidak terdeteksi! Pastikan wajah Anda terlihat jelas dan coba lagi.',
-                );
-                restartDetectionLoop(
-                    fotoSelfieBox,
-                    selfieLocalStream,
-                    "selfie",
-                );
-                return;
-            }
-            if (faceResult.count > 1) {
-                showToast(
-                    '<i class="fa-solid fa-circle-exclamation"></i> Terdeteksi ' +
-                        faceResult.count +
-                        " wajah! Foto selfie harus 1 orang saja.",
-                );
-                restartDetectionLoop(
-                    fotoSelfieBox,
-                    selfieLocalStream,
-                    "selfie",
-                );
-                return;
-            }
-
-            // Liveness check — prevent photo-of-photo spoofing
-            var liveness = checkLiveness(result.canvas);
-            if (!liveness.live) {
-                showToast(
-                    '<i class="fa-solid fa-user-shield"></i> ' +
-                        liveness.reason,
-                    "warning",
-                );
-                resetLivenessFrames();
-                restartDetectionLoop(
-                    fotoSelfieBox,
-                    selfieLocalStream,
-                    "selfie",
-                );
-                return;
-            }
-
+            // Face detection & liveness check are optional/bypassed now
             fotoSelfieInput.value = imageData;
             selfieLocalStream.getTracks().forEach((t) => t.stop());
             selfieLocalStream = null;
@@ -3073,7 +2997,7 @@ document.addEventListener("DOMContentLoaded", function () {
             btnCameraSelfie.textContent = "Ulangi Foto";
 
             showToast(
-                '<i class="fa-solid fa-circle-check"></i> Foto selfie tersimpan - wajah terverifikasi!',
+                '<i class="fa-solid fa-circle-check"></i> Foto selfie tersimpan!',
                 "success",
             );
         }
@@ -3178,66 +3102,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = capturePhoto(video, actuallyFront);
             const imageData = result.dataUrl;
 
-            // Face detection — STRICT: must be exactly 2 faces + verify document
-            const faceResult = await detectFaces(result.canvas, result.canvas);
-
-            if (!faceResult.detected || faceResult.count === 0) {
-                showToast(
-                    '<i class="fa-solid fa-triangle-exclamation"></i> Tidak ada wajah terdeteksi! Pastikan petugas piket & pengunjung terlihat.',
-                );
-                restartDetectionLoop(
-                    fotoPenerimaanBox,
-                    penerimaanLocalStream,
-                    "penerimaan",
-                );
-                return;
-            }
-            if (faceResult.count < 2) {
-                showToast(
-                    '<i class="fa-solid fa-triangle-exclamation"></i> Hanya ' +
-                        faceResult.count +
-                        " wajah — harus ada 2 orang (petugas piket & pengunjung)!",
-                );
-                restartDetectionLoop(
-                    fotoPenerimaanBox,
-                    penerimaanLocalStream,
-                    "penerimaan",
-                );
-                return;
-            }
-            if (faceResult.count > 2) {
-                showToast(
-                    '<i class="fa-solid fa-circle-exclamation"></i> Terdeteksi ' +
-                        faceResult.count +
-                        " wajah — harus tepat 2 orang saja!",
-                );
-                restartDetectionLoop(
-                    fotoPenerimaanBox,
-                    penerimaanLocalStream,
-                    "penerimaan",
-                );
-                return;
-            }
-            // Check document presence
-            var docCheck = detectDocumentRegions(result.canvas);
-            if (docCheck.length === 0) {
-                showToast(
-                    '<i class="fa-solid fa-file-circle-exclamation"></i> Berkas tidak terdeteksi! Pastikan berkas/surat terlihat di foto.',
-                );
-                restartDetectionLoop(
-                    fotoPenerimaanBox,
-                    penerimaanLocalStream,
-                    "penerimaan",
-                );
-                return;
-            }
-            showToast(
-                '<i class="fa-solid fa-circle-check"></i> Foto penerimaan tersimpan - 2 wajah + ' +
-                    docCheck.length +
-                    " berkas terverifikasi!",
-                "success",
-            );
-
+            // Face detection & document checking are optional/bypassed now
             fotoPenerimaanInput.value = imageData;
             penerimaanLocalStream.getTracks().forEach((t) => t.stop());
             penerimaanLocalStream = null;
@@ -3256,6 +3121,11 @@ document.addEventListener("DOMContentLoaded", function () {
             fotoPenerimaanBox.appendChild(imgEl);
 
             btnCameraPenerimaan.textContent = "Ulangi Foto";
+
+            showToast(
+                '<i class="fa-solid fa-circle-check"></i> Foto penerimaan tersimpan!',
+                "success",
+            );
         }
     });
 
@@ -3598,52 +3468,6 @@ document.addEventListener("DOMContentLoaded", function () {
             // Check NIK validity
             const selectedId = jenisIdHidden.value;
             const config = idConfig[selectedId] || idConfig[""];
-
-            // Check NIK validity (no repeated digits more than 3 times)
-            if (
-                config.digits &&
-                nikInput.value &&
-                hasRepeatedDigits(nikInput.value, config.maxRepeated)
-            ) {
-                e.preventDefault();
-                showToast(
-                    `<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh sama lebih dari ${config.maxRepeated} digit berturut-turut.`,
-                    "error",
-                );
-                nikInput.closest(".form-group").classList.add("shake");
-                setTimeout(
-                    () =>
-                        nikInput
-                            .closest(".form-group")
-                            .classList.remove("shake"),
-                    600,
-                );
-                nikInput.focus();
-                return;
-            }
-
-            // Check NIK validity (no sequential digits more than 2)
-            if (
-                config.digits &&
-                nikInput.value &&
-                hasSequentialDigits(nikInput.value, config.maxSequential)
-            ) {
-                e.preventDefault();
-                showToast(
-                    `<i class="fa-solid fa-circle-exclamation"></i> NIK tidak valid! Angka tidak boleh berurutan lebih dari ${config.maxSequential} digit.`,
-                    "error",
-                );
-                nikInput.closest(".form-group").classList.add("shake");
-                setTimeout(
-                    () =>
-                        nikInput
-                            .closest(".form-group")
-                            .classList.remove("shake"),
-                    600,
-                );
-                nikInput.focus();
-                return;
-            }
 
             // Check selfie is taken
             if (!fotoSelfieInput.value) {
